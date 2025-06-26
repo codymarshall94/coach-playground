@@ -3,7 +3,9 @@ import { ExerciseCard } from "@/components/ExerciseCard";
 import { WorkoutSummary } from "@/components/WorkoutSummary";
 import { EXERCISES } from "@/data/exercises";
 import { Exercise, WorkoutExercise } from "@/types/Workout";
+import { getExerciseDetails } from "@/utils/getExerciseDetails";
 import { createWorkoutExercise } from "@/utils/workout";
+import { calculateWorkoutSummary } from "@/utils/workout-summary";
 import {
   closestCenter,
   DndContext,
@@ -15,9 +17,14 @@ import {
 import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Droppable } from "./Droppable";
+import { EmptyState } from "./EmptyState";
 import { ExerciseBuilderCard } from "./ExerciseBuilderCard";
 import { ExerciseLibrary } from "./ExerciseLibrary";
+import { Logo } from "./Logo";
+import { QuickStatsBar } from "./QuickStatsBar";
 import { Button } from "./ui/button";
+import { WorkoutFooter } from "./WorkoutFooter";
+import { WorkoutInsightsPanel } from "./WorkoutInsights";
 
 export const WorkoutBuilder = () => {
   const [workout, setWorkout] = useState<WorkoutExercise[]>([]);
@@ -44,40 +51,38 @@ export const WorkoutBuilder = () => {
     );
   };
 
-  const addSet = (index: number) => {
-    setWorkout((prev) =>
-      prev.map((exercise, i) =>
-        i === index
-          ? {
-              ...exercise,
-              sets: [...exercise.sets, { reps: 8, weight: 0, rest: 90 }],
-            }
-          : exercise
-      )
-    );
-  };
   const clearWorkout = () => {
     setWorkout([]);
   };
 
   const activeExercise = EXERCISES.find((ex) => ex.id === activeId);
 
-  return (
-    <div className="">
-      <div className="container mx-auto p-6 flex flex gap-6">
-        <WorkoutSummary workout={workout} />
-        <ExerciseLibrary addExercise={addExercise} />
-      </div>
+  const fullExercises = getExerciseDetails(workout);
 
-      <div className="container mx-auto p-6">
+  const summary = calculateWorkoutSummary(fullExercises);
+
+  return (
+    <div className="flex flex-col h-screen">
+      <header className="sticky top-0 z-30 bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center shadow-sm">
+        <Logo size="xs" lineBreak={false} />
+        <div className="flex gap-2">
+          <WorkoutSummary workout={workout} summary={summary} />
+          <ExerciseLibrary addExercise={addExercise} />
+          {/* <SettingsPopover /> */}
+          {/* <Button variant="default" className="bg-blue-600 text-white">
+            Save Workout
+          </Button> */}
+        </div>
+      </header>
+      <QuickStatsBar summary={summary} />
+
+      <div className="container mx-auto p-6 flex-1">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragStart={handleDragStart}
         >
           <div className="grid lg:grid-cols-2 gap-8">
-            {/* Available Exercises */}
-
             {/* Workout Area */}
             <div className="space-y-4">
               <div className="flex items-center justify-between mb-6">
@@ -103,18 +108,11 @@ export const WorkoutBuilder = () => {
 
               <Droppable id="workout-drop">
                 {workout.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-center py-12">
-                    <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
-                      <Plus className="w-8 h-8 text-gray-400" />
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      Start Building Your Workout
-                    </h3>
-                    <p className="text-gray-500 max-w-sm">
-                      Drag exercises from the left panel to create your custom
-                      workout routine
-                    </p>
-                  </div>
+                  <EmptyState
+                    icon={<Plus className="w-10 h-10 text-gray-400" />}
+                    title="Start Building Your Workout"
+                    description="Open the exercise library to add exercises to your workout"
+                  />
                 ) : (
                   <div className="space-y-3">
                     {workout.map((exercise, index) => (
@@ -130,6 +128,7 @@ export const WorkoutBuilder = () => {
                 )}
               </Droppable>
             </div>
+            <WorkoutInsightsPanel workout={workout} />
           </div>
 
           <DragOverlay>
@@ -144,6 +143,7 @@ export const WorkoutBuilder = () => {
           </DragOverlay>
         </DndContext>
       </div>
+      <WorkoutFooter workout={workout} onSave={() => {}} />
     </div>
   );
 };

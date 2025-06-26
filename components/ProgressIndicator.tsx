@@ -1,35 +1,24 @@
 "use client";
 import { Progress } from "@/components/ui/progress";
+import { FIELD_INFO } from "@/constants/exercise-info";
+import { InfoIcon } from "./InfoIcon";
 
 interface ProgressIndicatorProps {
   value: number;
   max?: number;
   label: string;
-  color?: "default" | "green" | "yellow" | "red";
   showValue?: boolean;
+  field: keyof typeof FIELD_INFO;
 }
 
 export function ProgressIndicator({
   value,
   max = 10,
   label,
-  color = "default",
   showValue = true,
+  field,
 }: ProgressIndicatorProps) {
   const percentage = (value / max) * 100;
-
-  const getColorClass = () => {
-    switch (color) {
-      case "green":
-        return "bg-green-500";
-      case "yellow":
-        return "bg-yellow-500";
-      case "red":
-        return "bg-red-500";
-      default:
-        return "bg-blue-500";
-    }
-  };
 
   const getIntensityColor = (val: number) => {
     if (val <= 3) return "green";
@@ -42,7 +31,9 @@ export function ProgressIndicator({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-gray-700">{label}</span>
+        <span className="text-sm font-medium text-gray-700">
+          {label} <InfoIcon field={field} />
+        </span>
         {showValue && (
           <span
             className={`text-sm font-semibold ${

@@ -1,0 +1,3 @@
+export const LOW_VOLUME_PER_MUSCLE = 10;
+export const MEDIUM_VOLUME_PER_MUSCLE = 20;
+export const HIGH_VOLUME_PER_MUSCLE = 30;

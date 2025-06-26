@@ -1,7 +1,9 @@
-"use client";
+import { ActivationMap, Muscle } from "@/types/Workout";
+
+import { MUSCLE_DISPLAY_MAP } from "@/constants/muscles";
 
 interface MuscleActivationChartProps {
-  activationMap: Record<string, number>;
+  activationMap: ActivationMap;
 }
 
 export function MuscleActivationChart({
@@ -26,7 +28,7 @@ export function MuscleActivationChart({
           <div key={muscle} className="space-y-1">
             <div className="flex items-center justify-between text-sm">
               <span className="font-medium text-gray-700 capitalize">
-                {muscle.replace(/([A-Z])/g, " $1").trim()}
+                {MUSCLE_DISPLAY_MAP[muscle as Muscle]}
               </span>
               <span className="text-gray-600 font-semibold">
                 {percentage.toFixed(0)}%

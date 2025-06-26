@@ -29,3 +29,10 @@ export function estimateExerciseDuration(
 
   return totalTime; // in seconds
 }
+
+export function estimateWorkoutDuration(workout: WorkoutExercise[]): number {
+  return workout.reduce(
+    (sum, exercise) => sum + estimateExerciseDuration(exercise),
+    0
+  );
+}

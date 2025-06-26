@@ -34,4 +34,13 @@ export const FIELD_INFO = {
     description:
       "Dominant physiological energy system: ATP-PC (short bursts), Glycolytic (1-3 min), Oxidative (endurance).",
   },
+  recoveryDays: {
+    label: "Recovery Days",
+    description: "Indicates how many days to rest between sets of an exercise.",
+  },
+  baseCalorieCost: {
+    label: "Base Calorie Cost",
+    description:
+      "Indicates how many calories an exercise burns per rep. This is the base calorie cost of the exercise, which is used to calculate the total calorie cost of the exercise.",
+  },
 };

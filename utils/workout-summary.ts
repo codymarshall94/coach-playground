@@ -1,7 +1,10 @@
 import { EXERCISES } from "@/data/exercises";
+import { WorkoutSummaryStats } from "@/types/WorkoutSummary";
 import { Exercise } from "@/types/Workout";
 
-export function calculateWorkoutSummary(exercises: Exercise[]) {
+export function calculateWorkoutSummary(
+  exercises: Exercise[]
+): WorkoutSummaryStats {
   const totalVolume = exercises.reduce(
     (sum, ex) =>
       sum +
