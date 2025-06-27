@@ -1,14 +1,15 @@
 export type SetInfo = {
   reps: number;
-  weight: number;
   rest: number; // in seconds
   rpe?: number;
+  rir?: number;
+  oneRepMaxPercent?: number;
 };
 
 export type WorkoutExercise = {
   id: string; // lookup back to full exercise data
   name: string;
-  sets: SetInfo[]; // reps, weight, rest, etc.
+  sets: SetInfo[]; // reps, rpe, rest, etc.
 };
 
 export type Workout = {
@@ -18,6 +19,8 @@ export type Workout = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+export type IntensitySystem = "rpe" | "oneRepMaxPercent" | "rir" | "none";
 
 export type SkillRequirement = "low" | "moderate" | "high";
 
@@ -42,7 +45,6 @@ export type Equipment =
   | "bench"
   | "box"
   | "pause"
-  | "tempo"
   | "bar"
   | "kettlebell"
   | "cable"

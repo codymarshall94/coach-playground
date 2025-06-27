@@ -10,24 +10,22 @@ export function estimateExerciseDuration(
   exercise: WorkoutExercise,
   secondsPerRep: number = 4
 ): number {
-  const sets = exercise.sets;
+  const sets = exercise.sets ?? [];
 
   let totalReps = 0;
   let totalRest = 0;
 
   sets.forEach((set, index) => {
-    totalReps += set.reps;
+    totalReps += set.reps ?? 0;
 
-    // Don't add rest after the last set
     if (index < sets.length - 1) {
-      totalRest += set.rest;
+      totalRest += set.rest ?? 90; // fallback
     }
   });
 
   const workingTime = totalReps * secondsPerRep;
-  const totalTime = workingTime + totalRest;
 
-  return totalTime; // in seconds
+  return workingTime + totalRest;
 }
 
 export function estimateWorkoutDuration(workout: WorkoutExercise[]): number {

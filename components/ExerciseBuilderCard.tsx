@@ -3,8 +3,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import type { WorkoutExercise } from "@/types/Workout";
+import { EXERCISES } from "@/data/exercises";
+import type { IntensitySystem, WorkoutExercise } from "@/types/Workout";
 import { estimateExerciseDuration } from "@/utils/estimateExerciseDuration";
+import { getExerciseETL } from "@/utils/getExerciseEtl";
 import {
   Clock,
   GripVertical,
@@ -14,6 +16,22 @@ import {
   Weight,
   X,
 } from "lucide-react";
+import { useState } from "react";
+import { ETLDisplay } from "./EtlDisplay";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+
+const intensityLabel: Record<IntensitySystem, string> = {
+  rpe: "RPE",
+  oneRepMaxPercent: "%1RM",
+  rir: "RIR",
+  none: "Effort",
+};
 
 export const ExerciseBuilderCard = ({
   order,
@@ -26,6 +44,12 @@ export const ExerciseBuilderCard = ({
   onRemove: () => void;
   onUpdateSets: (sets: WorkoutExercise["sets"]) => void;
 }) => {
+  const [intensitySystem, setIntensitySystem] =
+    useState<IntensitySystem>("rpe");
+
+  const exerciseMeta = EXERCISES.find((ex) => ex.id === exercise.id);
+  const { totalETL, normalizedETL } = getExerciseETL(exercise, exerciseMeta!);
+
   const addSet = () => {
     const newSet = { reps: 8, weight: 0, rest: 90 };
     onUpdateSets([...exercise.sets, newSet]);
@@ -68,7 +92,7 @@ export const ExerciseBuilderCard = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-2  transition-opacity">
             <Button variant="ghost" size="sm" className="p-2 cursor-move">
               <GripVertical className="w-4 h-4 text-gray-400" />
             </Button>
@@ -80,6 +104,38 @@ export const ExerciseBuilderCard = ({
             >
               <Trash2 className="w-4 h-4" />
             </Button>
+            <Select
+              value={intensitySystem}
+              onValueChange={(v) => {
+                const newSystem = v as IntensitySystem;
+                setIntensitySystem(newSystem);
+
+                const updated = exercise.sets.map((set) => {
+                  return {
+                    reps: set.reps,
+                    rest: set.rest,
+                    rpe: newSystem === "rpe" ? set.rpe ?? 8 : undefined,
+                    oneRepMaxPercent:
+                      newSystem === "oneRepMaxPercent"
+                        ? set.oneRepMaxPercent ?? 75
+                        : undefined,
+                    rir: newSystem === "rir" ? set.rir ?? 2 : undefined,
+                  };
+                });
+
+                onUpdateSets(updated);
+              }}
+            >
+              <SelectTrigger className="h-8 w-28 text-sm">
+                <SelectValue placeholder="Intensity" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="rpe">RPE</SelectItem>
+                <SelectItem value="oneRepMaxPercent">%1RM</SelectItem>
+                <SelectItem value="rir">RIR</SelectItem>
+                <SelectItem value="none">None</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </CardHeader>
@@ -87,21 +143,21 @@ export const ExerciseBuilderCard = ({
       <CardContent className="space-y-4">
         {/* Sets Table Header */}
         {exercise.sets.length > 0 && (
-          <div className="grid grid-cols-12 gap-2 text-xs font-medium text-gray-500 uppercase tracking-wide px-2">
-            <div className="col-span-1">Set</div>
-            <div className="col-span-3 flex items-center gap-1">
+          <div className="grid grid-cols-[40px_1fr_1fr_1fr_60px] gap-2 text-xs font-medium text-gray-500 uppercase tracking-wide px-2">
+            <div>Set</div>
+            <div className="flex items-center gap-1">
               <RotateCcw className="w-3 h-3" />
               Reps
             </div>
-            <div className="col-span-3 flex items-center gap-1">
+            <div className="flex items-center gap-1">
               <Weight className="w-3 h-3" />
-              Weight
+              {intensityLabel[intensitySystem]}
             </div>
-            <div className="col-span-3 flex items-center gap-1">
+            <div className="flex items-center gap-1">
               <Clock className="w-3 h-3" />
-              Rest
+              Rest (s)
             </div>
-            <div className="col-span-2">Actions</div>
+            <div>Actions</div>
           </div>
         )}
 
@@ -134,24 +190,54 @@ export const ExerciseBuilderCard = ({
 
               <div className="col-span-3">
                 <div className="relative">
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.5"
-                    value={set.weight}
-                    onChange={(e) =>
-                      updateSet(
-                        i,
-                        "weight",
-                        Number.parseFloat(e.target.value) || 0
-                      )
-                    }
-                    className="h-8 text-sm text-center pr-8"
-                    placeholder="Weight"
-                  />
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500">
-                    kg
-                  </span>
+                  {intensitySystem === "rpe" && (
+                    <Input
+                      type="number"
+                      min={5}
+                      max={10}
+                      step={0.5}
+                      value={set.rpe}
+                      onChange={(e) =>
+                        updateSet(i, "rpe", parseFloat(e.target.value))
+                      }
+                      placeholder="RPE"
+                      className="h-8 text-sm text-center"
+                    />
+                  )}
+
+                  {intensitySystem === "oneRepMaxPercent" && (
+                    <Input
+                      type="number"
+                      min={50}
+                      max={100}
+                      step={1}
+                      value={set.oneRepMaxPercent}
+                      onChange={(e) =>
+                        updateSet(
+                          i,
+                          "oneRepMaxPercent",
+                          parseInt(e.target.value)
+                        )
+                      }
+                      placeholder="%1RM"
+                      className="h-8 text-sm text-center"
+                    />
+                  )}
+
+                  {intensitySystem === "rir" && (
+                    <Input
+                      type="number"
+                      min={0}
+                      max={5}
+                      step={1}
+                      value={set.rir}
+                      onChange={(e) =>
+                        updateSet(i, "rir", parseInt(e.target.value))
+                      }
+                      placeholder="RIR"
+                      className="h-8 text-sm text-center"
+                    />
+                  )}
                 </div>
               </div>
 
@@ -200,11 +286,11 @@ export const ExerciseBuilderCard = ({
         </div>
 
         {/* Add Set Button */}
-        <div className="pt-2 border-t border-gray-200">
+        <div className="flex flex-1 gap-2 pt-2 border-t border-gray-200">
           <Button
             onClick={addSet}
             variant="outline"
-            className="w-full h-10 border-dashed border-gray-300 text-gray-600 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50 transition-colors"
+            className="flex-1 h-10 border-dashed border-gray-300 text-gray-600 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50 transition-colors"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Set
@@ -214,15 +300,25 @@ export const ExerciseBuilderCard = ({
         {/* Quick Stats */}
         <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-100">
           <div className="flex items-center gap-4">
-            <span>
-              Total Volume:{" "}
-              <span className="font-medium text-gray-700">
-                {exercise.sets
-                  .reduce((sum, set) => sum + set.reps * set.weight, 0)
-                  .toFixed(1)}{" "}
-                kg
-              </span>
-            </span>
+            <ETLDisplay
+              etl={normalizedETL}
+              formula={{
+                reps: exercise.sets.reduce((sum, set) => sum + set.reps, 0),
+                intensity:
+                  exercise.sets.reduce((sum, set) => {
+                    if (intensitySystem === "rpe") return sum + (set.rpe ?? 8);
+                    if (intensitySystem === "rir")
+                      return sum + (10 - (set.rir ?? 2)); // estimate
+                    if (intensitySystem === "oneRepMaxPercent")
+                      return sum + (set.oneRepMaxPercent ?? 75) / 100;
+                    return sum + 0.8;
+                  }, 0) / exercise.sets.length,
+                fatigue: exerciseMeta?.fatigue?.index ?? 1,
+                baseVolume:
+                  exerciseMeta?.volumePerSetEstimate?.hypertrophy ?? 10,
+              }}
+            />
+
             <span>
               Total Reps:{" "}
               <span className="font-medium text-gray-700">

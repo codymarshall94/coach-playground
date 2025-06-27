@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Popover,
@@ -22,9 +21,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import {
+  EQUIPMENT_DISPLAY_MAP,
+  EQUIPMENT_LIST,
+} from "@/constants/equipment-list";
 import { CATEGORY_DISPLAY_MAP } from "@/constants/movement-category";
 import { MUSCLES } from "@/constants/muscles";
+import { groupBy } from "@/utils/groupBy";
 import { Filter } from "lucide-react";
+import { useState } from "react";
 
 const traitTags = ["compound", "unilateral", "ballistic"];
 
@@ -38,8 +44,8 @@ export function FilterPopover({
   toggleTrait,
   skill,
   setSkill,
-  equipment,
-  setEquipment,
+  selectedEquipment,
+  toggleEquipment,
   clearFilters,
   maxFatigue,
   setMaxFatigue,
@@ -59,8 +65,8 @@ export function FilterPopover({
   toggleTrait: (tag: string) => void;
   skill: string;
   setSkill: (val: string) => void;
-  equipment: string;
-  setEquipment: (val: string) => void;
+  selectedEquipment: string[];
+  toggleEquipment: (val: string) => void;
   clearFilters: () => void;
   maxFatigue: number | null;
   setMaxFatigue: (val: number | null) => void;
@@ -71,6 +77,10 @@ export function FilterPopover({
   maxJointStress: number | null;
   setMaxJointStress: (val: number | null) => void;
 }) {
+  const [showAdvancedMuscles, setShowAdvancedMuscles] = useState(false);
+  const muscleGroups = groupBy(MUSCLES, (m) => m.group || "ungrouped");
+  const groupNames = Object.keys(muscleGroups);
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -104,23 +114,70 @@ export function FilterPopover({
           <AccordionItem value="muscles">
             <AccordionTrigger>Muscles</AccordionTrigger>
             <AccordionContent>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {MUSCLES.map((m) => (
-                  <Badge
-                    key={m.id}
-                    variant={
-                      selectedMuscles.includes(m.id) ? "default" : "outline"
-                    }
-                    onClick={() => toggleMuscle(m.id)}
-                    className="cursor-pointer"
+              {!showAdvancedMuscles ? (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {groupNames.map((group) => (
+                    <Badge
+                      key={group}
+                      variant={
+                        muscleGroups[group].every((m) =>
+                          selectedMuscles.includes(m.id)
+                        )
+                          ? "default"
+                          : "outline"
+                      }
+                      onClick={() => toggleMuscle(group)}
+                      className="cursor-pointer capitalize"
+                    >
+                      {group.replace("_", " ")}
+                    </Badge>
+                  ))}
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="text-xs"
+                    onClick={() => setShowAdvancedMuscles(true)}
                   >
-                    {m.displayName}
-                  </Badge>
-                ))}
-              </div>
+                    Advanced ▼
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  {groupNames.map((group) => (
+                    <div key={group} className="mb-2">
+                      <p className="text-xs font-medium text-muted-foreground mb-1 capitalize">
+                        {group.replace("_", " ")}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {muscleGroups[group].map((m) => (
+                          <Badge
+                            key={m.id}
+                            variant={
+                              selectedMuscles.includes(m.id)
+                                ? "default"
+                                : "outline"
+                            }
+                            onClick={() => toggleMuscle(m.id)}
+                            className="cursor-pointer"
+                          >
+                            {m.displayName}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="text-xs mt-2"
+                    onClick={() => setShowAdvancedMuscles(false)}
+                  >
+                    ← Back to Groups
+                  </Button>
+                </>
+              )}
             </AccordionContent>
           </AccordionItem>
-
           <AccordionItem value="traits">
             <AccordionTrigger>Exercise Traits</AccordionTrigger>
             <AccordionContent>
@@ -143,89 +200,60 @@ export function FilterPopover({
 
           <AccordionItem value="limits">
             <AccordionTrigger>Fatigue Limits</AccordionTrigger>
-            <AccordionContent className="space-y-4">
-              <h4 className="text-sm font-medium text-slate-700">
-                Set limits for fatigue metrics
-              </h4>
-              <p className="text-xs text-slate-500">
-                Filter out exercises that exceed your desired threshold for
-                fatigue, joint stress, CNS, or metabolic load. All values are
-                between 0 (low) and 1 (high).
-              </p>
-
-              <div>
-                <Label>Fatigue Index ≤</Label>
-                <Input
-                  type="number"
+            <AccordionContent className="space-y-6">
+              <div className="space-y-1">
+                <Label>Fatigue Index ≤ {maxFatigue ?? 1}</Label>
+                <Slider
                   min={0}
                   max={1}
-                  step={0.01}
-                  value={maxFatigue ?? ""}
-                  onChange={(e) =>
-                    setMaxFatigue(
-                      e.target.value ? parseFloat(e.target.value) : null
-                    )
-                  }
+                  step={0.1}
+                  value={[maxFatigue ?? 1]}
+                  onValueChange={([val]) => setMaxFatigue(val)}
                 />
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground">
                   Overall per-set fatigue. 0 = light, 1 = very taxing.
                 </p>
               </div>
 
-              <div>
-                <Label>CNS Demand ≤</Label>
-                <Input
-                  type="number"
+              <div className="space-y-1">
+                <Label>CNS Demand ≤ {maxCNS ?? 1}</Label>
+                <Slider
                   min={0}
                   max={1}
-                  step={0.01}
-                  value={maxCNS ?? ""}
-                  onChange={(e) =>
-                    setMaxCNS(
-                      e.target.value ? parseFloat(e.target.value) : null
-                    )
-                  }
+                  step={0.1}
+                  value={[maxCNS ?? 1]}
+                  onValueChange={([val]) => setMaxCNS(val)}
                 />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Neurological load. High values (&gt; 0.8) involve explosive or
+                <p className="text-xs text-muted-foreground">
+                  Neurological load. High values (≥ 0.8) involve explosive or
                   heavy lifts.
                 </p>
               </div>
 
-              <div>
-                <Label>Metabolic Demand ≤</Label>
-                <Input
-                  type="number"
+              <div className="space-y-1">
+                <Label>Metabolic Demand ≤ {maxMetabolic ?? 1}</Label>
+                <Slider
                   min={0}
                   max={1}
-                  step={0.01}
-                  value={maxMetabolic ?? ""}
-                  onChange={(e) =>
-                    setMaxMetabolic(
-                      e.target.value ? parseFloat(e.target.value) : null
-                    )
-                  }
+                  step={0.1}
+                  value={[maxMetabolic ?? 1]}
+                  onValueChange={([val]) => setMaxMetabolic(val)}
                 />
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground">
                   "Burn" factor. High values stress endurance and recovery.
                 </p>
               </div>
 
-              <div>
-                <Label>Joint Stress ≤</Label>
-                <Input
-                  type="number"
+              <div className="space-y-1">
+                <Label>Joint Stress ≤ {maxJointStress ?? 1}</Label>
+                <Slider
                   min={0}
                   max={1}
-                  step={0.01}
-                  value={maxJointStress ?? ""}
-                  onChange={(e) =>
-                    setMaxJointStress(
-                      e.target.value ? parseFloat(e.target.value) : null
-                    )
-                  }
+                  step={0.1}
+                  value={[maxJointStress ?? 1]}
+                  onValueChange={([val]) => setMaxJointStress(val)}
                 />
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground">
                   Estimated strain on joints. Keep low (&lt; 0.4) for rehab or
                   accessory work.
                 </p>
@@ -248,15 +276,23 @@ export function FilterPopover({
               </Select>
             </AccordionContent>
           </AccordionItem>
-
           <AccordionItem value="equipment">
             <AccordionTrigger>Equipment</AccordionTrigger>
             <AccordionContent>
-              <Input
-                placeholder="e.g. dumbbell"
-                value={equipment}
-                onChange={(e) => setEquipment(e.target.value)}
-              />
+              <div className="flex flex-wrap gap-2 mt-2">
+                {EQUIPMENT_LIST.map((eq) => (
+                  <Badge
+                    key={eq}
+                    variant={
+                      selectedEquipment.includes(eq) ? "default" : "outline"
+                    }
+                    onClick={() => toggleEquipment(eq)}
+                    className="cursor-pointer capitalize"
+                  >
+                    {EQUIPMENT_DISPLAY_MAP[eq]}
+                  </Badge>
+                ))}
+              </div>
             </AccordionContent>
           </AccordionItem>
         </Accordion>

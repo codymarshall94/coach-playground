@@ -850,49 +850,6 @@ export const EXERCISES: Exercise[] = [
   },
 
   {
-    id: "vertical_jump_test",
-    name: "Vertical Jump Test",
-    aliases: ["countermovement jump", "VJ test"],
-    category: "jump",
-    movementPlane: "sagittal",
-    loadProfile: "vertical",
-    equipment: ["bodyweight"],
-    skillRequirement: "moderate",
-    compound: true,
-    unilateral: false,
-    ballistic: true,
-    romRating: "medium",
-    forceCurve: "ascending",
-    idealRepRange: [1, 3],
-    intensityCeiling: 1.0,
-    fatigue: {
-      index: 0.4,
-      cnsDemand: 0.5,
-      metabolicDemand: 0.3,
-      jointStress: 0.2,
-    },
-    recoveryDays: 1,
-    baseCalorieCost: 7,
-    activationMap: {
-      quadriceps: 0.9,
-      gluteus_maximus: 0.85,
-      gastrocnemius: 0.6,
-    },
-    energySystem: "ATP-CP",
-    volumePerSetEstimate: { strength: 80, hypertrophy: 150 },
-    cues: [
-      "Quick dip with knees soft",
-      "Extend fully with hips forward",
-      "Reach tall with arms overhead",
-    ],
-    variations: ["hands on hips", "with arm swing", "in-place"], // TODO: add variations
-    contraIndications: [],
-    externalLinks: [
-      { label: "How-to Video", url: "https://youtu.be/uFgb0wDAbzY" },
-    ],
-  },
-
-  {
     id: "single_leg_jump_bw",
     name: "Single-Leg Jump",
     aliases: ["unilateral jump", "single leg vertical"],

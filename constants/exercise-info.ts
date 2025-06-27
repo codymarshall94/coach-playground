@@ -1,4 +1,14 @@
 export const FIELD_INFO = {
+  ETL: {
+    label: "Estimated Training Load",
+    description:
+      "An estimate of how demanding an exercise is, factoring in reps, intensity, and movement difficulty. Helps gauge total training stress.",
+  },
+  totalReps: {
+    label: "Total Reps",
+    description:
+      "The total number of reps performed in all sets of an exercise. Helps gauge total volume.",
+  },
   cnsDemand: {
     label: "CNS Demand",
     description:
