@@ -4,13 +4,13 @@ import { CATEGORY_DISPLAY_MAP } from "@/constants/movement-category";
 import { useExerciseFilter } from "@/hooks/useExerciseFilter";
 import type { Exercise } from "@/types/Workout";
 import { Dumbbell } from "lucide-react";
-import { EmptyState } from "./EmptyState";
-import { ExerciseCard } from "./ExerciseCard";
-import { FilterPopover } from "./FilterPopover";
-import { SortPopover } from "./SortPopover";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { ScrollArea } from "./ui/scroll-area";
+import { EmptyState } from "@/components/EmptyState";
+import { ExerciseCard } from "@/features/workout-builder/components/ExerciseCard";
+import { FilterPopover } from "@/features/workout-builder/components/FilterPopover";
+import { SortPopover } from "@/features/workout-builder/components/SortPopover";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
@@ -18,7 +18,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "./ui/sheet";
+} from "@/components/ui/sheet";
 
 export const ExerciseLibrary = ({
   addExercise,

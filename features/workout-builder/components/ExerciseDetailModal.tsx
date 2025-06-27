@@ -1,7 +1,6 @@
 "use client";
 
 import { InfoIcon } from "@/components/InfoIcon";
-import { MuscleActivationChart } from "@/components/MuscleActivationChart";
 import { ProgressIndicator } from "@/components/ProgressIndicator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,6 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MUSCLE_DISPLAY_MAP } from "@/constants/muscles";
 import type { EXERCISES } from "@/data/exercises";
 import { getPrimaryAndSecondaryMuscles } from "@/utils/getPrimaryAndSecondaryMuscles";
+import { MuscleActivationChart } from "./MuscleActivationChart";
 import {
   Activity,
   AlertTriangle,

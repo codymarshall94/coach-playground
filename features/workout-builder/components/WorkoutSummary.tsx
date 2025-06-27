@@ -1,8 +1,8 @@
 "use client";
 
-import { EnergySystemChart } from "@/components/EnergySystemChart";
-import { FatigueBreakdown } from "@/components/FatigueBreakdown";
-import { MuscleBreakdownChart } from "@/components/MuscleBreakdownChart";
+import { EnergySystemChart } from "@/features/workout-builder/components/EnergySystemChart";
+import { FatigueBreakdown } from "@/features/workout-builder/components/FatigueBreakdown";
+import { MuscleBreakdownChart } from "@/features/workout-builder/components/MuscleBreakdownChart";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {

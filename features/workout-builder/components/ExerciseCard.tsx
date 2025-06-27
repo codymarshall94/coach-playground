@@ -1,8 +1,8 @@
-import { ExerciseDetailModal } from "@/components/ExerciseDetailModal";
+import { ExerciseDetailModal } from "@/features/workout-builder/components/ExerciseDetailModal";
 import { Button } from "@/components/ui/button";
 import { EXERCISES } from "@/data/exercises";
 import { Activity, AlertTriangle, Brain, Clock, Plus, Zap } from "lucide-react";
-import { TermTooltip } from "./TermTooltip";
+import { TermTooltip } from "../../../components/TermTooltip";
 
 interface ExerciseCardProps {
   exercise: (typeof EXERCISES)[number];

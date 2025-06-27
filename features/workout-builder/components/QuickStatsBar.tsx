@@ -51,11 +51,17 @@ export const QuickStatsBar = ({
   };
 
   if (summary.topMuscles.length === 0) {
-    return null;
+    return (
+      <div className="w-full max-h-16 h-full border-b border-gray-200 bg-white px-6 py-2 flex items-center justify-between text-sm text-gray-700">
+        <h2 className="text-lg font-medium">
+          Select a workout with exercises to view the quick stats
+        </h2>
+      </div>
+    );
   }
 
   return (
-    <div className="w-full border-b border-gray-200 bg-white px-6 py-2 flex items-center justify-between text-sm text-gray-700">
+    <div className="w-full max-h-16 h-full border-b border-gray-200 bg-white px-6 py-2 flex items-center justify-between text-sm text-gray-700">
       <div className="flex gap-6 flex-wrap">
         {activeStats.includes("fatigue") && (
           <div className="flex items-center gap-1">

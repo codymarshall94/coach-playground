@@ -10,12 +10,33 @@ export type WorkoutExercise = {
   id: string; // lookup back to full exercise data
   name: string;
   sets: SetInfo[]; // reps, rpe, rest, etc.
+  intensity: IntensitySystem;
 };
 
 export type Workout = {
   exercises: WorkoutExercise[];
   name: string;
   description: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type DayType = "workout" | "rest" | "active_rest" | "other";
+
+export type ProgramDay = {
+  id: string;
+  name: string;
+  description: string;
+  workout: Workout[];
+  order: number;
+  type: DayType;
+};
+
+export type Program = {
+  id: string;
+  name: string;
+  description: string;
+  days: ProgramDay[];
   createdAt: Date;
   updatedAt: Date;
 };

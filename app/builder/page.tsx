@@ -1,4 +1,4 @@
-import { WorkoutBuilder } from "@/components/WorkoutBuilder";
+import { WorkoutBuilder } from "@/features/workout-builder/WorkoutBuilder";
 
 export default function BuilderPage() {
   return <WorkoutBuilder />;

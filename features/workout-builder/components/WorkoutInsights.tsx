@@ -9,7 +9,7 @@ import { WorkoutExercise } from "@/types/Workout";
 import { getWorkoutInsights } from "@/utils/getWorkoutInsights";
 import { getWorkoutTypeFromCategories } from "@/utils/getWorkoutTypeFromCategories";
 import { Dumbbell, Info } from "lucide-react";
-import { EmptyState } from "./EmptyState";
+import { EmptyState } from "../../../components/EmptyState";
 import { MuscleVolumeRow } from "./MuscleVolumeRow";
 import { RatioIndicator } from "./RatioIndicator";
 import { TopMusclesList } from "./TopMusclesList";

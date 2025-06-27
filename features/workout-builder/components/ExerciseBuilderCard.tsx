@@ -3,10 +3,21 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { EXERCISES } from "@/data/exercises";
-import type { IntensitySystem, WorkoutExercise } from "@/types/Workout";
+import type {
+  IntensitySystem,
+  SetInfo,
+  WorkoutExercise,
+} from "@/types/Workout";
 import { estimateExerciseDuration } from "@/utils/estimateExerciseDuration";
-import { getExerciseETL } from "@/utils/getExerciseEtl";
+import { getExerciseETL } from "@/utils/etl";
 import {
   Clock,
   GripVertical,
@@ -16,15 +27,7 @@ import {
   Weight,
   X,
 } from "lucide-react";
-import { useState } from "react";
 import { ETLDisplay } from "./EtlDisplay";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select";
 
 const intensityLabel: Record<IntensitySystem, string> = {
   rpe: "RPE",
@@ -33,25 +36,44 @@ const intensityLabel: Record<IntensitySystem, string> = {
   none: "Effort",
 };
 
+const getIntensityValue = (
+  intensity: IntensitySystem,
+  set: SetInfo
+): Partial<SetInfo> => {
+  switch (intensity) {
+    case "rpe":
+      return { rpe: 8 };
+    case "oneRepMaxPercent":
+      return { oneRepMaxPercent: 75 };
+    case "rir":
+      return { rir: 2 };
+    default:
+      return {};
+  }
+};
+
 export const ExerciseBuilderCard = ({
   order,
   exercise,
   onRemove,
   onUpdateSets,
+  onUpdateIntensity,
 }: {
   order: number;
   exercise: WorkoutExercise;
   onRemove: () => void;
   onUpdateSets: (sets: WorkoutExercise["sets"]) => void;
+  onUpdateIntensity: (intensity: IntensitySystem) => void;
 }) => {
-  const [intensitySystem, setIntensitySystem] =
-    useState<IntensitySystem>("rpe");
-
   const exerciseMeta = EXERCISES.find((ex) => ex.id === exercise.id);
-  const { totalETL, normalizedETL } = getExerciseETL(exercise, exerciseMeta!);
+  const { totalETL } = getExerciseETL(exercise, exerciseMeta!);
 
   const addSet = () => {
-    const newSet = { reps: 8, weight: 0, rest: 90 };
+    const newSet = {
+      reps: 8,
+      rest: 90,
+      ...getIntensityValue(exercise.intensity, { reps: 8, rest: 90 }),
+    };
     onUpdateSets([...exercise.sets, newSet]);
   };
 
@@ -105,25 +127,9 @@ export const ExerciseBuilderCard = ({
               <Trash2 className="w-4 h-4" />
             </Button>
             <Select
-              value={intensitySystem}
+              value={exercise.intensity}
               onValueChange={(v) => {
-                const newSystem = v as IntensitySystem;
-                setIntensitySystem(newSystem);
-
-                const updated = exercise.sets.map((set) => {
-                  return {
-                    reps: set.reps,
-                    rest: set.rest,
-                    rpe: newSystem === "rpe" ? set.rpe ?? 8 : undefined,
-                    oneRepMaxPercent:
-                      newSystem === "oneRepMaxPercent"
-                        ? set.oneRepMaxPercent ?? 75
-                        : undefined,
-                    rir: newSystem === "rir" ? set.rir ?? 2 : undefined,
-                  };
-                });
-
-                onUpdateSets(updated);
+                onUpdateIntensity(v as IntensitySystem);
               }}
             >
               <SelectTrigger className="h-8 w-28 text-sm">
@@ -151,7 +157,7 @@ export const ExerciseBuilderCard = ({
             </div>
             <div className="flex items-center gap-1">
               <Weight className="w-3 h-3" />
-              {intensityLabel[intensitySystem]}
+              {intensityLabel[exercise.intensity]}
             </div>
             <div className="flex items-center gap-1">
               <Clock className="w-3 h-3" />
@@ -190,7 +196,7 @@ export const ExerciseBuilderCard = ({
 
               <div className="col-span-3">
                 <div className="relative">
-                  {intensitySystem === "rpe" && (
+                  {exercise.intensity === "rpe" && (
                     <Input
                       type="number"
                       min={5}
@@ -205,7 +211,7 @@ export const ExerciseBuilderCard = ({
                     />
                   )}
 
-                  {intensitySystem === "oneRepMaxPercent" && (
+                  {exercise.intensity === "oneRepMaxPercent" && (
                     <Input
                       type="number"
                       min={50}
@@ -224,7 +230,7 @@ export const ExerciseBuilderCard = ({
                     />
                   )}
 
-                  {intensitySystem === "rir" && (
+                  {exercise.intensity === "rir" && (
                     <Input
                       type="number"
                       min={0}
@@ -301,15 +307,16 @@ export const ExerciseBuilderCard = ({
         <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-100">
           <div className="flex items-center gap-4">
             <ETLDisplay
-              etl={normalizedETL}
+              etl={totalETL}
               formula={{
                 reps: exercise.sets.reduce((sum, set) => sum + set.reps, 0),
                 intensity:
                   exercise.sets.reduce((sum, set) => {
-                    if (intensitySystem === "rpe") return sum + (set.rpe ?? 8);
-                    if (intensitySystem === "rir")
+                    if (exercise.intensity === "rpe")
+                      return sum + (set.rpe ?? 8);
+                    if (exercise.intensity === "rir")
                       return sum + (10 - (set.rir ?? 2)); // estimate
-                    if (intensitySystem === "oneRepMaxPercent")
+                    if (exercise.intensity === "oneRepMaxPercent")
                       return sum + (set.oneRepMaxPercent ?? 75) / 100;
                     return sum + 0.8;
                   }, 0) / exercise.sets.length,
