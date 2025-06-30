@@ -18,7 +18,7 @@ export const VolumeUnitTooltip = () => (
         <br />
         <br />
         They help compare how much effort each exercise or workout demands, even
-        if weights aren't tracked directly.
+        if weights aren&apos;t tracked directly.
       </p>
     </TooltipContent>
   </Tooltip>

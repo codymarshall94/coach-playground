@@ -1,6 +1,6 @@
-import { Program } from "@/types/Workout";
+import { ProgramDay } from "@/types/Workout";
 
-export const createWorkoutDay = (index: number): Program["days"][number] => ({
+export const createWorkoutDay = (index: number): ProgramDay => ({
   id: crypto.randomUUID(),
   name: `Day ${index + 1}`,
   type: "workout",
@@ -8,8 +8,6 @@ export const createWorkoutDay = (index: number): Program["days"][number] => ({
   description: "",
   workout: [
     {
-      name: "Main Workout",
-      description: "",
       createdAt: new Date(),
       updatedAt: new Date(),
       exercises: [],
@@ -17,7 +15,7 @@ export const createWorkoutDay = (index: number): Program["days"][number] => ({
   ],
 });
 
-export const createRestDay = (index: number): Program["days"][number] => ({
+export const createRestDay = (index: number): ProgramDay => ({
   id: crypto.randomUUID(),
   name: `Day ${index + 1}`,
   type: "rest",
