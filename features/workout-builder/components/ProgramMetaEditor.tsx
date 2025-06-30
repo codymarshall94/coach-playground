@@ -19,7 +19,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import type { ProgramGoal } from "@/types/Workout";
 import { useState } from "react";
-import { Edit3, Target } from "lucide-react";
+import { Edit3, FileText, Target } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ProgramMetaEditorProps {
   name: string;
@@ -133,7 +134,9 @@ export const ProgramMetaEditor: React.FC<ProgramMetaEditorProps> = ({
             size="sm"
             className="text-xs text-muted-foreground hover:text-foreground"
           >
-            {description ? "Edit Description" : "Add Description"}
+            <FileText
+              className={cn("h-3 w-3 mr-1", description && "text-blue-500")}
+            />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-80" align="start">

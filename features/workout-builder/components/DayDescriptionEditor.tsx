@@ -1,7 +1,7 @@
 "use client";
 
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 
 interface DayDescriptionEditorProps {
@@ -9,10 +9,10 @@ interface DayDescriptionEditorProps {
   onSave: (val: string) => void;
 }
 
-export const DayDescriptionEditor: React.FC<DayDescriptionEditorProps> = ({
+export const DayDescriptionEditor = ({
   value,
   onSave,
-}) => {
+}: DayDescriptionEditorProps) => {
   const [temp, setTemp] = useState(value);
 
   return (

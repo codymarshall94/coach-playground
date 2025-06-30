@@ -7,45 +7,50 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import type { Program } from "@/types/Workout";
+import { Textarea } from "@/components/ui/textarea";
+import type { Program, ProgramDay } from "@/types/Workout";
 import { FileText } from "lucide-react";
-import { DayDescriptionEditor } from "./DayDescriptionEditor";
 import { DayNameEditor } from "./DayNameEditor";
+import { cn } from "@/lib/utils";
 
 interface DayHeaderProps {
   program: Program;
+  activeBlockIndex: number;
   activeDayIndex: number;
   editedName: string;
   setEditedName: (name: string) => void;
   isEditingName: boolean;
   setIsEditingName: (value: boolean) => void;
-  updateDayName: (name: string) => void;
-  updateDayDescription: (desc: string) => void;
+  updateDayDetails: (updates: Partial<ProgramDay>) => void;
   exerciseCount: number;
 }
 
-export const DayHeader: React.FC<DayHeaderProps> = ({
+export const DayHeader = ({
   program,
+  activeBlockIndex,
   activeDayIndex,
   editedName,
   setEditedName,
   isEditingName,
   setIsEditingName,
-  updateDayName,
-  updateDayDescription,
+  updateDayDetails,
   exerciseCount,
-}) => {
-  const day = program.days[activeDayIndex];
+}: DayHeaderProps) => {
+  const day =
+    program.mode === "blocks"
+      ? program.blocks![activeBlockIndex].days[activeDayIndex] ?? null
+      : program.days![activeDayIndex];
 
   return (
     <div className="flex items-center justify-between gap-4 pb-3 mb-4 border-b w-full">
       {/* Left side: Name and Exercise count */}
       <DayNameEditor
         program={program}
+        activeBlockIndex={activeBlockIndex}
         activeDayIndex={activeDayIndex}
         editedName={editedName}
         setEditedName={setEditedName}
-        updateDayName={updateDayName}
+        updateDayDetails={updateDayDetails}
         isEditingName={isEditingName}
         setIsEditingName={setIsEditingName}
       />
@@ -69,17 +74,28 @@ export const DayHeader: React.FC<DayHeaderProps> = ({
                   : "text-muted-foreground/50 hover:text-muted-foreground"
               }`}
             >
-              <FileText className="h-3 w-3 mr-1" />
-              {day.description ? "Edit Note" : "Add Note "}
+              <FileText
+                className={cn(
+                  "h-3 w-3 mr-1",
+                  day.description && "text-blue-500"
+                )}
+              />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80" align="start">
             <div className="space-y-2">
               <h4 className="font-medium text-sm">Day Description</h4>
-              <DayDescriptionEditor
-                value={day.description || ""}
-                onSave={updateDayDescription}
-              />
+              <div className="space-y-2">
+                <Textarea
+                  rows={3}
+                  value={day.description || ""}
+                  onChange={(e) =>
+                    updateDayDetails({ description: e.target.value })
+                  }
+                  placeholder="E.g. Focus on glutes, light accessories..."
+                  className="resize-none"
+                />
+              </div>
             </div>
           </PopoverContent>
         </Popover>

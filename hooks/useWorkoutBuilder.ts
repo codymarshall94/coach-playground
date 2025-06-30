@@ -1,30 +1,31 @@
-import { useState } from "react";
 import {
   Exercise,
   IntensitySystem,
   Program,
+  ProgramBlock,
   ProgramDay,
   WorkoutExercise,
 } from "@/types/Workout";
 import { createEmptyProgram } from "@/utils/createEmptyProgram";
 import { createWorkoutExercise } from "@/utils/workout";
 import { createRestDay, createWorkoutDay } from "@/utils/workoutDays";
+import { useState } from "react";
 
 export function useWorkoutBuilder(initialProgram?: Program) {
   const [program, setProgram] = useState<Program>(
     initialProgram ?? createEmptyProgram()
   );
 
-  const usingBlocks = !!program.blocks?.length;
-  const [activeBlockIndex, setActiveBlockIndex] = useState<number>(
-    usingBlocks ? 0 : 0
-  );
+  const usingBlocks = program.mode === "blocks";
+  const [activeBlockIndex, setActiveBlockIndex] = useState(0);
   const [activeDayIndex, setActiveDayIndex] = useState<number>(0);
 
   // === Safe Getters ===
   const getDayRef = (p: Program = program): ProgramDay | null => {
     if (usingBlocks) {
-      return p.blocks?.[activeBlockIndex]?.days?.[activeDayIndex] ?? null;
+      const block = p.blocks?.[activeBlockIndex];
+      if (!block || activeDayIndex >= block.days.length) return null;
+      return block.days[activeDayIndex] ?? null;
     }
     return p.days?.[activeDayIndex] ?? null;
   };
@@ -44,10 +45,20 @@ export function useWorkoutBuilder(initialProgram?: Program) {
     }
   };
 
+  const getCurrentDays = (): ProgramDay[] => {
+    return usingBlocks
+      ? program.blocks?.[activeBlockIndex]?.days ?? []
+      : program.days ?? [];
+  };
+
+  const getActiveDaySafe = (): ProgramDay | null => {
+    const days = getCurrentDays();
+    return days?.[activeDayIndex] ?? null;
+  };
+
   const activeDay = getDayRef();
   const isWorkoutDay =
-    activeDay?.type === "workout" &&
-    activeDay.workout?.[0]?.exercises?.length >= 0;
+    activeDay?.type === "workout" && !!activeDay?.workout?.[0];
 
   const workout: WorkoutExercise[] = isWorkoutDay
     ? activeDay!.workout[0].exercises
@@ -119,44 +130,56 @@ export function useWorkoutBuilder(initialProgram?: Program) {
   };
 
   // === Day Control ===
-  const updateDayName = (name: string) => {
+
+  const updateDayDetails = (updates: Partial<ProgramDay>) => {
     updateProgram((prev) => {
-      const day = { ...getDayRef(prev), name } as ProgramDay;
+      const day = { ...getDayRef(prev), ...updates } as ProgramDay;
       return setDayRef(prev, day);
     });
   };
 
   const handleAddDay = (type: "workout" | "rest") => {
-    const newDay = type === "workout" ? createWorkoutDay(0) : createRestDay(0);
+    const nextOrder = usingBlocks
+      ? program.blocks?.[activeBlockIndex]?.days.length ?? 0
+      : program.days?.length ?? 0;
+
+    const newDay =
+      type === "workout"
+        ? createWorkoutDay(nextOrder)
+        : createRestDay(nextOrder);
 
     updateProgram((prev) => {
       if (usingBlocks) {
         const blocks = [...(prev.blocks ?? [])];
-        blocks[activeBlockIndex].days.push(newDay);
+        const targetBlock = blocks[activeBlockIndex];
+        if (!targetBlock) return prev;
+
+        const updatedDays = [...targetBlock.days, newDay];
+        blocks[activeBlockIndex] = { ...targetBlock, days: updatedDays };
+
+        setActiveDayIndex(updatedDays.length - 1);
+
         return { ...prev, blocks };
       } else {
-        const days = [...(prev.days ?? []), newDay];
-        return { ...prev, days };
+        const updatedDays = [...(prev.days ?? []), newDay];
+
+        setActiveDayIndex(updatedDays.length - 1);
+
+        return { ...prev, days: updatedDays };
       }
     });
-
-    setActiveDayIndex(() =>
-      usingBlocks
-        ? program.blocks![activeBlockIndex].days.length
-        : program.days!.length
-    );
   };
 
   const handleRemoveWorkoutDay = (index: number) => {
+    if (!program.blocks?.[activeBlockIndex]) return;
+
     updateProgram((prev) => {
       if (usingBlocks) {
         const blocks = [...(prev.blocks ?? [])];
         const days = [...blocks[activeBlockIndex].days];
         days.splice(index, 1);
         blocks[activeBlockIndex].days = days;
-        setActiveDayIndex(
-          Math.max(0, Math.min(activeDayIndex, days.length - 1))
-        );
+        setActiveDayIndex(Math.max(0, days.length - 1));
         return { ...prev, blocks };
       } else {
         const days = [...(prev.days ?? [])].filter((_, i) => i !== index);
@@ -202,18 +225,98 @@ export function useWorkoutBuilder(initialProgram?: Program) {
   };
 
   const addTrainingBlock = () => {
+    console.log(`current blocks: ${program.blocks?.length}`);
     updateProgram((prev) => {
+      const newDay = createWorkoutDay(0);
+
       const newBlock = {
         id: crypto.randomUUID(),
-        name: `Block ${prev.blocks?.length + 1 || 1}`,
-        order: prev.blocks?.length + 1 || 1,
-        weeks: 3,
-        days: [],
+        name: `Block ${prev.blocks?.length ? prev.blocks.length + 1 : 1}`,
+        order: prev.blocks?.length ? prev.blocks.length : 0,
+        weeks: 4,
+        days: [newDay],
       };
+
       const newBlocks = [...(prev.blocks ?? []), newBlock];
-      setActiveBlockIndex(newBlocks.length - 1); // ✅ updated index
+
+      setActiveBlockIndex(newBlocks.length - 1);
       setActiveDayIndex(0);
+
       return { ...prev, blocks: newBlocks };
+    });
+  };
+
+  const removeTrainingBlock = (index: number) => {
+    updateProgram((prev) => {
+      const blocks = [...(prev.blocks ?? [])];
+      if (index < 0 || index >= blocks.length) return prev;
+
+      blocks.splice(index, 1);
+      setActiveBlockIndex(Math.max(0, blocks.length - 1));
+      setActiveDayIndex(0); // optionally reset to 0
+
+      return { ...prev, blocks };
+    });
+  };
+
+  const updateBlockDetails = (
+    index: number,
+    updates: Partial<ProgramBlock>
+  ) => {
+    updateProgram((prev) => {
+      const blocks = [...(prev.blocks ?? [])];
+      if (!blocks[index]) return prev;
+
+      blocks[index] = { ...blocks[index], ...updates };
+      return { ...prev, blocks };
+    });
+  };
+
+  const reorderBlocks = (reordered: ProgramBlock[]) => {
+    updateProgram((prev) => ({ ...prev, blocks: reordered }));
+  };
+
+  const confirmModeSwitch = (newMode: "blocks" | "days") => {
+    const safeToSwitch =
+      program.mode === newMode ||
+      window.confirm(
+        `Switching to "${newMode}" mode may discard existing structure.\n\nDo you want to proceed?`
+      );
+
+    if (!safeToSwitch) return;
+
+    updateProgram((prev) => {
+      if (newMode === "days" && prev.blocks) {
+        const mergedDays: ProgramDay[] = prev.blocks
+          .flatMap((block) => block.days)
+          .map((day, i) => ({ ...day, order: i }));
+
+        return {
+          ...prev,
+          mode: "days",
+          blocks: undefined,
+          days: mergedDays,
+        };
+      }
+
+      if (newMode === "blocks" && prev.days) {
+        const defaultBlock: ProgramBlock = {
+          id: crypto.randomUUID(),
+          name: `Block ${prev.blocks?.length ?? 0 + 1}`,
+          order: 0,
+          days: prev.days.map((day, i) => ({ ...day, order: i })),
+          weeks: 4,
+        };
+
+        return {
+          ...prev,
+          mode: "blocks",
+          days: undefined,
+          blocks: [defaultBlock],
+        };
+      }
+
+      return { ...prev, mode: newMode };
     });
   };
 
@@ -233,11 +336,17 @@ export function useWorkoutBuilder(initialProgram?: Program) {
     addExercise,
     removeExercise,
     clearWorkout,
-    updateDayName,
+    updateDayDetails,
     handleAddDay,
     handleRemoveWorkoutDay,
     handleDuplicateWorkoutDay,
     addTrainingBlock,
+    removeTrainingBlock,
+    updateBlockDetails,
+    reorderBlocks,
     usingBlocks,
+    getCurrentDays,
+    getActiveDaySafe,
+    confirmModeSwitch,
   };
 }

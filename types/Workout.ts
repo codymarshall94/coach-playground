@@ -47,8 +47,9 @@ export type Program = {
   name: string;
   description: string;
   goal: ProgramGoal;
-  blocks?: ProgramBlock[]; // ✅ Optional if user prefers only days
-  days?: ProgramDay[]; // ✅ Optional if using block structure
+  mode: "days" | "blocks";
+  blocks?: ProgramBlock[];
+  days?: ProgramDay[];
   createdAt: Date;
   updatedAt: Date;
 };

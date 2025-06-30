@@ -1,36 +1,35 @@
 "use client";
 
-import { useState, useMemo } from "react";
 import {
-  DndContext,
-  DragOverlay,
   DragStartEvent,
   PointerSensor,
   useSensor,
   useSensors,
-  closestCenter,
 } from "@dnd-kit/core";
+import { useMemo, useState } from "react";
 
-import { Bed, Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 
-import { Droppable } from "@/components/Droppable";
-import { EmptyState } from "@/components/EmptyState";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 
+import { Droppable } from "@/components/Droppable";
+import { EmptyState } from "@/components/EmptyState";
 import { EXERCISES } from "@/data/exercises";
-import { ExerciseBuilderCard } from "@/features/workout-builder/components/ExerciseBuilderCard";
-import { ExerciseCard } from "@/features/workout-builder/components/ExerciseCard";
 import { ExerciseLibrary } from "@/features/workout-builder/components/ExerciseLibrary";
 import { ProgramDaySelector } from "@/features/workout-builder/components/ProgramDaySelector";
-import { WorkoutFooter } from "@/features/workout-builder/components/WorkoutFooter";
 import { useWorkoutBuilder } from "@/hooks/useWorkoutBuilder";
 import { analyzeWorkoutDay } from "@/utils/analyzeWorkoutDay";
-import { DayHeader } from "./components/DayHeader";
-import { ProgramMetaEditor } from "./components/ProgramMetaEditor";
-import { ProgramPreview } from "./components/ProgramPreview";
-import { WorkoutAnalyticsPanel } from "./components/WorkoutAnalyticsPanel";
+import { closestCenter, DndContext, DragOverlay } from "@dnd-kit/core";
+import { Bed, Trash2 } from "lucide-react";
 import { BlockSelector } from "./components/BlockSelector";
+import { DayHeader } from "./components/DayHeader";
+import { ExerciseBuilderCard } from "./components/ExerciseBuilderCard";
+import { ExerciseCard } from "./components/ExerciseCard";
+import { ModeSwitchDialog } from "./components/ModeSwitchDialog";
+import { ProgramMetaEditor } from "./components/ProgramMetaEditor";
+import { WorkoutAnalyticsPanel } from "./components/WorkoutAnalyticsPanel";
+import ProgramPreview from "./components/ProgramPreview";
 
 export const WorkoutBuilder = () => {
   const {
@@ -42,7 +41,7 @@ export const WorkoutBuilder = () => {
     setActiveBlockIndex,
     workout,
     isWorkoutDay,
-    updateDayName,
+    updateDayDetails,
     handleAddDay,
     handleRemoveWorkoutDay,
     handleDuplicateWorkoutDay,
@@ -53,7 +52,10 @@ export const WorkoutBuilder = () => {
     clearWorkout,
     updateExerciseNotes,
     addTrainingBlock,
+    removeTrainingBlock,
+    reorderBlocks,
     usingBlocks,
+    updateBlockDetails,
   } = useWorkoutBuilder();
 
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -86,6 +88,7 @@ export const WorkoutBuilder = () => {
       <header className="sticky top-0 z-30 bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center shadow-sm">
         <Logo size="xs" lineBreak={false} />
         <div className="flex gap-2">
+          <ProgramPreview program={program} />
           {isWorkoutDay && (
             <ExerciseLibrary
               addExercise={addExercise}
@@ -93,7 +96,6 @@ export const WorkoutBuilder = () => {
               setOpen={setExerciseLibraryOpen}
             />
           )}
-          <ProgramPreview program={program} />
         </div>
       </header>
 
@@ -105,11 +107,10 @@ export const WorkoutBuilder = () => {
           goal={program.goal}
           onChange={(fields) => setProgram((prev) => ({ ...prev, ...fields }))}
         />
-
-        <Button onClick={addTrainingBlock}>
-          <Plus className="w-4 h-4" />
-          Add Block
-        </Button>
+        <ModeSwitchDialog
+          currentProgram={program}
+          onSwitchMode={(updated) => setProgram(updated)}
+        />
 
         {/* BLOCK + DAY SELECTORS */}
         <div className="flex gap-6 mb-4">
@@ -117,47 +118,52 @@ export const WorkoutBuilder = () => {
             <BlockSelector
               blocks={program.blocks ?? []}
               activeIndex={activeBlockIndex}
+              activeDayIndex={activeDayIndex}
               onSelect={(i) => setActiveBlockIndex(i)}
               onAddBlock={addTrainingBlock}
-              onRemoveBlock={(index) =>
-                setProgram((prev) => ({
-                  ...prev,
-                  blocks: prev.blocks!.filter((_, i) => i !== index),
-                }))
-              }
-              onRenameBlock={(index, name) =>
+              onRemoveBlock={(index) => removeTrainingBlock(index)}
+              onReorder={(reordered) => reorderBlocks(reordered)}
+              onSelectDay={setActiveDayIndex}
+              onAddWorkoutDay={() => handleAddDay("workout")}
+              onAddRestDay={() => handleAddDay("rest")}
+              onRemoveWorkoutDay={handleRemoveWorkoutDay}
+              onDuplicateWorkoutDay={handleDuplicateWorkoutDay}
+              onReorderDays={(reordered) =>
                 setProgram((prev) => {
-                  const updated = [...(prev.blocks ?? [])];
-                  updated[index].name = name;
-                  return { ...prev, blocks: updated };
+                  if (usingBlocks && typeof activeBlockIndex === "number") {
+                    const blocks = [...(prev.blocks ?? [])];
+                    blocks[activeBlockIndex].days = reordered;
+                    return { ...prev, blocks };
+                  } else {
+                    return { ...prev, days: reordered };
+                  }
                 })
               }
+              onUpdateBlockDetails={updateBlockDetails}
+            />
+          )}
+          {program.mode === "days" && (
+            <ProgramDaySelector
+              days={currentDays}
+              activeIndex={activeDayIndex}
+              onSelect={setActiveDayIndex}
+              onAddWorkoutDay={() => handleAddDay("workout")}
+              onAddRestDay={() => handleAddDay("rest")}
+              onRemoveWorkoutDay={handleRemoveWorkoutDay}
+              onDuplicateWorkoutDay={handleDuplicateWorkoutDay}
               onReorder={(reordered) =>
-                setProgram((prev) => ({ ...prev, blocks: reordered }))
+                setProgram((prev) => {
+                  if (usingBlocks && typeof activeBlockIndex === "number") {
+                    const blocks = [...(prev.blocks ?? [])];
+                    blocks[activeBlockIndex].days = reordered;
+                    return { ...prev, blocks };
+                  } else {
+                    return { ...prev, days: reordered };
+                  }
+                })
               }
             />
           )}
-
-          <ProgramDaySelector
-            days={currentDays}
-            activeIndex={activeDayIndex}
-            onSelect={setActiveDayIndex}
-            onAddWorkoutDay={() => handleAddDay("workout")}
-            onAddRestDay={() => handleAddDay("rest")}
-            onRemoveWorkoutDay={handleRemoveWorkoutDay}
-            onDuplicateWorkoutDay={handleDuplicateWorkoutDay}
-            onReorder={(reordered) =>
-              setProgram((prev) => {
-                if (usingBlocks && typeof activeBlockIndex === "number") {
-                  const blocks = [...(prev.blocks ?? [])];
-                  blocks[activeBlockIndex].days = reordered;
-                  return { ...prev, blocks };
-                } else {
-                  return { ...prev, days: reordered };
-                }
-              })
-            }
-          />
 
           {/* WORKOUT CONTENT */}
           <DndContext
@@ -165,36 +171,18 @@ export const WorkoutBuilder = () => {
             collisionDetection={closestCenter}
             onDragStart={handleDragStart}
           >
-            <div className="grid w-full">
+            <div className="grid w-full max-w-4xl">
               <div className="flex items-center justify-between mb-6 w-full">
                 <div className="w-full">
                   <DayHeader
                     program={program}
+                    activeBlockIndex={activeBlockIndex}
                     activeDayIndex={activeDayIndex}
                     editedName={editedName}
                     setEditedName={setEditedName}
                     isEditingName={isEditingName}
                     setIsEditingName={setIsEditingName}
-                    updateDayName={updateDayName}
-                    updateDayDescription={(desc) =>
-                      setProgram((prev) => {
-                        if (usingBlocks) {
-                          const blocks = [...(prev.blocks ?? [])];
-                          const days = blocks[activeBlockIndex].days.map(
-                            (d, i) =>
-                              i === activeDayIndex
-                                ? { ...d, description: desc }
-                                : d
-                          );
-                          blocks[activeBlockIndex].days = days;
-                          return { ...prev, blocks };
-                        }
-                        const days = prev.days!.map((d, i) =>
-                          i === activeDayIndex ? { ...d, description: desc } : d
-                        );
-                        return { ...prev, days };
-                      })
-                    }
+                    updateDayDetails={updateDayDetails}
                     exerciseCount={workout.length}
                   />
 
@@ -292,7 +280,7 @@ export const WorkoutBuilder = () => {
         </div>
       </div>
 
-      <WorkoutFooter workout={workout} />
+      {/* <WorkoutFooter workout={workout} /> */}
     </div>
   );
 };

@@ -1,14 +1,17 @@
 "use client";
 
 import { SortableItem } from "@/components/SortableItem";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import type { ProgramBlock } from "@/types/Workout";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Textarea } from "@/components/ui/textarea";
+import type { ProgramBlock, ProgramDay } from "@/types/Workout";
 import {
   DndContext,
   DragEndEvent,
@@ -24,27 +27,42 @@ import {
   arrayMove,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { GripVertical, MoreVertical, Plus, Trash } from "lucide-react";
+import { Edit, GripVertical, Plus, Trash } from "lucide-react";
 import { useState } from "react";
+import { ProgramDaySelector } from "./ProgramDaySelector";
 
 type Props = {
   blocks: ProgramBlock[];
   activeIndex: number;
+  activeDayIndex: number;
   onSelect: (index: number) => void;
   onAddBlock: () => void;
   onRemoveBlock: (index: number) => void;
   onReorder: (reordered: ProgramBlock[]) => void;
-  onRenameBlock: (index: number, newName: string) => void;
+  onSelectDay: (index: number) => void;
+  onAddWorkoutDay: () => void;
+  onAddRestDay: () => void;
+  onRemoveWorkoutDay: (index: number) => void;
+  onDuplicateWorkoutDay: (index: number) => void;
+  onReorderDays: (reordered: ProgramDay[]) => void;
+  onUpdateBlockDetails: (index: number, updates: Partial<ProgramBlock>) => void;
 };
 
 export function BlockSelector({
   blocks,
   activeIndex,
+  activeDayIndex,
   onSelect,
   onAddBlock,
   onRemoveBlock,
   onReorder,
-  onRenameBlock,
+  onSelectDay,
+  onAddWorkoutDay,
+  onAddRestDay,
+  onRemoveWorkoutDay,
+  onDuplicateWorkoutDay,
+  onReorderDays,
+  onUpdateBlockDetails,
 }: Props) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const sensors = useSensors(
@@ -88,41 +106,117 @@ export function BlockSelector({
         <div className="flex flex-col gap-3">
           {blocks.map((block, i) => (
             <SortableItem key={block.id} id={block.id}>
-              <div className="flex items-center gap-3 w-full">
-                <Button
-                  onClick={() => onSelect(i)}
-                  variant={i === activeIndex ? "default" : "outline"}
-                  className="flex-1 justify-start truncate"
-                >
-                  {block.name || `Block ${i + 1}`}
-                </Button>
+              <div className="border rounded-lg p-4 space-y-4 shadow-sm bg-white">
+                {/* Block Header */}
+                <div className="flex justify-between items-center">
+                  <Button
+                    onClick={() => onSelect(i)}
+                    variant={i === activeIndex ? "default" : "outline"}
+                  >
+                    {block.name || `Block ${i + 1}`}
+                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant="secondary"
+                      className="bg-blue-50 text-blue-700 border-blue-200 text-xs"
+                    >
+                      {block.days.length}{" "}
+                      {block.days.length === 1 ? "Day" : "Days"}
+                    </Badge>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <MoreVertical className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-40">
-                    <DropdownMenuItem
-                      onClick={() => {
-                        const newName = prompt(
-                          "Rename block",
-                          block.name || `Block ${i + 1}`
-                        );
-                        if (newName) onRenameBlock(i, newName);
-                      }}
-                    >
-                      ✏️ Rename
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => onRemoveBlock(i)}
-                      className="text-red-600 focus:text-red-600"
-                    >
-                      <Trash className="w-4 h-4 mr-2" /> Remove
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80" align="end">
+                        <div className="space-y-4">
+                          <h4 className="font-medium">Edit Block</h4>
+
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium">Name</Label>
+                            <Input
+                              value={block.name || ""}
+                              onChange={(e) =>
+                                onUpdateBlockDetails(i, {
+                                  name: e.target.value,
+                                })
+                              }
+                              placeholder="Block name"
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">
+                                Weeks
+                              </Label>
+                              <Input
+                                type="number"
+                                min="1"
+                                max="52"
+                                value={block.weeks || ""}
+                                onChange={(e) =>
+                                  onUpdateBlockDetails(i, {
+                                    weeks: Number(e.target.value) || undefined,
+                                  })
+                                }
+                                placeholder="4"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium">
+                              Description
+                            </Label>
+                            <Textarea
+                              value={block.description || ""}
+                              onChange={(e) =>
+                                onUpdateBlockDetails(i, {
+                                  description: e.target.value,
+                                })
+                              }
+                              placeholder="Block goals and notes..."
+                              rows={2}
+                            />
+                          </div>
+
+                          <div className="flex justify-end gap-2 pt-2 border-t">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => onRemoveBlock(i)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash className="w-4 h-4 mr-1" />
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+
+                {/* Inline Day Selector */}
+                {i === activeIndex && (
+                  <ProgramDaySelector
+                    days={block.days}
+                    activeIndex={activeDayIndex}
+                    onSelect={onSelectDay}
+                    onAddWorkoutDay={onAddWorkoutDay}
+                    onAddRestDay={onAddRestDay}
+                    onRemoveWorkoutDay={onRemoveWorkoutDay}
+                    onDuplicateWorkoutDay={onDuplicateWorkoutDay}
+                    onReorder={onReorderDays}
+                  />
+                )}
               </div>
             </SortableItem>
           ))}
