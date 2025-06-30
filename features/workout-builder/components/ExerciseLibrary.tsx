@@ -1,13 +1,6 @@
 "use client";
 
-import { CATEGORY_DISPLAY_MAP } from "@/constants/movement-category";
-import { useExerciseFilter } from "@/hooks/useExerciseFilter";
-import type { Exercise } from "@/types/Workout";
-import { Dumbbell } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
-import { ExerciseCard } from "@/features/workout-builder/components/ExerciseCard";
-import { FilterPopover } from "@/features/workout-builder/components/FilterPopover";
-import { SortPopover } from "@/features/workout-builder/components/SortPopover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -19,11 +12,22 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { CATEGORY_DISPLAY_MAP } from "@/constants/movement-category";
+import { ExerciseCard } from "@/features/workout-builder/components/ExerciseCard";
+import { FilterPopover } from "@/features/workout-builder/components/FilterPopover";
+import { SortPopover } from "@/features/workout-builder/components/SortPopover";
+import { useExerciseFilter } from "@/hooks/useExerciseFilter";
+import type { Exercise } from "@/types/Workout";
+import { Book, Dumbbell } from "lucide-react";
 
 export const ExerciseLibrary = ({
   addExercise,
+  open,
+  setOpen,
 }: {
   addExercise: (exercise: Exercise) => void;
+  open: boolean;
+  setOpen: (open: boolean) => void;
 }) => {
   const {
     filtered,
@@ -53,10 +57,10 @@ export const ExerciseLibrary = ({
     grouped,
   } = useExerciseFilter();
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="secondary" className="gap-2 ">
-          <Dumbbell className="w-4 h-4" /> Exercise Library
+        <Button variant="outline" className="gap-2 ">
+          <Book className="w-4 h-4" /> Exercise Library
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-full max-w-lg min-w-1/3 p-4">

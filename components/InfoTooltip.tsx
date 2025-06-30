@@ -7,7 +7,13 @@ import {
 import { FIELD_INFO } from "@/constants/exercise-info";
 import { HelpCircle } from "lucide-react";
 
-export const InfoIcon = ({ field }: { field: keyof typeof FIELD_INFO }) => {
+export const InfoTooltip = ({
+  field,
+  text,
+}: {
+  field?: keyof typeof FIELD_INFO;
+  text?: string;
+}) => {
   return (
     <TooltipProvider>
       <Tooltip>
@@ -15,7 +21,9 @@ export const InfoIcon = ({ field }: { field: keyof typeof FIELD_INFO }) => {
           <HelpCircle className="w-3 h-3 ml-1 text-gray-400" />
         </TooltipTrigger>
         <TooltipContent className="max-w-xs">
-          <p className="text-xs">{FIELD_INFO[field].description}</p>
+          <p className="text-xs">
+            {field ? FIELD_INFO[field].description : text}
+          </p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

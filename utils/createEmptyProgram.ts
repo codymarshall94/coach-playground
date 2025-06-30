@@ -4,7 +4,8 @@ export const createEmptyProgram = (): Program => {
   return {
     id: crypto.randomUUID(),
     name: "My Program",
-    description: "My Program Description",
+    description: "",
+    goal: "strength",
     createdAt: new Date(),
     updatedAt: new Date(),
     days: [
@@ -16,8 +17,6 @@ export const createEmptyProgram = (): Program => {
         description: "",
         workout: [
           {
-            name: "Main Workout",
-            description: "",
             createdAt: new Date(),
             updatedAt: new Date(),
             exercises: [],

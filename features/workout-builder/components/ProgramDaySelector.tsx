@@ -200,16 +200,16 @@ export function ProgramDaySelector({
           <div className="flex gap-2 mt-4 pt-2 border-t border-gray-100">
             <Button
               onClick={onAddWorkoutDay}
-              variant="secondary"
-              className="flex-1 transition-all duration-200 hover:scale-105"
+              variant="outline"
+              className="flex-1 cursor-pointer"
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Dumbbell className="w-4 h-4 mr-2" />
               Add Workout Day
             </Button>
             <Button
               onClick={onAddRestDay}
               variant="ghost"
-              className="flex-1 transition-all duration-200 hover:scale-105"
+              className="flex-1 cursor-pointer"
             >
               <Bed className="w-4 h-4 mr-2" />
               Add Rest Day

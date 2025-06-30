@@ -1,6 +1,6 @@
 "use client";
 
-import { InfoIcon } from "@/components/InfoIcon";
+import { InfoTooltip } from "@/components/InfoTooltip";
 import { ProgressIndicator } from "@/components/ProgressIndicator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MUSCLE_DISPLAY_MAP } from "@/constants/muscles";
 import type { EXERCISES } from "@/data/exercises";
 import { getPrimaryAndSecondaryMuscles } from "@/utils/getPrimaryAndSecondaryMuscles";
-import { MuscleActivationChart } from "./MuscleActivationChart";
 import {
   Activity,
   AlertTriangle,
@@ -36,6 +35,7 @@ import {
   Target,
   Zap,
 } from "lucide-react";
+import { MuscleActivationChart } from "./MuscleActivationChart";
 
 export function ExerciseDetailModal({
   exercise,
@@ -141,7 +141,7 @@ export function ExerciseDetailModal({
                   <div className="flex justify-between">
                     <span className="text-sm font-medium flex items-center gap-1">
                       <Clock className="w-4 h-4" /> Recovery Time{" "}
-                      <InfoIcon field="recoveryDays" />
+                      <InfoTooltip field="recoveryDays" />
                     </span>
                     <span className="text-sm text-muted-foreground">
                       {exercise.recoveryDays} days
@@ -151,7 +151,7 @@ export function ExerciseDetailModal({
                   <div className="flex justify-between">
                     <span className="text-sm font-medium flex items-center gap-1">
                       <Flame className="w-4 h-4" /> Calorie Burn{" "}
-                      <InfoIcon field="baseCalorieCost" />
+                      <InfoTooltip field="baseCalorieCost" />
                     </span>
                     <span className="text-sm text-muted-foreground">
                       {exercise.baseCalorieCost} kcal
@@ -161,7 +161,7 @@ export function ExerciseDetailModal({
                   <div className="flex justify-between">
                     <span className="text-sm font-medium flex items-center gap-1">
                       {getEnergySystemIcon(exercise.energySystem)} Energy System{" "}
-                      <InfoIcon field="energySystem" />
+                      <InfoTooltip field="energySystem" />
                     </span>
                     <span className="text-sm text-muted-foreground">
                       {exercise.energySystem}
@@ -239,19 +239,19 @@ export function ExerciseDetailModal({
                   <CardContent className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium flex items-center gap-1">
-                        Load Profile <InfoIcon field="loadProfile" />
+                        Load Profile <InfoTooltip field="loadProfile" />
                       </span>
                       <Badge variant="outline">{exercise.loadProfile}</Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium flex items-center gap-1">
-                        Force Curve <InfoIcon field="forceCurve" />
+                        Force Curve <InfoTooltip field="forceCurve" />
                       </span>
                       <Badge variant="outline">{exercise.forceCurve}</Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium flex items-center gap-1">
-                        ROM Rating <InfoIcon field="romRating" />
+                        ROM Rating <InfoTooltip field="romRating" />
                       </span>
                       <Badge variant="outline">{exercise.romRating}</Badge>
                     </div>

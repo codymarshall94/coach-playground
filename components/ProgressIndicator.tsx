@@ -1,7 +1,7 @@
 "use client";
 import { Progress } from "@/components/ui/progress";
 import { FIELD_INFO } from "@/constants/exercise-info";
-import { InfoIcon } from "./InfoIcon";
+import { InfoTooltip } from "./InfoTooltip";
 
 interface ProgressIndicatorProps {
   value: number;
@@ -32,7 +32,7 @@ export function ProgressIndicator({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-gray-700">
-          {label} <InfoIcon field={field} />
+          {label} <InfoTooltip field={field} />
         </span>
         {showValue && (
           <span

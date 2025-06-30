@@ -10,18 +10,26 @@ export type WorkoutExercise = {
   id: string; // lookup back to full exercise data
   name: string;
   sets: SetInfo[]; // reps, rpe, rest, etc.
+  notes?: string;
   intensity: IntensitySystem;
 };
 
 export type Workout = {
   exercises: WorkoutExercise[];
-  name: string;
-  description: string;
   createdAt: Date;
   updatedAt: Date;
 };
 
 export type DayType = "workout" | "rest" | "active_rest" | "other";
+
+export type ProgramBlock = {
+  id: string;
+  name: string;
+  order: number;
+  description?: string;
+  weeks?: number; // Optional: useful for labeling (e.g., "Weeks 1-4")
+  days: ProgramDay[];
+};
 
 export type ProgramDay = {
   id: string;
@@ -32,11 +40,15 @@ export type ProgramDay = {
   type: DayType;
 };
 
+export type ProgramGoal = "strength" | "hypertrophy" | "endurance" | "power";
+
 export type Program = {
   id: string;
   name: string;
   description: string;
-  days: ProgramDay[];
+  goal: ProgramGoal;
+  blocks?: ProgramBlock[]; // ✅ Optional if user prefers only days
+  days?: ProgramDay[]; // ✅ Optional if using block structure
   createdAt: Date;
   updatedAt: Date;
 };

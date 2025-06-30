@@ -1,4 +1,5 @@
 "use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Bone, Brain, Heart } from "lucide-react";
@@ -14,39 +15,39 @@ export function FatigueBreakdown({
   avgMet,
   avgJoint,
 }: FatigueBreakdownProps) {
-  const fatigueMetrics = [
+  const metrics = [
     {
       label: "CNS Demand",
       value: avgCNS * 10,
       icon: Brain,
       color: "purple",
-      description: "Nervous system stress",
+      description: "Neural fatigue from heavy loads or complex lifts.",
     },
     {
       label: "Metabolic",
       value: avgMet * 10,
       icon: Heart,
       color: "red",
-      description: "Energy system demand",
+      description: "Energy system stress from higher rep or explosive work.",
     },
     {
       label: "Joint Stress",
       value: avgJoint * 10,
       icon: Bone,
       color: "orange",
-      description: "Mechanical stress",
+      description: "Structural strain from compressive or shearing forces.",
     },
   ];
 
-  const getIntensityColor = (value: number) => {
-    if (value <= 3) return "text-green-600";
-    if (value <= 6) return "text-yellow-600";
+  const getLabelColor = (value: number) => {
+    if (value < 4) return "text-green-600";
+    if (value < 7) return "text-yellow-600";
     return "text-red-600";
   };
 
-  const getProgressColor = (value: number) => {
-    if (value <= 3) return "bg-green-500";
-    if (value <= 6) return "bg-yellow-500";
+  const getBarColor = (value: number) => {
+    if (value < 4) return "bg-green-500";
+    if (value < 7) return "bg-yellow-500";
     return "bg-red-500";
   };
 
@@ -55,39 +56,34 @@ export function FatigueBreakdown({
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
           <Brain className="w-5 h-5 text-purple-600" />
-          Fatigue Analysis
+          Fatigue Breakdown
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {fatigueMetrics.map((metric) => (
-            <div key={metric.label} className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <metric.icon className="w-4 h-4 text-gray-600" />
-                  <span className="font-medium text-gray-700">
-                    {metric.label}
-                  </span>
-                </div>
-                <span
-                  className={`font-bold ${getIntensityColor(metric.value)}`}
-                >
-                  {metric.value.toFixed(1)}/10
-                </span>
+      <CardContent className="space-y-4">
+        {metrics.map(({ label, icon: Icon, value, description }) => (
+          <div key={label} className="space-y-1">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2 text-gray-700">
+                <Icon className="w-4 h-4" />
+                <span className="font-medium">{label}</span>
               </div>
-              <div className="relative">
-                <Progress value={(metric.value / 10) * 100} className="h-2" />
-                <div
-                  className={`absolute top-0 left-0 h-2 rounded-full transition-all ${getProgressColor(
-                    metric.value
-                  )}`}
-                  style={{ width: `${(metric.value / 10) * 100}%` }}
-                />
-              </div>
-              <p className="text-xs text-gray-500">{metric.description}</p>
+              <span className={`text-sm font-semibold ${getLabelColor(value)}`}>
+                {value.toFixed(1)}/10
+              </span>
             </div>
-          ))}
-        </div>
+
+            <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className={`absolute h-full transition-all duration-500 ${getBarColor(
+                  value
+                )}`}
+                style={{ width: `${value * 10}%` }}
+              />
+            </div>
+
+            <p className="text-xs text-gray-500">{description}</p>
+          </div>
+        ))}
       </CardContent>
     </Card>
   );

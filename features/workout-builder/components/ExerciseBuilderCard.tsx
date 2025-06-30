@@ -4,12 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { EXERCISES } from "@/data/exercises";
 import type {
   IntensitySystem,
@@ -20,6 +26,7 @@ import { estimateExerciseDuration } from "@/utils/estimateExerciseDuration";
 import { getExerciseETL } from "@/utils/etl";
 import {
   Clock,
+  FileText,
   GripVertical,
   Plus,
   RotateCcw,
@@ -28,6 +35,7 @@ import {
   X,
 } from "lucide-react";
 import { ETLDisplay } from "./EtlDisplay";
+import { useState } from "react";
 
 const intensityLabel: Record<IntensitySystem, string> = {
   rpe: "RPE",
@@ -58,13 +66,17 @@ export const ExerciseBuilderCard = ({
   onRemove,
   onUpdateSets,
   onUpdateIntensity,
+  onUpdateNotes,
 }: {
   order: number;
   exercise: WorkoutExercise;
   onRemove: () => void;
   onUpdateSets: (sets: WorkoutExercise["sets"]) => void;
   onUpdateIntensity: (intensity: IntensitySystem) => void;
+  onUpdateNotes: (notes: string) => void;
 }) => {
+  const [tempNotes, setTempNotes] = useState(exercise.notes || "");
+
   const exerciseMeta = EXERCISES.find((ex) => ex.id === exercise.id);
   const { totalETL } = getExerciseETL(exercise, exerciseMeta!);
 
@@ -107,17 +119,71 @@ export const ExerciseBuilderCard = ({
             <div className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">
               {order + 1}
             </div>
-            <div>
+            <div className="flex flex-col gap-2">
               <h3 className="font-semibold text-gray-900 text-lg">
                 {exercise.name}
               </h3>
+
+              <div className="flex items-center gap-2">
+                {exercise.notes && (
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-gray-600 bg-gray-50 px-2 py-1 rounded">
+                      {exercise.notes}
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2  transition-opacity">
+          <div className="flex items-center gap-2 transition-opacity">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`p-2 ${
+                    exercise.notes ? "text-blue-600" : "text-gray-400"
+                  } hover:text-blue-700`}
+                >
+                  <FileText className="w-4 h-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80" align="end">
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm">Exercise Notes</h4>
+                  <Textarea
+                    value={tempNotes}
+                    onChange={(e) => setTempNotes(e.target.value)}
+                    placeholder="Add notes about form, tempo, modifications..."
+                    rows={3}
+                    className="resize-none"
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setTempNotes(exercise.notes || "")}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        onUpdateNotes(tempNotes);
+                      }}
+                    >
+                      Save
+                    </Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+
             <Button variant="ghost" size="sm" className="p-2 cursor-move">
               <GripVertical className="w-4 h-4 text-gray-400" />
             </Button>
+
             <Button
               variant="ghost"
               size="sm"
@@ -126,6 +192,7 @@ export const ExerciseBuilderCard = ({
             >
               <Trash2 className="w-4 h-4" />
             </Button>
+
             <Select
               value={exercise.intensity}
               onValueChange={(v) => {
@@ -179,7 +246,6 @@ export const ExerciseBuilderCard = ({
                   {i + 1}
                 </span>
               </div>
-
               <div className="col-span-3">
                 <Input
                   type="number"
@@ -193,7 +259,6 @@ export const ExerciseBuilderCard = ({
                   placeholder="Reps"
                 />
               </div>
-
               <div className="col-span-3">
                 <div className="relative">
                   {exercise.intensity === "rpe" && (
@@ -204,13 +269,12 @@ export const ExerciseBuilderCard = ({
                       step={0.5}
                       value={set.rpe}
                       onChange={(e) =>
-                        updateSet(i, "rpe", parseFloat(e.target.value))
+                        updateSet(i, "rpe", Number.parseFloat(e.target.value))
                       }
                       placeholder="RPE"
                       className="h-8 text-sm text-center"
                     />
                   )}
-
                   {exercise.intensity === "oneRepMaxPercent" && (
                     <Input
                       type="number"
@@ -222,14 +286,13 @@ export const ExerciseBuilderCard = ({
                         updateSet(
                           i,
                           "oneRepMaxPercent",
-                          parseInt(e.target.value)
+                          Number.parseInt(e.target.value)
                         )
                       }
                       placeholder="%1RM"
                       className="h-8 text-sm text-center"
                     />
                   )}
-
                   {exercise.intensity === "rir" && (
                     <Input
                       type="number"
@@ -238,7 +301,7 @@ export const ExerciseBuilderCard = ({
                       step={1}
                       value={set.rir}
                       onChange={(e) =>
-                        updateSet(i, "rir", parseInt(e.target.value))
+                        updateSet(i, "rir", Number.parseInt(e.target.value))
                       }
                       placeholder="RIR"
                       className="h-8 text-sm text-center"
@@ -246,7 +309,6 @@ export const ExerciseBuilderCard = ({
                   )}
                 </div>
               </div>
-
               <div className="col-span-3">
                 <div className="relative">
                   <Input
@@ -265,7 +327,6 @@ export const ExerciseBuilderCard = ({
                   </span>
                 </div>
               </div>
-
               <div className="col-span-2 flex items-center gap-1">
                 <Button
                   variant="ghost"
@@ -296,7 +357,7 @@ export const ExerciseBuilderCard = ({
           <Button
             onClick={addSet}
             variant="outline"
-            className="flex-1 h-10 border-dashed border-gray-300 text-gray-600 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50 transition-colors"
+            className="flex-1 h-10 border-dashed border-gray-300 text-gray-600 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50 transition-colors bg-transparent"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Set
@@ -325,7 +386,6 @@ export const ExerciseBuilderCard = ({
                   exerciseMeta?.volumePerSetEstimate?.hypertrophy ?? 10,
               }}
             />
-
             <span>
               Total Reps:{" "}
               <span className="font-medium text-gray-700">

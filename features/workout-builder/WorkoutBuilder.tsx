@@ -1,40 +1,47 @@
 "use client";
 
-import { Droppable } from "@/components/Droppable";
-import { EmptyState } from "@/components/EmptyState";
-import { ExerciseCard } from "@/features/workout-builder/components/ExerciseCard";
-import { Logo } from "@/components/Logo";
-import { ProgramDaySelector } from "@/features/workout-builder/components/ProgramDaySelector";
-import { QuickStatsBar } from "@/features/workout-builder/components/QuickStatsBar";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { WorkoutFooter } from "@/features/workout-builder/components/WorkoutFooter";
-import { WorkoutSummary } from "@/features/workout-builder/components/WorkoutSummary";
-import { EXERCISES } from "@/data/exercises";
-import { ExerciseBuilderCard } from "@/features/workout-builder/components/ExerciseBuilderCard";
-import { ExerciseLibrary } from "@/features/workout-builder/components/ExerciseLibrary";
-import { useWorkoutBuilder } from "@/hooks/useWorkoutBuilder";
-import { getExerciseDetails } from "@/utils/getExerciseDetails";
-import { calculateWorkoutSummary } from "@/utils/workout-summary";
+import { useState, useMemo } from "react";
 import {
-  closestCenter,
   DndContext,
   DragOverlay,
   DragStartEvent,
   PointerSensor,
   useSensor,
   useSensors,
+  closestCenter,
 } from "@dnd-kit/core";
-import { Bed, Check, Pencil, Plus, Trash2, X } from "lucide-react";
-import { useState } from "react";
+
+import { Bed, Plus, Trash2 } from "lucide-react";
+
+import { Droppable } from "@/components/Droppable";
+import { EmptyState } from "@/components/EmptyState";
+import { Logo } from "@/components/Logo";
+import { Button } from "@/components/ui/button";
+
+import { EXERCISES } from "@/data/exercises";
+import { ExerciseBuilderCard } from "@/features/workout-builder/components/ExerciseBuilderCard";
+import { ExerciseCard } from "@/features/workout-builder/components/ExerciseCard";
+import { ExerciseLibrary } from "@/features/workout-builder/components/ExerciseLibrary";
+import { ProgramDaySelector } from "@/features/workout-builder/components/ProgramDaySelector";
+import { WorkoutFooter } from "@/features/workout-builder/components/WorkoutFooter";
+import { useWorkoutBuilder } from "@/hooks/useWorkoutBuilder";
+import { analyzeWorkoutDay } from "@/utils/analyzeWorkoutDay";
+import { DayHeader } from "./components/DayHeader";
+import { ProgramMetaEditor } from "./components/ProgramMetaEditor";
+import { ProgramPreview } from "./components/ProgramPreview";
+import { WorkoutAnalyticsPanel } from "./components/WorkoutAnalyticsPanel";
+import { BlockSelector } from "./components/BlockSelector";
 
 export const WorkoutBuilder = () => {
   const {
     program,
-    activeDayIndex,
-    workout,
-    setActiveDayIndex,
     setProgram,
+    activeDayIndex,
+    setActiveDayIndex,
+    activeBlockIndex,
+    setActiveBlockIndex,
+    workout,
+    isWorkoutDay,
     updateDayName,
     handleAddDay,
     handleRemoveWorkoutDay,
@@ -44,11 +51,17 @@ export const WorkoutBuilder = () => {
     updateExerciseSets,
     updateExerciseIntensity,
     clearWorkout,
+    updateExerciseNotes,
+    addTrainingBlock,
+    usingBlocks,
   } = useWorkoutBuilder();
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  const [exerciseLibraryOpen, setExerciseLibraryOpen] = useState(false);
+
   const sensors = useSensors(useSensor(PointerSensor));
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -56,121 +69,165 @@ export const WorkoutBuilder = () => {
   };
 
   const activeExercise = EXERCISES.find((ex) => ex.id === activeId);
-  const fullExercises = getExerciseDetails(workout);
-  const summary = calculateWorkoutSummary(fullExercises);
+  const insights = isWorkoutDay ? analyzeWorkoutDay(workout) : null;
+
+  const currentDays = useMemo(() => {
+    if (usingBlocks && typeof activeBlockIndex === "number") {
+      return program.blocks?.[activeBlockIndex]?.days ?? [];
+    }
+    return program.days ?? [];
+  }, [program, activeBlockIndex, usingBlocks]);
+
+  const noWorkoutDays = currentDays.length === 0;
 
   return (
     <div className="flex flex-col h-screen">
+      {/* HEADER */}
       <header className="sticky top-0 z-30 bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center shadow-sm">
         <Logo size="xs" lineBreak={false} />
         <div className="flex gap-2">
-          <WorkoutSummary workout={workout} summary={summary} />
-          {program.days[activeDayIndex].type === "workout" && (
-            <ExerciseLibrary addExercise={addExercise} />
+          {isWorkoutDay && (
+            <ExerciseLibrary
+              addExercise={addExercise}
+              open={exerciseLibraryOpen}
+              setOpen={setExerciseLibraryOpen}
+            />
           )}
+          <ProgramPreview program={program} />
         </div>
       </header>
 
-      <QuickStatsBar summary={summary} />
+      {/* MAIN */}
+      <div className="p-6 flex-1 space-y-4">
+        <ProgramMetaEditor
+          name={program.name}
+          description={program.description}
+          goal={program.goal}
+          onChange={(fields) => setProgram((prev) => ({ ...prev, ...fields }))}
+        />
 
-      <div className="p-6 flex-1">
+        <Button onClick={addTrainingBlock}>
+          <Plus className="w-4 h-4" />
+          Add Block
+        </Button>
+
+        {/* BLOCK + DAY SELECTORS */}
         <div className="flex gap-6 mb-4">
+          {usingBlocks && (
+            <BlockSelector
+              blocks={program.blocks ?? []}
+              activeIndex={activeBlockIndex}
+              onSelect={(i) => setActiveBlockIndex(i)}
+              onAddBlock={addTrainingBlock}
+              onRemoveBlock={(index) =>
+                setProgram((prev) => ({
+                  ...prev,
+                  blocks: prev.blocks!.filter((_, i) => i !== index),
+                }))
+              }
+              onRenameBlock={(index, name) =>
+                setProgram((prev) => {
+                  const updated = [...(prev.blocks ?? [])];
+                  updated[index].name = name;
+                  return { ...prev, blocks: updated };
+                })
+              }
+              onReorder={(reordered) =>
+                setProgram((prev) => ({ ...prev, blocks: reordered }))
+              }
+            />
+          )}
+
           <ProgramDaySelector
-            days={program.days}
+            days={currentDays}
             activeIndex={activeDayIndex}
-            onSelect={(index) => setActiveDayIndex(index)}
-            onRemoveWorkoutDay={handleRemoveWorkoutDay}
-            onDuplicateWorkoutDay={handleDuplicateWorkoutDay}
+            onSelect={setActiveDayIndex}
             onAddWorkoutDay={() => handleAddDay("workout")}
             onAddRestDay={() => handleAddDay("rest")}
-            onReorder={(reordered) => {
-              setProgram((prev) => ({
-                ...prev,
-                days: reordered,
-              }));
-            }}
+            onRemoveWorkoutDay={handleRemoveWorkoutDay}
+            onDuplicateWorkoutDay={handleDuplicateWorkoutDay}
+            onReorder={(reordered) =>
+              setProgram((prev) => {
+                if (usingBlocks && typeof activeBlockIndex === "number") {
+                  const blocks = [...(prev.blocks ?? [])];
+                  blocks[activeBlockIndex].days = reordered;
+                  return { ...prev, blocks };
+                } else {
+                  return { ...prev, days: reordered };
+                }
+              })
+            }
           />
 
+          {/* WORKOUT CONTENT */}
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragStart={handleDragStart}
           >
-            <div className="grid  gap-8">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between mb-6">
-                  {activeDayIndex !== null && program && (
-                    <div className="flex items-center gap-2">
-                      {isEditingName ? (
-                        <>
-                          <Input
-                            value={editedName}
-                            onChange={(e) => setEditedName(e.target.value)}
-                            className="text-2xl font-bold text-gray-900 bg-transparent border-b border-gray-300 focus:outline-none focus:ring-0 focus:border-black"
-                            placeholder="Day Name"
-                            autoFocus
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                updateDayName(
-                                  editedName.trim() || "Untitled Day"
-                                );
-                                setIsEditingName(false);
-                              }
-                            }}
-                          />
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              updateDayName(
-                                editedName.trim() || "Untitled Day"
-                              );
-                              setIsEditingName(false);
-                            }}
-                          >
-                            <Check className="w-5 h-5 text-green-600 hover:text-green-700" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setIsEditingName(false)}
-                          >
-                            <X className="w-5 h-5 text-red-500 hover:text-red-600" />
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <h2 className="text-2xl font-bold text-gray-900">
-                            {program?.days[activeDayIndex].name}
-                          </h2>
-                          <Pencil
-                            className="w-4 h-4 text-muted-foreground cursor-pointer hover:text-black"
-                            onClick={() => {
-                              setEditedName(program.days[activeDayIndex].name);
-                              setIsEditingName(true);
-                            }}
-                          />
-                        </>
-                      )}
-                      <div className="flex items-center gap-2">
-                        <span className="px-2 py-1 text-sm font-medium bg-green-100 text-green-800 rounded-md whitespace-nowrap">
-                          {workout.length}{" "}
-                          {workout.length === 1 ? "Exercise" : "Exercises"}
-                        </span>
-                      </div>
-                    </div>
-                  )}
+            <div className="grid w-full">
+              <div className="flex items-center justify-between mb-6 w-full">
+                <div className="w-full">
+                  <DayHeader
+                    program={program}
+                    activeDayIndex={activeDayIndex}
+                    editedName={editedName}
+                    setEditedName={setEditedName}
+                    isEditingName={isEditingName}
+                    setIsEditingName={setIsEditingName}
+                    updateDayName={updateDayName}
+                    updateDayDescription={(desc) =>
+                      setProgram((prev) => {
+                        if (usingBlocks) {
+                          const blocks = [...(prev.blocks ?? [])];
+                          const days = blocks[activeBlockIndex].days.map(
+                            (d, i) =>
+                              i === activeDayIndex
+                                ? { ...d, description: desc }
+                                : d
+                          );
+                          blocks[activeBlockIndex].days = days;
+                          return { ...prev, blocks };
+                        }
+                        const days = prev.days!.map((d, i) =>
+                          i === activeDayIndex ? { ...d, description: desc } : d
+                        );
+                        return { ...prev, days };
+                      })
+                    }
+                    exerciseCount={workout.length}
+                  />
 
                   {workout.length > 0 && (
-                    <Button onClick={clearWorkout} variant="outline" size="sm">
-                      <Trash2 className="w-4 h-4" />
-                      Clear All
-                    </Button>
+                    <div className="flex items-center gap-2 mt-2">
+                      <WorkoutAnalyticsPanel
+                        workout={workout}
+                        summary={insights!}
+                        open={analyticsOpen}
+                        setOpen={setAnalyticsOpen}
+                      />
+                      <Button
+                        onClick={clearWorkout}
+                        variant="outline"
+                        size="sm"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Clear All
+                      </Button>
+                    </div>
                   )}
                 </div>
+              </div>
 
+              {noWorkoutDays ? (
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-1 text-sm font-medium bg-green-100 text-green-800 rounded-md whitespace-nowrap">
+                    {currentDays.length} Days
+                  </span>
+                </div>
+              ) : (
                 <Droppable id="workout-drop">
-                  {program.days[activeDayIndex]?.type === "rest" ? (
+                  {!isWorkoutDay ? (
                     <EmptyState
                       className="w-full"
                       icon={<Bed className="w-10 h-10 text-gray-400" />}
@@ -197,14 +254,28 @@ export const WorkoutBuilder = () => {
                           onUpdateIntensity={(intensity) =>
                             updateExerciseIntensity(index, intensity)
                           }
+                          onUpdateNotes={(notes) =>
+                            updateExerciseNotes(index, notes)
+                          }
                         />
                       ))}
                     </div>
                   )}
                 </Droppable>
-              </div>
+              )}
 
-              {/* <WorkoutInsightsPanel workout={workout} /> */}
+              {isWorkoutDay && (
+                <div className="mt-6 flex justify-center">
+                  <Button
+                    onClick={() => setExerciseLibraryOpen(true)}
+                    variant="outline"
+                    className="flex items-center gap-2 px-6 py-3 border-2 border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Exercise
+                  </Button>
+                </div>
+              )}
             </div>
 
             <DragOverlay>

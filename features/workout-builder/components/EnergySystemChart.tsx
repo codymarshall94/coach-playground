@@ -1,4 +1,5 @@
 "use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Flame, Heart, Zap } from "lucide-react";
 
@@ -22,7 +23,7 @@ export function EnergySystemChart({
     }
   };
 
-  const getSystemColor = (system: string) => {
+  const getSystemBar = (system: string) => {
     switch (system.toLowerCase()) {
       case "aerobic":
         return "bg-blue-500";
@@ -41,36 +42,32 @@ export function EnergySystemChart({
           Energy System Focus
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {Object.entries(systemBreakdown).map(([system, count]) => {
-            const percentage = (count / totalExercises) * 100;
+      <CardContent className="space-y-4">
+        {Object.entries(systemBreakdown).map(([system, count]) => {
+          const percent = (count / totalExercises) * 100;
 
-            return (
-              <div key={system} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {getSystemIcon(system)}
-                    <span className="font-medium text-gray-700 capitalize">
-                      {system}
-                    </span>
-                  </div>
-                  <span className="text-sm font-semibold text-gray-600">
-                    {count}x ({percentage.toFixed(0)}%)
-                  </span>
+          return (
+            <div key={system} className="space-y-1">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-gray-700">
+                  {getSystemIcon(system)}
+                  <span className="capitalize font-medium">{system}</span>
                 </div>
-                <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full transition-all duration-500 ${getSystemColor(
-                      system
-                    )}`}
-                    style={{ width: `${percentage}%` }}
-                  />
-                </div>
+                <span className="text-sm font-semibold text-gray-600">
+                  {count}x ({percent.toFixed(0)}%)
+                </span>
               </div>
-            );
-          })}
-        </div>
+              <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className={`h-full transition-all duration-500 ${getSystemBar(
+                    system
+                  )}`}
+                  style={{ width: `${percent}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
       </CardContent>
     </Card>
   );

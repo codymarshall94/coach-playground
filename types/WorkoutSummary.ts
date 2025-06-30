@@ -9,4 +9,16 @@ export type WorkoutSummaryStats = {
   topMuscles: [string, number][];
   avgRecovery: number;
   maxRecovery: number;
+  total_sets: number;
+  total_fatigue: number;
+  top_muscles: [string, number][];
+  muscle_volumes: Record<string, number>;
+  muscle_set_counts: Record<string, number>;
+  category_counts: Record<string, number>;
+  energy_system_counts: Record<string, number>;
+  workout_type: string;
+  injury_risk: "Low" | "Moderate" | "High";
+  push_pull_ratio?: number;
+  lower_upper_ratio?: number;
+  overload_potential?: string;
 };
