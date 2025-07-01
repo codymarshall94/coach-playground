@@ -1,6 +1,5 @@
-import { ActivationMap, Muscle } from "@/types/Workout";
-
 import { MUSCLE_DISPLAY_MAP } from "@/constants/muscles";
+import { ActivationMap, Muscle } from "@/types/Exercise";
 
 interface MuscleActivationChartProps {
   activationMap: ActivationMap;

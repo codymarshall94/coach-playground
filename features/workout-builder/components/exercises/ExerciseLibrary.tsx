@@ -13,9 +13,9 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { CATEGORY_DISPLAY_MAP } from "@/constants/movement-category";
-import { ExerciseCard } from "@/features/workout-builder/components/ExerciseCard";
-import { FilterPopover } from "@/features/workout-builder/components/FilterPopover";
-import { SortPopover } from "@/features/workout-builder/components/SortPopover";
+import { ExerciseCard } from "@/features/workout-builder/components/exercises/ExerciseCard";
+import { FilterPopover } from "@/features/workout-builder/components/exercises/FilterPopover";
+import { SortPopover } from "@/features/workout-builder/components/exercises/SortPopover";
 import { useExerciseFilter } from "@/hooks/useExerciseFilter";
 import type { Exercise } from "@/types/Workout";
 import { Book, Dumbbell } from "lucide-react";
@@ -30,6 +30,7 @@ export const ExerciseLibrary = ({
   setOpen: (open: boolean) => void;
 }) => {
   const {
+    exercises,
     filtered,
     search,
     setSearch,
@@ -55,7 +56,9 @@ export const ExerciseLibrary = ({
     sortKey,
     setSortKey,
     grouped,
+    isLoading,
   } = useExerciseFilter();
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
@@ -65,13 +68,15 @@ export const ExerciseLibrary = ({
       </SheetTrigger>
       <SheetContent side="left" className="w-full max-w-lg min-w-1/3 p-4">
         <SheetHeader>
-          <SheetTitle className="text-xl font-bold text-slate-900">
+          <SheetTitle className="text-xl font-bold text-foreground">
             Exercise Library
           </SheetTitle>
-          <SheetDescription>{filtered.length} exercises found</SheetDescription>
+          <SheetDescription>
+            {filtered?.length} exercises found
+          </SheetDescription>
         </SheetHeader>
 
-        <div className="sticky top-0 z-10 bg-white flex items-center justify-between  gap-2">
+        <div className="sticky top-0 z-10 bg-background flex items-center justify-between  gap-2">
           <Input
             placeholder="Search exercises..."
             value={search}
@@ -105,7 +110,7 @@ export const ExerciseLibrary = ({
         </div>
 
         <ScrollArea className="mt-4 h-[calc(100vh-200px)] pr-2">
-          {filtered.length === 0 ? (
+          {filtered?.length === 0 && !isLoading ? (
             <EmptyState
               icon={<Dumbbell className="w-8 h-8" />}
               title="No exercises found"
@@ -120,7 +125,7 @@ export const ExerciseLibrary = ({
             <div className="space-y-6">
               {Object.entries(grouped).map(([category, list]) => (
                 <div key={category} className="space-y-2">
-                  <h4 className="text-sm font-semibold text-slate-600 uppercase">
+                  <h4 className="text-sm font-semibold text-muted-foreground uppercase">
                     {CATEGORY_DISPLAY_MAP[category] ?? category}
                   </h4>
                   <div className="space-y-2">

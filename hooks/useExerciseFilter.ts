@@ -1,8 +1,10 @@
-import { EXERCISES } from "@/data/exercises";
-import { Equipment, Exercise } from "@/types/Workout";
-import { getMusclesFromSelection } from "@/utils/getMusclesFromSelection";
+import { getAllExercises } from "@/services/exerciseService";
+import { Exercise } from "@/types/Exercise";
+import { Equipment } from "@/types/Exercise";
 import { groupBy } from "@/utils/groupBy";
-import { getGroupMuscles, isGroup } from "@/utils/muscleGroups";
+import { getMusclesFromSelection } from "@/utils/muscles/getMusclesFromSelection";
+import { getGroupMuscles, isGroup } from "@/utils/muscles/muscleGroups";
+import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
 export function useExerciseFilter() {
@@ -19,6 +21,11 @@ export function useExerciseFilter() {
   const [maxCNS, setMaxCNS] = useState<number | null>(null);
   const [maxMetabolic, setMaxMetabolic] = useState<number | null>(null);
   const [maxJointStress, setMaxJointStress] = useState<number | null>(null);
+
+  const { data: exercises, isLoading } = useQuery({
+    queryKey: ["exercises"],
+    queryFn: () => getAllExercises(),
+  });
 
   const toggleCategory = (cat: string) => {
     setActiveCategories((prev) =>
@@ -68,59 +75,66 @@ export function useExerciseFilter() {
   };
 
   const filtered = useMemo(() => {
-    return EXERCISES.filter((ex) => {
-      const matchesSearch =
-        ex.name.toLowerCase().includes(search.toLowerCase()) ||
-        ex.aliases.some((a) => a.toLowerCase().includes(search.toLowerCase()));
+    return exercises
+      ?.filter((ex) => {
+        const matchesSearch =
+          ex.name.toLowerCase().includes(search.toLowerCase()) ||
+          ex.aliases.some((a: string) =>
+            a.toLowerCase().includes(search.toLowerCase())
+          );
 
-      const matchesCategory =
-        activeCategories.length === 0 || activeCategories.includes(ex.category);
+        const matchesCategory =
+          activeCategories.length === 0 ||
+          activeCategories.includes(ex.category);
 
-      const matchesSkill = selectedSkill
-        ? ex.skillRequirement === selectedSkill
-        : true;
+        const matchesSkill = selectedSkill
+          ? ex.skill_requirement === selectedSkill
+          : true;
 
-      const matchesEquipment =
-        selectedEquipment.length === 0 ||
-        selectedEquipment.some((eq) => ex.equipment.includes(eq as Equipment));
+        const matchesEquipment =
+          selectedEquipment.length === 0 ||
+          selectedEquipment.some((eq) =>
+            ex.equipment.includes(eq as Equipment)
+          );
 
-      const effectiveMuscles = getMusclesFromSelection(selectedMuscles);
+        const effectiveMuscles = getMusclesFromSelection(selectedMuscles);
 
-      const matchesMuscle =
-        effectiveMuscles.length === 0 ||
-        effectiveMuscles.some((muscle) =>
-          Object.keys(ex.activationMap).includes(muscle)
+        const matchesMuscle =
+          effectiveMuscles.length === 0 ||
+          effectiveMuscles.some((muscle) =>
+            Object.keys(ex.activation_map).includes(muscle)
+          );
+
+        const matchesTraits =
+          selectedTraits.length === 0 ||
+          selectedTraits.every((trait) => ex[trait as keyof Exercise] === true);
+
+        const matchesFatigue =
+          maxFatigue === null || ex.fatigue.index <= maxFatigue;
+        const matchesCNS = maxCNS === null || ex.fatigue.cns_demand <= maxCNS;
+        const matchesMetabolic =
+          maxMetabolic === null || ex.fatigue.metabolic_demand <= maxMetabolic;
+        const matchesJoint =
+          maxJointStress === null || ex.fatigue.joint_stress <= maxJointStress;
+
+        return (
+          matchesSearch &&
+          matchesCategory &&
+          matchesSkill &&
+          matchesEquipment &&
+          matchesMuscle &&
+          matchesTraits &&
+          matchesFatigue &&
+          matchesCNS &&
+          matchesMetabolic &&
+          matchesJoint
         );
-
-      const matchesTraits =
-        selectedTraits.length === 0 ||
-        selectedTraits.every((trait) => ex[trait as keyof Exercise] === true);
-
-      const matchesFatigue =
-        maxFatigue === null || ex.fatigue.index <= maxFatigue;
-      const matchesCNS = maxCNS === null || ex.fatigue.cnsDemand <= maxCNS;
-      const matchesMetabolic =
-        maxMetabolic === null || ex.fatigue.metabolicDemand <= maxMetabolic;
-      const matchesJoint =
-        maxJointStress === null || ex.fatigue.jointStress <= maxJointStress;
-
-      return (
-        matchesSearch &&
-        matchesCategory &&
-        matchesSkill &&
-        matchesEquipment &&
-        matchesMuscle &&
-        matchesTraits &&
-        matchesFatigue &&
-        matchesCNS &&
-        matchesMetabolic &&
-        matchesJoint
-      );
-    }).sort((a, b) => {
-      if (sortKey === "recovery") return a.recoveryDays - b.recoveryDays;
-      if (sortKey === "fatigue") return b.fatigue.index - a.fatigue.index;
-      return a.name.localeCompare(b.name);
-    });
+      })
+      .sort((a, b) => {
+        if (sortKey === "recovery") return a.recovery_days - b.recovery_days;
+        if (sortKey === "fatigue") return b.fatigue.index - a.fatigue.index;
+        return a.name.localeCompare(b.name);
+      });
   }, [
     search,
     activeCategories,
@@ -133,9 +147,10 @@ export function useExerciseFilter() {
     maxCNS,
     maxMetabolic,
     maxJointStress,
+    exercises,
   ]);
 
-  const grouped = groupBy(filtered, (ex) => ex.category);
+  const grouped = groupBy(filtered || [], (ex) => ex.category);
 
   return {
     search,
@@ -162,6 +177,8 @@ export function useExerciseFilter() {
     setMaxJointStress,
     resetFilters,
     filtered,
+    exercises,
     grouped,
+    isLoading,
   };
 }

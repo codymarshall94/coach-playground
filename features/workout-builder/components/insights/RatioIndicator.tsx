@@ -35,27 +35,27 @@ export function RatioIndicator({
   }
 
   return (
-    <div className="space-y-3 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+    <div className="space-y-3 p-4 bg-background rounded-xl border border-border shadow-sm">
       {/* Header with labels */}
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-violet-500"></div>
-          <span className="text-sm font-medium text-slate-700">
+          <span className="text-sm font-medium text-muted-foreground">
             {labelLeft}
           </span>
         </div>
 
         <div className="text-center">
-          <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
             Ratio
           </div>
-          <div className="text-lg font-bold text-slate-800">
+          <div className="text-lg font-bold text-foreground">
             {value.toFixed(2)}
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-slate-700">
+          <span className="text-sm font-medium text-muted-foreground">
             {labelRight}
           </span>
           <div className="w-3 h-3 rounded-full bg-rose-500"></div>
@@ -65,18 +65,16 @@ export function RatioIndicator({
       {/* Enhanced progress bar */}
       <div className="relative">
         {/* Background track */}
-        <div className="h-3 bg-gradient-to-r from-violet-100 via-slate-100 to-rose-100 rounded-full border border-slate-200 overflow-hidden">
+        <div className="h-3 bg-gradient-to-r from-violet-100 via-muted to-rose-100 rounded-full border border-border overflow-hidden">
           {/* Gradient overlay for visual zones */}
           <div className="absolute inset-0 bg-gradient-to-r from-violet-50/50 via-emerald-50/50 to-rose-50/50"></div>
         </div>
 
         {/* Ideal marker (thin line) */}
         <div
-          className="absolute top-0 bottom-0 w-0.5 bg-slate-400 rounded-full opacity-60"
+          className="absolute top-0 bottom-0 w-0.5 bg-muted rounded-full opacity-60"
           style={{ left: `calc(${idealPercent}% - 1px)` }}
-        >
-          <div className="absolute -top-1 -left-1 w-2.5 h-2.5 bg-slate-400 rounded-full opacity-80"></div>
-        </div>
+        ></div>
 
         {/* Current value marker */}
         <div
@@ -91,8 +89,8 @@ export function RatioIndicator({
         <div className="absolute -bottom-4 left-0 right-0 flex justify-between px-2">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="flex flex-col items-center">
-              <div className="w-px h-2 bg-slate-300"></div>
-              <span className="text-xs text-slate-400 mt-1">
+              <div className="w-px h-2 bg-muted"></div>
+              <span className="text-xs text-muted-foreground mt-1">
                 {(i * 0.5).toFixed(1)}
               </span>
             </div>

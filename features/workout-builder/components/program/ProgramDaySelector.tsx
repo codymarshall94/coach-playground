@@ -1,5 +1,6 @@
 "use client";
 
+import { SortableItem } from "@/components/SortableItem";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -32,7 +33,6 @@ import {
   Trash,
 } from "lucide-react";
 import { useState } from "react";
-import { SortableItem } from "../../../components/SortableItem";
 
 type Props = {
   days: ProgramDay[];
@@ -91,7 +91,7 @@ function DayButton({
         )}
         {day.type === "workout" &&
           (!day.workout || day.workout.length === 0) && (
-            <div className="flex items-center justify-center ml-auto bg-gray-200 text-gray-500 rounded-full min-w-[24px] h-6 px-2 text-xs font-medium">
+            <div className="flex items-center justify-center ml-auto bg-muted text-muted-foreground rounded-full min-w-[24px] h-6 px-2 text-xs font-medium">
               0
             </div>
           )}
@@ -197,7 +197,7 @@ export function ProgramDaySelector({
           ))}
 
           {/* Add buttons */}
-          <div className="flex gap-2 mt-4 pt-2 border-t border-gray-100">
+          <div className="flex gap-2 mt-4 pt-2 border-t border-border">
             <Button
               onClick={onAddWorkoutDay}
               variant="outline"
@@ -221,7 +221,7 @@ export function ProgramDaySelector({
       {/* Drag Overlay */}
       <DragOverlay>
         {activeDay && (
-          <div className="bg-white border rounded-lg shadow-xl ring-2 ring-blue-300 p-3 opacity-95">
+          <div className="bg-background border rounded-lg shadow-xl ring-2 ring-blue-300 p-3 opacity-95">
             <div className="flex items-center gap-3">
               <GripVertical className="w-4 h-4 text-blue-500" />
               <DayButton

@@ -1,17 +1,17 @@
-import { ExerciseDetailModal } from "@/features/workout-builder/components/ExerciseDetailModal";
+import { TermTooltip } from "@/components/TermTooltip";
 import { Button } from "@/components/ui/button";
-import { EXERCISES } from "@/data/exercises";
+import { ExerciseDetailModal } from "@/features/workout-builder/components/exercises/ExerciseDetailModal";
+import { Exercise } from "@/types/Exercise";
 import { Activity, AlertTriangle, Brain, Clock, Plus, Zap } from "lucide-react";
-import { TermTooltip } from "../../../components/TermTooltip";
 
 interface ExerciseCardProps {
-  exercise: (typeof EXERCISES)[number];
+  exercise: Exercise;
   onAdd: () => void;
 }
 
 const Tag = ({ children }: { children: React.ReactNode }) => (
   <TermTooltip term={children?.toString().toLowerCase() ?? ""}>
-    <span className="px-1 py-0.5 bg-gray-100 rounded text-[10px] font-medium text-gray-600">
+    <span className="px-1 py-0.5 bg-muted rounded text-[10px] font-medium text-muted-foreground">
       {children}
     </span>
   </TermTooltip>
@@ -31,7 +31,7 @@ const Metric = ({
   <div className="flex items-center gap-1">
     {icon}
     <TermTooltip term={label.toLowerCase().replace(" ", "_")}>
-      <span className={color || "text-gray-500"}>
+      <span className={color || "text-muted-foreground"}>
         {label}: {value.toFixed(1)}
       </span>
     </TermTooltip>
@@ -48,27 +48,27 @@ export const ExerciseCard = ({ exercise, onAdd }: ExerciseCardProps) => {
   };
 
   return (
-    <div className="group relative p-4 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-gray-300 transition mb-3">
+    <div className="group relative p-4 bg-background border border-border rounded-xl shadow-sm hover:shadow-md hover:border-border transition mb-3">
       <div className="flex items-start justify-between">
         <div className="flex-1">
           {/* Title */}
           <div className="flex items-center gap-2 mb-2">
-            <h3 className="font-semibold text-gray-900 text-lg">
+            <h3 className="font-semibold text-foreground text-lg">
               {exercise.name}
             </h3>
             {exercise.aliases?.[0] && (
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-muted-foreground">
                 ({exercise.aliases[0]})
               </span>
             )}
           </div>
 
           {/* Recovery & Fatigue */}
-          <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
+          <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
             <Metric
               icon={<Clock className="w-4 h-4" />}
               label="Recovery"
-              value={exercise.recoveryDays}
+              value={exercise.recovery_days}
             />
             <Metric
               icon={
@@ -81,20 +81,20 @@ export const ExerciseCard = ({ exercise, onAdd }: ExerciseCardProps) => {
           </div>
 
           {/* Meta Info */}
-          <div className="text-xs text-gray-500 mb-2">
-            <TermTooltip term={exercise.loadProfile.toLowerCase()}>
-              <span className="text-xs text-gray-500">
-                {exercise.loadProfile.toUpperCase()} •{" "}
+          <div className="text-xs text-muted-foreground mb-2">
+            <TermTooltip term={exercise.load_profile.toLowerCase()}>
+              <span className="text-xs text-muted-foreground">
+                {exercise.load_profile.toUpperCase()} •{" "}
               </span>
             </TermTooltip>
-            <TermTooltip term={exercise.movementPlane.toLowerCase()}>
-              <span className="text-xs text-gray-500">
-                {exercise.movementPlane.toUpperCase()} •{" "}
+            <TermTooltip term={exercise.movement_plane.toLowerCase()}>
+              <span className="text-xs text-muted-foreground">
+                {exercise.movement_plane.toUpperCase()} •{" "}
               </span>
             </TermTooltip>
-            <TermTooltip term={exercise.forceCurve.toLowerCase()}>
-              <span className="text-xs text-gray-500">
-                {exercise.forceCurve.toUpperCase()}
+            <TermTooltip term={exercise.force_curve.toLowerCase()}>
+              <span className="text-xs text-muted-foreground">
+                {exercise.force_curve.toUpperCase()}
               </span>
             </TermTooltip>
           </div>
@@ -111,33 +111,33 @@ export const ExerciseCard = ({ exercise, onAdd }: ExerciseCardProps) => {
               </TermTooltip>
             )}
             <TermTooltip term="romRating">
-              <span className="px-1 py-0.5 bg-gray-100 rounded text-[10px] font-medium text-gray-600">
-                ROM: {exercise.romRating}
+              <span className="px-1 py-0.5 bg-muted rounded text-[10px] font-medium text-muted-foreground">
+                ROM: {exercise.rom_rating}
               </span>
             </TermTooltip>
             <TermTooltip term="skillRequirement">
-              <span className="px-1 py-0.5 bg-gray-100 rounded text-[10px] font-medium text-gray-600">
-                Skill: {exercise.skillRequirement}
+              <span className="px-1 py-0.5 bg-muted rounded text-[10px] font-medium text-muted-foreground">
+                Skill: {exercise.skill_requirement}
               </span>
             </TermTooltip>
           </div>
 
           {/* Fatigue Breakdown */}
-          <div className="flex gap-3 mt-3 text-xs text-gray-500">
+          <div className="flex gap-3 mt-3 text-xs text-muted-foreground">
             <Metric
               icon={<Brain className="w-3 h-3" />}
               label="CNS"
-              value={exercise.fatigue.cnsDemand * 10}
+              value={exercise.fatigue.cns_demand * 10}
             />
             <Metric
               icon={<Activity className="w-3 h-3" />}
               label="Met"
-              value={exercise.fatigue.metabolicDemand * 10}
+              value={exercise.fatigue.metabolic_demand * 10}
             />
             <Metric
               icon={<AlertTriangle className="w-3 h-3" />}
               label="Joint"
-              value={exercise.fatigue.jointStress * 10}
+              value={exercise.fatigue.joint_stress * 10}
             />
           </div>
         </div>

@@ -106,16 +106,21 @@ export function BlockSelector({
         <div className="flex flex-col gap-3">
           {blocks.map((block, i) => (
             <SortableItem key={block.id} id={block.id}>
-              <div className="border rounded-lg p-4 space-y-4 shadow-sm bg-white">
-                {/* Block Header */}
+              <div
+                className="border rounded-lg p-4 space-y-4 shadow-sm bg-white"
+                onClick={() => onSelect(i)}
+              >
                 <div className="flex justify-between items-center">
-                  <Button
-                    onClick={() => onSelect(i)}
-                    variant={i === activeIndex ? "default" : "outline"}
-                  >
+                  <Button variant={i === activeIndex ? "default" : "outline"}>
                     {block.name || `Block ${i + 1}`}
                   </Button>
                   <div className="flex items-center gap-2">
+                    <Badge
+                      variant="secondary"
+                      className="bg-blue-50 text-blue-700 border-blue-200 text-xs"
+                    >
+                      {block.weeks || 4} Weeks
+                    </Badge>
                     <Badge
                       variant="secondary"
                       className="bg-blue-50 text-blue-700 border-blue-200 text-xs"
@@ -204,7 +209,6 @@ export function BlockSelector({
                   </div>
                 </div>
 
-                {/* Inline Day Selector */}
                 {i === activeIndex && (
                   <ProgramDaySelector
                     days={block.days}

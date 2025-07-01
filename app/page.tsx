@@ -17,6 +17,15 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+export const metadata = {
+  title: "Workout Sandbox",
+  description:
+    "Build, preview, and customize your training sessions in the Workout Sandbox.",
+  icons: {
+    icon: "/favicon.ico",
+  },
+};
+
 const liveMetrics = [
   {
     name: "Fatigue & CNS Demand",

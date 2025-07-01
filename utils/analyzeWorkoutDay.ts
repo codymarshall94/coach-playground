@@ -1,5 +1,5 @@
 import { MUSCLES } from "@/constants/muscles";
-import { EXERCISES } from "@/data/exercises";
+import { Exercise } from "@/types/Exercise";
 import { WorkoutExercise } from "@/types/Workout";
 import { WorkoutSummaryStats } from "@/types/WorkoutSummary";
 
@@ -79,7 +79,8 @@ function determineWorkoutType(
 // Main Analysis Function
 
 export function analyzeWorkoutDay(
-  workout: WorkoutExercise[]
+  workout: WorkoutExercise[],
+  exercises: Exercise[]
 ): WorkoutAnalytics {
   const muscleVolumes: Record<string, number> = {};
   const muscleSetCounts: Record<string, number> = {};
@@ -96,27 +97,27 @@ export function analyzeWorkoutDay(
   let totalJointStress = 0;
 
   for (const workoutEx of workout) {
-    const baseEx = EXERCISES.find((e) => e.id === workoutEx.id);
+    const baseEx = exercises?.find((e) => e.id === workoutEx.id);
     if (!baseEx) continue;
 
     // ✅ Count once per exercise (not per set)
     increment(categoryCounts, baseEx.category);
-    increment(energySystemCounts, baseEx.energySystem);
+    increment(energySystemCounts, baseEx.energy_system);
 
     const volumePerSet =
-      (baseEx.volumePerSetEstimate.strength +
-        baseEx.volumePerSetEstimate.hypertrophy) /
+      (baseEx.volume_per_set_estimate.strength +
+        baseEx.volume_per_set_estimate.hypertrophy) /
       2;
 
     for (const _set of workoutEx.sets) {
       setCount++;
       totalFatigue += baseEx.fatigue.index;
-      totalRecovery += baseEx.recoveryDays;
-      totalJointStress += baseEx.fatigue.jointStress;
+      totalRecovery += baseEx.recovery_days;
+      totalJointStress += baseEx.fatigue.joint_stress;
       totalVolume += volumePerSet;
 
       for (const [muscleId, activation] of Object.entries(
-        baseEx.activationMap
+        baseEx.activation_map
       )) {
         increment(muscleVolumes, muscleId, activation);
         increment(muscleSetCounts, muscleId);

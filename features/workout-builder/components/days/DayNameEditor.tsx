@@ -31,7 +31,7 @@ export const DayNameEditor = ({
           <Input
             value={editedName}
             onChange={(e) => setEditedName(e.target.value)}
-            className="text-2xl font-bold text-gray-900 bg-transparent border-b border-gray-300 focus:outline-none focus:ring-0 focus:border-black"
+            className="text-2xl font-bold text-foreground bg-transparent border-b border-gray-300 focus:outline-none focus:ring-0 focus:border-black"
             placeholder="Day Name"
             autoFocus
             onKeyDown={(e) => {
@@ -54,7 +54,7 @@ export const DayNameEditor = ({
         </>
       ) : (
         <>
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-2xl font-bold text-foreground">
             {program.mode === "blocks"
               ? program.blocks![activeBlockIndex].days[activeDayIndex].name
               : program.days![activeDayIndex].name}

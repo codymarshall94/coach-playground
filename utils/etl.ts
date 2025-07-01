@@ -1,4 +1,5 @@
-import { Exercise, WorkoutExercise } from "@/types/Workout";
+import { Exercise } from "@/types/Exercise";
+import { WorkoutExercise } from "@/types/Workout";
 
 // Default intensity if RPE isn't given
 function estimateIntensityFromRPE(rpe: number): number {
@@ -41,7 +42,7 @@ export function getExerciseETL(
   goal: "strength" | "hypertrophy" = "hypertrophy"
 ): { totalETL: number; normalizedETL: number } {
   const fatigue = exerciseMeta.fatigue?.index ?? 1;
-  const baseVolumePerSet = exerciseMeta.volumePerSetEstimate?.[goal] ?? 10; // fallback if not defined
+  const baseVolumePerSet = exerciseMeta.volume_per_set_estimate?.[goal] ?? 10; // fallback if not defined
 
   let totalETL = 0;
 

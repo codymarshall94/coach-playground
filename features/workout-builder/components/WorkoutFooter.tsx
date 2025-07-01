@@ -1,8 +1,8 @@
 import { EXERCISES } from "@/data/exercises";
 import { WorkoutExercise } from "@/types/Workout";
-import { estimateWorkoutDuration } from "@/utils/estimateExerciseDuration";
+import { estimateWorkoutDuration } from "@/utils/volume/estimateExerciseDuration";
 import { getWorkoutETL } from "@/utils/etl";
-import { ETLDisplay } from "./EtlDisplay";
+import { ETLDisplay } from "./insights/EtlDisplay";
 
 export const WorkoutFooter = ({ workout }: { workout: WorkoutExercise[] }) => {
   const totalReps = workout.reduce(

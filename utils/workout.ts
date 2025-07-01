@@ -11,7 +11,7 @@ export function createWorkoutExercise(
   sets: number = 3
 ): WorkoutExercise {
   const reps = Math.round(
-    (exercise.idealRepRange[0] + exercise.idealRepRange[1]) / 2
+    (exercise.ideal_rep_range[0] + exercise.ideal_rep_range[1]) / 2
   );
 
   const getIntensity = (): Partial<SetInfo> => {

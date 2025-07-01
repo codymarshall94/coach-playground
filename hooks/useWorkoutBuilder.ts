@@ -1,15 +1,17 @@
 import {
-  Exercise,
   IntensitySystem,
   Program,
   ProgramBlock,
   ProgramDay,
   WorkoutExercise,
 } from "@/types/Workout";
+import { Exercise } from "@/types/Exercise";
 import { createEmptyProgram } from "@/utils/createEmptyProgram";
 import { createWorkoutExercise } from "@/utils/workout";
 import { createRestDay, createWorkoutDay } from "@/utils/workoutDays";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getAllExercises } from "@/services/exerciseService";
 
 export function useWorkoutBuilder(initialProgram?: Program) {
   const [program, setProgram] = useState<Program>(
@@ -19,6 +21,11 @@ export function useWorkoutBuilder(initialProgram?: Program) {
   const usingBlocks = program.mode === "blocks";
   const [activeBlockIndex, setActiveBlockIndex] = useState(0);
   const [activeDayIndex, setActiveDayIndex] = useState<number>(0);
+
+  const { data: exercises } = useQuery({
+    queryKey: ["exercises"],
+    queryFn: () => getAllExercises() as Promise<Exercise[]>,
+  });
 
   // === Safe Getters ===
   const getDayRef = (p: Program = program): ProgramDay | null => {
@@ -343,6 +350,7 @@ export function useWorkoutBuilder(initialProgram?: Program) {
 
   return {
     program,
+    exercises,
     setProgram,
     activeDayIndex,
     setActiveDayIndex,

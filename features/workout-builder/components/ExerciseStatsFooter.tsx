@@ -1,7 +1,7 @@
 import { WorkoutExercise } from "@/types/Workout";
-import { estimateExerciseDuration } from "@/utils/estimateExerciseDuration";
+import { estimateExerciseDuration } from "@/utils/volume/estimateExerciseDuration";
 import { IntensitySystem, Exercise } from "@/types/Workout";
-import { ETLDisplay } from "./EtlDisplay";
+import { ETLDisplay } from "./insights/EtlDisplay";
 
 export const ExerciseStatsFooter = ({
   exercise,

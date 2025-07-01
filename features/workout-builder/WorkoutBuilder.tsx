@@ -1,38 +1,42 @@
 "use client";
 
+import { Droppable } from "@/components/Droppable";
+import { EmptyState } from "@/components/EmptyState";
+import { Button } from "@/components/ui/button";
+import { ProgramDaySelector } from "@/features/workout-builder/components/program/ProgramDaySelector";
+import { useWorkoutBuilder } from "@/hooks/useWorkoutBuilder";
+import { saveProgramService } from "@/services/programService";
+import { Program } from "@/types/Workout";
+import { analyzeWorkoutDay } from "@/utils/analyzeWorkoutDay";
 import {
+  closestCenter,
+  DndContext,
+  DragOverlay,
   DragStartEvent,
   PointerSensor,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
+import { User } from "@supabase/supabase-js";
+import { Bed, Plus, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import { DayHeader } from "./components/days/DayHeader";
+import { ExerciseBuilderCard } from "./components/exercises/ExerciseBuilderCard";
+import { ExerciseCard } from "./components/exercises/ExerciseCard";
+import { WorkoutAnalyticsPanel } from "./components/insights/WorkoutAnalyticsPanel";
+import { BlockSelector } from "./components/program/BlockSelector";
+import { ModeSwitchDialog } from "./components/program/ModeSwitchDialog";
+import { ProgramMetaEditor } from "./components/program/ProgramMetaEditor";
+import { WorkoutBuilderHeader } from "./components/WorkoutBuilderHeader";
 
-import { Plus } from "lucide-react";
-
-import { Logo } from "@/components/Logo";
-import { Button } from "@/components/ui/button";
-
-import { Droppable } from "@/components/Droppable";
-import { EmptyState } from "@/components/EmptyState";
-import { EXERCISES } from "@/data/exercises";
-import { ExerciseLibrary } from "@/features/workout-builder/components/ExerciseLibrary";
-import { ProgramDaySelector } from "@/features/workout-builder/components/ProgramDaySelector";
-import { useWorkoutBuilder } from "@/hooks/useWorkoutBuilder";
-import { analyzeWorkoutDay } from "@/utils/analyzeWorkoutDay";
-import { closestCenter, DndContext, DragOverlay } from "@dnd-kit/core";
-import { Bed, Trash2 } from "lucide-react";
-import { BlockSelector } from "./components/BlockSelector";
-import { DayHeader } from "./components/DayHeader";
-import { ExerciseBuilderCard } from "./components/ExerciseBuilderCard";
-import { ExerciseCard } from "./components/ExerciseCard";
-import { ModeSwitchDialog } from "./components/ModeSwitchDialog";
-import { ProgramMetaEditor } from "./components/ProgramMetaEditor";
-import { WorkoutAnalyticsPanel } from "./components/WorkoutAnalyticsPanel";
-import ProgramPreview from "./components/ProgramPreview";
-
-export const WorkoutBuilder = () => {
+export const WorkoutBuilder = ({
+  initialProgram,
+}: {
+  initialProgram?: Program;
+}) => {
   const {
+    exercises,
     program,
     setProgram,
     activeDayIndex,
@@ -56,7 +60,22 @@ export const WorkoutBuilder = () => {
     reorderBlocks,
     usingBlocks,
     updateBlockDetails,
-  } = useWorkoutBuilder();
+  } = useWorkoutBuilder(initialProgram);
+
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await saveProgramService(program);
+      toast.success("Program saved successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save program.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -70,8 +89,10 @@ export const WorkoutBuilder = () => {
     setActiveId(event.active.id as string);
   };
 
-  const activeExercise = EXERCISES.find((ex) => ex.id === activeId);
-  const insights = isWorkoutDay ? analyzeWorkoutDay(workout) : null;
+  const activeExercise = exercises?.find((ex) => ex.id === activeId);
+  const insights = isWorkoutDay
+    ? analyzeWorkoutDay(workout, exercises ?? [])
+    : null;
 
   const currentDays = useMemo(() => {
     if (usingBlocks && typeof activeBlockIndex === "number") {
@@ -85,19 +106,15 @@ export const WorkoutBuilder = () => {
   return (
     <div className="flex flex-col h-screen">
       {/* HEADER */}
-      <header className="sticky top-0 z-30 bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center shadow-sm">
-        <Logo size="xs" lineBreak={false} />
-        <div className="flex gap-2">
-          <ProgramPreview program={program} />
-          {isWorkoutDay && (
-            <ExerciseLibrary
-              addExercise={addExercise}
-              open={exerciseLibraryOpen}
-              setOpen={setExerciseLibraryOpen}
-            />
-          )}
-        </div>
-      </header>
+      <WorkoutBuilderHeader
+        program={program}
+        isSaving={isSaving}
+        handleSave={handleSave}
+        isWorkoutDay={isWorkoutDay}
+        addExercise={addExercise}
+        exerciseLibraryOpen={exerciseLibraryOpen}
+        setExerciseLibraryOpen={setExerciseLibraryOpen}
+      />
 
       {/* MAIN */}
       <div className="p-6 flex-1 space-y-4">
@@ -209,7 +226,7 @@ export const WorkoutBuilder = () => {
 
               {noWorkoutDays ? (
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-1 text-sm font-medium bg-green-100 text-green-800 rounded-md whitespace-nowrap">
+                  <span className="px-2 py-1 text-sm font-medium bg-muted text-muted-foreground rounded-md whitespace-nowrap">
                     {currentDays.length} Days
                   </span>
                 </div>
@@ -218,13 +235,15 @@ export const WorkoutBuilder = () => {
                   {!isWorkoutDay ? (
                     <EmptyState
                       className="w-full"
-                      icon={<Bed className="w-10 h-10 text-gray-400" />}
+                      icon={<Bed className="w-10 h-10 text-muted-foreground" />}
                       title="Rest Day"
                       description="You have programmed a rest day for this workout"
                     />
                   ) : workout.length === 0 ? (
                     <EmptyState
-                      icon={<Plus className="w-10 h-10 text-gray-400" />}
+                      icon={
+                        <Plus className="w-10 h-10 text-muted-foreground" />
+                      }
                       title="Start Building Your Workout"
                       description="Open the exercise library to add exercises to your workout"
                     />
@@ -257,7 +276,7 @@ export const WorkoutBuilder = () => {
                   <Button
                     onClick={() => setExerciseLibraryOpen(true)}
                     variant="outline"
-                    className="flex items-center gap-2 px-6 py-3 border-2 border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-2 px-6 py-3 border-2 border-dashed border-border hover:border-border hover:bg-muted/50 transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                     Add Exercise

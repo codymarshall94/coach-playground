@@ -20,8 +20,8 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MUSCLE_DISPLAY_MAP } from "@/constants/muscles";
-import type { EXERCISES } from "@/data/exercises";
-import { getPrimaryAndSecondaryMuscles } from "@/utils/getPrimaryAndSecondaryMuscles";
+import { Exercise } from "@/types/Exercise";
+import { getPrimaryAndSecondaryMuscles } from "@/utils/muscles/getPrimaryAndSecondaryMuscles";
 import {
   Activity,
   AlertTriangle,
@@ -35,13 +35,9 @@ import {
   Target,
   Zap,
 } from "lucide-react";
-import { MuscleActivationChart } from "./MuscleActivationChart";
+import { MuscleActivationChart } from "../insights/MuscleActivationChart";
 
-export function ExerciseDetailModal({
-  exercise,
-}: {
-  exercise: (typeof EXERCISES)[number];
-}) {
+export function ExerciseDetailModal({ exercise }: { exercise: Exercise }) {
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
       case "beginner":
@@ -67,7 +63,7 @@ export function ExerciseDetailModal({
   };
 
   const { primary, secondary } = getPrimaryAndSecondaryMuscles(
-    exercise.activationMap
+    exercise.activation_map
   );
 
   return (
@@ -85,11 +81,11 @@ export function ExerciseDetailModal({
             {exercise.name}
             <Badge
               className={
-                getDifficultyColor(exercise.loadProfile) +
+                getDifficultyColor(exercise.load_profile) +
                 " border text-xs ml-auto"
               }
             >
-              {exercise.loadProfile}
+              {exercise.load_profile}
             </Badge>
           </DialogTitle>
         </DialogHeader>
@@ -111,19 +107,19 @@ export function ExerciseDetailModal({
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <ProgressIndicator
-                    value={exercise.fatigue.cnsDemand * 10}
+                    value={exercise.fatigue.cns_demand * 10}
                     label="CNS Demand"
                     max={10}
                     field="cnsDemand"
                   />
                   <ProgressIndicator
-                    value={exercise.fatigue.metabolicDemand * 10}
+                    value={exercise.fatigue.metabolic_demand * 10}
                     label="Metabolic Demand"
                     max={10}
                     field="metabolicDemand"
                   />
                   <ProgressIndicator
-                    value={exercise.fatigue.jointStress * 10}
+                    value={exercise.fatigue.joint_stress * 10}
                     label="Joint Stress"
                     max={10}
                     field="jointStress"
@@ -144,7 +140,7 @@ export function ExerciseDetailModal({
                       <InfoTooltip field="recoveryDays" />
                     </span>
                     <span className="text-sm text-muted-foreground">
-                      {exercise.recoveryDays} days
+                      {exercise.recovery_days} days
                     </span>
                   </div>
 
@@ -154,17 +150,17 @@ export function ExerciseDetailModal({
                       <InfoTooltip field="baseCalorieCost" />
                     </span>
                     <span className="text-sm text-muted-foreground">
-                      {exercise.baseCalorieCost} kcal
+                      {exercise.base_calorie_cost} kcal
                     </span>
                   </div>
 
                   <div className="flex justify-between">
                     <span className="text-sm font-medium flex items-center gap-1">
-                      {getEnergySystemIcon(exercise.energySystem)} Energy System{" "}
-                      <InfoTooltip field="energySystem" />
+                      {getEnergySystemIcon(exercise.energy_system)} Energy
+                      System <InfoTooltip field="energySystem" />
                     </span>
                     <span className="text-sm text-muted-foreground">
-                      {exercise.energySystem}
+                      {exercise.energy_system}
                     </span>
                   </div>
                 </CardContent>
@@ -186,7 +182,7 @@ export function ExerciseDetailModal({
                 </CardHeader>
                 <CardContent>
                   <MuscleActivationChart
-                    activationMap={exercise.activationMap}
+                    activationMap={exercise.activation_map}
                   />
                 </CardContent>
               </Card>
@@ -241,19 +237,19 @@ export function ExerciseDetailModal({
                       <span className="text-sm font-medium flex items-center gap-1">
                         Load Profile <InfoTooltip field="loadProfile" />
                       </span>
-                      <Badge variant="outline">{exercise.loadProfile}</Badge>
+                      <Badge variant="outline">{exercise.load_profile}</Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium flex items-center gap-1">
                         Force Curve <InfoTooltip field="forceCurve" />
                       </span>
-                      <Badge variant="outline">{exercise.forceCurve}</Badge>
+                      <Badge variant="outline">{exercise.force_curve}</Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium flex items-center gap-1">
                         ROM Rating <InfoTooltip field="romRating" />
                       </span>
-                      <Badge variant="outline">{exercise.romRating}</Badge>
+                      <Badge variant="outline">{exercise.rom_rating}</Badge>
                     </div>
                   </CardContent>
                 </Card>
@@ -297,7 +293,7 @@ export function ExerciseDetailModal({
                   </CardContent>
                 </Card>
 
-                {exercise.contraIndications.length > 0 && (
+                {exercise.contra_indications.length > 0 && (
                   <Card className="border border-orange-200 bg-orange-50">
                     <CardHeader>
                       <CardTitle className="text-sm text-orange-800 flex gap-2 items-center">
@@ -310,7 +306,7 @@ export function ExerciseDetailModal({
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="flex flex-wrap gap-2">
-                      {exercise.contraIndications.map((c, i) => (
+                      {exercise.contra_indications.map((c, i) => (
                         <Badge
                           key={i}
                           className="bg-orange-200 text-orange-800 text-xs"
@@ -322,7 +318,7 @@ export function ExerciseDetailModal({
                   </Card>
                 )}
 
-                {exercise.externalLinks.length > 0 && (
+                {exercise.external_links.length > 0 && (
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-sm flex items-center gap-2">
@@ -331,7 +327,7 @@ export function ExerciseDetailModal({
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                      {exercise.externalLinks.map((link, i) => (
+                      {exercise.external_links.map((link, i) => (
                         <a
                           key={i}
                           href={link.url}

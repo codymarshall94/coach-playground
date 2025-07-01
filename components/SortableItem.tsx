@@ -31,12 +31,12 @@ export function SortableItem({
       ref={setNodeRef}
       style={style}
       className={`
-        flex items-center gap-3 px-3 py-2 bg-white border rounded-lg 
+        flex items-center gap-3 px-3 py-2 bg-background border rounded-lg 
         transition-all duration-200 ease-in-out
         ${
           isSortableDragging
             ? "opacity-50 scale-105 shadow-lg ring-2 ring-blue-200 z-50"
-            : "hover:bg-gray-50 hover:shadow-md"
+            : "hover:bg-muted hover:shadow-md"
         }
         ${isDragging ? "shadow-xl ring-2 ring-blue-300" : ""}
       `}

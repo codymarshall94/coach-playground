@@ -1,7 +1,4 @@
-"use client";
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Bone, Brain, Heart } from "lucide-react";
 
 interface FatigueBreakdownProps {
@@ -42,13 +39,13 @@ export function FatigueBreakdown({
   const getLabelColor = (value: number) => {
     if (value < 4) return "text-green-600";
     if (value < 7) return "text-yellow-600";
-    return "text-red-600";
+    return "text-destructive";
   };
 
   const getBarColor = (value: number) => {
     if (value < 4) return "bg-green-500";
     if (value < 7) return "bg-yellow-500";
-    return "bg-red-500";
+    return "bg-destructive";
   };
 
   return (
@@ -63,7 +60,7 @@ export function FatigueBreakdown({
         {metrics.map(({ label, icon: Icon, value, description }) => (
           <div key={label} className="space-y-1">
             <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2 text-gray-700">
+              <div className="flex items-center gap-2 text-muted-foreground">
                 <Icon className="w-4 h-4" />
                 <span className="font-medium">{label}</span>
               </div>
@@ -72,7 +69,7 @@ export function FatigueBreakdown({
               </span>
             </div>
 
-            <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div className="relative h-2 bg-muted rounded-full overflow-hidden">
               <div
                 className={`absolute h-full transition-all duration-500 ${getBarColor(
                   value
@@ -81,7 +78,7 @@ export function FatigueBreakdown({
               />
             </div>
 
-            <p className="text-xs text-gray-500">{description}</p>
+            <p className="text-xs text-muted-foreground">{description}</p>
           </div>
         ))}
       </CardContent>

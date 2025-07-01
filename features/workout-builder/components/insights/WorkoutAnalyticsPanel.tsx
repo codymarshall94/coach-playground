@@ -15,6 +15,9 @@ import { WorkoutExercise } from "@/types/Workout";
 import { WorkoutSummaryStats } from "@/types/WorkoutSummary";
 import { BarChart2, Dumbbell } from "lucide-react";
 
+import { getAllExercises } from "@/services/exerciseService";
+import { Exercise } from "@/types/Exercise";
+import { useQuery } from "@tanstack/react-query";
 import { EnergySystemChart } from "./EnergySystemChart";
 import { FatigueBreakdown } from "./FatigueBreakdown";
 import { MuscleVolumeRow } from "./MuscleVolumeRow";
@@ -33,6 +36,11 @@ export const WorkoutAnalyticsPanel = ({
   open,
   setOpen,
 }: Props) => {
+  const { data: exercises } = useQuery({
+    queryKey: ["exercises"],
+    queryFn: () => getAllExercises() as Promise<Exercise[]>,
+  });
+
   if (workout.length === 0) {
     return (
       <EmptyState
@@ -74,7 +82,7 @@ export const WorkoutAnalyticsPanel = ({
 
       <SheetContent className="space-y-6 overflow-y-auto w-full max-w-3xl min-w-1/2 p-6">
         <SheetHeader>
-          <SheetTitle className="text-xl font-bold text-slate-900">
+          <SheetTitle className="text-xl font-bold text-foreground">
             Workout Analytics
           </SheetTitle>
         </SheetHeader>
@@ -92,7 +100,7 @@ export const WorkoutAnalyticsPanel = ({
         <Card>
           <CardContent className="p-4 space-y-4">
             <div>
-              <h4 className="font-semibold text-sm text-gray-700 mb-1">
+              <h4 className="font-semibold text-sm text-muted-foreground mb-1">
                 Push / Pull Ratio
               </h4>
               <RatioIndicator
@@ -104,7 +112,7 @@ export const WorkoutAnalyticsPanel = ({
             </div>
 
             <div>
-              <h4 className="font-semibold text-sm text-gray-700 mb-1">
+              <h4 className="font-semibold text-sm text-muted-foreground mb-1">
                 Upper / Lower Ratio
               </h4>
               <RatioIndicator
@@ -119,7 +127,7 @@ export const WorkoutAnalyticsPanel = ({
 
         {/* Risk + Meta */}
         <Card>
-          <CardContent className="p-4 grid grid-cols-2 gap-4 text-sm text-gray-700">
+          <CardContent className="p-4 grid grid-cols-2 gap-4 text-sm text-muted-foreground">
             <div>
               <div className="font-medium">Workout Type</div>
               <div>{workout_type}</div>
@@ -129,7 +137,7 @@ export const WorkoutAnalyticsPanel = ({
               <div
                 className={`inline-block px-2 py-1 rounded-md text-white text-xs ${
                   injury_risk === "High"
-                    ? "bg-red-500"
+                    ? "bg-destructive"
                     : injury_risk === "Moderate"
                     ? "bg-yellow-500"
                     : "bg-green-500"
@@ -152,10 +160,10 @@ export const WorkoutAnalyticsPanel = ({
         {/* Movement Patterns */}
         <Card>
           <CardContent className="p-4">
-            <h4 className="text-sm font-semibold text-gray-700 mb-2">
+            <h4 className="text-sm font-semibold text-muted-foreground mb-2">
               Movement Patterns
             </h4>
-            <ul className="text-sm space-y-1 text-gray-700">
+            <ul className="text-sm space-y-1 text-muted-foreground">
               {Object.entries(movementFocus).map(([cat, count]) => (
                 <li key={cat} className="flex justify-between">
                   <span className="capitalize">
@@ -174,7 +182,7 @@ export const WorkoutAnalyticsPanel = ({
 
         {/* Muscle Volumes */}
         <div className="space-y-2">
-          <h4 className="text-sm font-semibold text-slate-700">
+          <h4 className="text-sm font-semibold text-muted-foreground">
             Muscle Group Volumes
           </h4>
           {Object.entries(muscle_volumes).map(([muscle, volume], index) => (
@@ -186,27 +194,28 @@ export const WorkoutAnalyticsPanel = ({
               weightedVolume={volume}
               maxVolume={maxVolume}
               workout={workout}
+              exercises={exercises ?? []}
             />
           ))}
         </div>
 
         {/* Summary */}
-        <Card className="bg-white rounded-xl">
-          <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4 p-5 text-center text-sm text-gray-700">
+        <Card className="bg-background rounded-xl">
+          <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4 p-5 text-center text-sm text-muted-foreground">
             <div>
-              <div className="text-lg font-bold text-gray-900">
+              <div className="text-lg font-bold text-foreground">
                 {workout.length}
               </div>
               <div>Total Exercises</div>
             </div>
             <div>
-              <div className="text-lg font-bold text-gray-900">
+              <div className="text-lg font-bold text-foreground">
                 {top_muscles.length}
               </div>
               <div>Muscles Targeted</div>
             </div>
             <div>
-              <div className="text-lg font-bold text-gray-900">
+              <div className="text-lg font-bold text-foreground">
                 {Object.keys(systemBreakdown).length}
               </div>
               <div>Energy Systems</div>

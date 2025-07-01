@@ -5,8 +5,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { MUSCLE_DISPLAY_MAP } from "@/constants/muscles";
-import { EXERCISES } from "@/data/exercises";
-import { Muscle, WorkoutExercise } from "@/types/Workout";
+import { Exercise, Muscle } from "@/types/Exercise";
+import { WorkoutExercise } from "@/types/Workout";
 
 interface MuscleVolumeRowProps {
   index: number;
@@ -15,16 +15,18 @@ interface MuscleVolumeRowProps {
   weightedVolume: number;
   maxVolume: number;
   workout: WorkoutExercise[]; // needed for exercise count
+  exercises: Exercise[];
 }
 
 const countExercisesForMuscle = (
   workout: WorkoutExercise[],
+  exercises: Exercise[],
   muscleId: string
 ): number => {
   const uniqueExerciseIds = new Set(
     workout
       .map((ex) =>
-        EXERCISES.find((e) => e.id === ex.id)?.activationMap?.[
+        exercises?.find((e) => e.id === ex.id)?.activation_map?.[
           muscleId as Muscle
         ]
           ? ex.id
@@ -42,12 +44,13 @@ export const MuscleVolumeRow: React.FC<MuscleVolumeRowProps> = ({
   weightedVolume,
   maxVolume,
   workout,
+  exercises,
 }) => {
   const displayName =
     MUSCLE_DISPLAY_MAP[muscleId as keyof typeof MUSCLE_DISPLAY_MAP];
   const percent = (weightedVolume / maxVolume) * 100;
 
-  const exerciseCount = countExercisesForMuscle(workout, muscleId);
+  const exerciseCount = countExercisesForMuscle(workout, exercises, muscleId);
 
   return (
     <div className="space-y-1">
@@ -55,19 +58,21 @@ export const MuscleVolumeRow: React.FC<MuscleVolumeRowProps> = ({
         <div className="flex items-center gap-2">
           <Badge
             className={`text-white ${
-              index + 1 > 3 ? "bg-slate-300" : "bg-slate-500"
+              index + 1 > 3 ? "bg-muted" : "bg-muted-foreground"
             }`}
           >
             {index + 1}
           </Badge>
-          <span className="capitalize text-slate-600">{displayName}</span>
+          <span className="capitalize text-muted-foreground">
+            {displayName}
+          </span>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-slate-500">{setCount} sets</span>
+          <span className="text-muted-foreground">{setCount} sets</span>
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="text-slate-400 text-[10px] underline cursor-help">
+              <span className="text-muted-foreground text-[10px] underline cursor-help">
                 ({weightedVolume.toFixed(1)} weighted)
               </span>
             </TooltipTrigger>
@@ -83,9 +88,9 @@ export const MuscleVolumeRow: React.FC<MuscleVolumeRowProps> = ({
         </div>
       </div>
 
-      <div className="w-full bg-slate-100 rounded h-1 overflow-hidden">
+      <div className="w-full bg-muted rounded h-1 overflow-hidden">
         <div
-          className="bg-slate-500 h-full transition-all"
+          className="bg-muted-foreground h-full transition-all"
           style={{ width: `${percent}%` }}
         />
       </div>

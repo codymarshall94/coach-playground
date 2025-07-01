@@ -18,7 +18,7 @@ export function Logo({
   };
   return (
     <h1
-      className={`font-black text-gray-900 ${sizeVariants[size]} ${className}`}
+      className={`font-black text-foreground ${sizeVariants[size]} ${className}`}
     >
       THE WORKOUT
       {lineBreak && <br />}

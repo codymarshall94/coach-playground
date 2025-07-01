@@ -15,11 +15,11 @@ export function EnergySystemChart({
   const getSystemIcon = (system: string) => {
     switch (system.toLowerCase()) {
       case "aerobic":
-        return <Heart className="w-4 h-4 text-blue-600" />;
+        return <Heart className="w-4 h-4 text-blue-500" />;
       case "anaerobic":
-        return <Zap className="w-4 h-4 text-red-600" />;
+        return <Zap className="w-4 h-4 text-destructive" />;
       default:
-        return <Flame className="w-4 h-4 text-orange-600" />;
+        return <Flame className="w-4 h-4 text-muted-foreground" />;
     }
   };
 
@@ -28,9 +28,9 @@ export function EnergySystemChart({
       case "aerobic":
         return "bg-blue-500";
       case "anaerobic":
-        return "bg-red-500";
+        return "bg-destructive";
       default:
-        return "bg-orange-500";
+        return "bg-muted-foreground";
     }
   };
 
@@ -49,15 +49,15 @@ export function EnergySystemChart({
           return (
             <div key={system} className="space-y-1">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-gray-700">
+                <div className="flex items-center gap-2 text-muted-foreground">
                   {getSystemIcon(system)}
                   <span className="capitalize font-medium">{system}</span>
                 </div>
-                <span className="text-sm font-semibold text-gray-600">
+                <span className="text-sm font-semibold text-muted-foreground">
                   {count}x ({percent.toFixed(0)}%)
                 </span>
               </div>
-              <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="relative h-2 bg-muted rounded-full overflow-hidden">
                 <div
                   className={`h-full transition-all duration-500 ${getSystemBar(
                     system
