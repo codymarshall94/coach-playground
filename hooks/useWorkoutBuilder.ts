@@ -171,14 +171,19 @@ export function useWorkoutBuilder(initialProgram?: Program) {
   };
 
   const handleRemoveWorkoutDay = (index: number) => {
-    if (!program.blocks?.[activeBlockIndex]) return;
-
     updateProgram((prev) => {
       if (usingBlocks) {
         const blocks = [...(prev.blocks ?? [])];
+        if (!blocks[activeBlockIndex]) return prev;
+
         const days = [...blocks[activeBlockIndex].days];
         days.splice(index, 1);
-        blocks[activeBlockIndex].days = days;
+
+        blocks[activeBlockIndex] = {
+          ...blocks[activeBlockIndex],
+          days,
+        };
+
         setActiveDayIndex(Math.max(0, days.length - 1));
         return { ...prev, blocks };
       } else {
@@ -193,12 +198,16 @@ export function useWorkoutBuilder(initialProgram?: Program) {
 
   const handleDuplicateWorkoutDay = (index: number) => {
     updateProgram((prev) => {
-      const sourceDay = usingBlocks
-        ? prev.blocks?.[activeBlockIndex]?.days[index]
-        : prev.days?.[index];
+      const isBlockMode = prev.mode === "blocks";
+      const blocks = [...(prev.blocks ?? [])];
+      const days = isBlockMode
+        ? [...(blocks[activeBlockIndex]?.days ?? [])]
+        : [...(prev.days ?? [])];
+
+      const sourceDay = days[index];
       if (!sourceDay) return prev;
 
-      const duplicate = {
+      const duplicate: ProgramDay = {
         ...sourceDay,
         id: crypto.randomUUID(),
         name: `${sourceDay.name} (Copy)`,
@@ -211,17 +220,29 @@ export function useWorkoutBuilder(initialProgram?: Program) {
         })),
       };
 
-      if (usingBlocks) {
-        const blocks = [...(prev.blocks ?? [])];
-        blocks[activeBlockIndex].days.push(duplicate);
-        setActiveDayIndex(blocks[activeBlockIndex].days.length - 1);
-        return { ...prev, blocks };
-      } else {
-        const days = [...(prev.days ?? []), duplicate];
-        setActiveDayIndex(days.length - 1);
-        return { ...prev, days };
+      const updatedDays = [...days, duplicate];
+
+      if (isBlockMode) {
+        blocks[activeBlockIndex] = {
+          ...blocks[activeBlockIndex],
+          days: updatedDays,
+        };
+
+        return {
+          ...prev,
+          blocks,
+        };
       }
+
+      return {
+        ...prev,
+        days: updatedDays,
+      };
     });
+
+    // Use a separate `useEffect` or manual set here
+    // to avoid stale index update issues
+    setActiveDayIndex((prevIndex) => prevIndex + 1);
   };
 
   const addTrainingBlock = () => {
