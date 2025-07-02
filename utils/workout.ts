@@ -1,5 +1,5 @@
+import type { Exercise } from "@/types/Exercise";
 import type {
-  Exercise,
   IntensitySystem,
   SetInfo,
   WorkoutExercise,
@@ -29,6 +29,8 @@ export function createWorkoutExercise(
 
   return {
     id: exercise.id,
+    exercise_id: exercise.id,
+    order_num: 0,
     name: exercise.name,
     intensity,
     sets: Array.from({ length: sets }, () => ({

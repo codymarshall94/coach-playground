@@ -9,6 +9,7 @@ export async function insertWorkoutExercises(
 
   const payload = exercises.map((ex, index) => ({
     workout_id: workoutId,
+    exercise_id: ex.id, // ← this is the original catalog exercise
     name: ex.name,
     intensity: ex.intensity,
     notes: ex.notes ?? "",

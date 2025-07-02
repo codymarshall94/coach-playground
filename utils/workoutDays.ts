@@ -1,10 +1,10 @@
 import { ProgramDay } from "@/types/Workout";
 
-export const createWorkoutDay = (index: number): ProgramDay => ({
+export const createWorkoutDay = (order = 0): ProgramDay => ({
   id: crypto.randomUUID(),
-  name: `Day ${index + 1}`,
+  name: `Day ${order + 1}`,
+  order,
   type: "workout",
-  order: index,
   description: "",
   workout: [
     {

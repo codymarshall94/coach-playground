@@ -1,4 +1,5 @@
-import { ExerciseCategory, WorkoutTypes } from "@/types/Workout";
+import { ExerciseCategory } from "@/types/Exercise";
+import { WorkoutTypes } from "@/types/Workout";
 
 const CATEGORY_MAP: Record<string, WorkoutTypes> = {
   strength: "strength",

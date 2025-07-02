@@ -1,5 +1,5 @@
 import { WorkoutBuilder } from "@/features/workout-builder/WorkoutBuilder";
-import { getProgramById } from "@/services/programService";
+import { createClient } from "@/utils/supabase/server";
 
 export default async function ProgramEditPage({
   params,
@@ -7,9 +7,42 @@ export default async function ProgramEditPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const program = await getProgramById(id);
+  const supabase = await createClient();
 
-  if (!program) return <p>Failed to load program</p>;
+  const { data, error } = await supabase
+    .from("programs")
+    .select(
+      `
+    *,
+    blocks:program_blocks (
+      *,
+      days:program_days (
+        *,
+        workout:workouts (
+          *,
+          exercises:workout_exercises (
+            *,
+            sets:exercise_sets (*)
+          )
+        )
+      )
+    ),
+    days:program_days (
+      *,
+      workout:workouts (
+        *,
+        exercises:workout_exercises (
+          *,
+          sets:exercise_sets (*)
+        )
+      )
+    )
+  `
+    )
+    .eq("id", id)
+    .single();
 
-  return <WorkoutBuilder initialProgram={program} />;
+  if (!data) return <p>Failed to load program</p>;
+
+  return <WorkoutBuilder initialProgram={data} />;
 }

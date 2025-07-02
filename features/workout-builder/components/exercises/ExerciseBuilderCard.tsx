@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { getAllExercises } from "@/services/exerciseService";
+import { fetchExerciseById } from "@/lib/supabase/exercises";
 import { Exercise } from "@/types/Exercise";
 import type {
   IntensitySystem,
@@ -25,7 +25,6 @@ import type {
 } from "@/types/Workout";
 import { getExerciseETL } from "@/utils/etl";
 import { estimateExerciseDuration } from "@/utils/volume/estimateExerciseDuration";
-import { useQuery } from "@tanstack/react-query";
 import {
   Clock,
   FileText,
@@ -79,13 +78,9 @@ export const ExerciseBuilderCard = ({
 }) => {
   const [tempNotes, setTempNotes] = useState(exercise.notes || "");
 
-  const { data: exercises } = useQuery({
-    queryKey: ["exercises"],
-    queryFn: () => getAllExercises() as Promise<Exercise[]>,
-  });
+  const exerciseMeta = fetchExerciseById(exercise.exercise_id);
 
-  const exerciseMeta = exercises?.find((ex) => ex.id === exercise.id);
-  const { totalETL } = getExerciseETL(exercise, exerciseMeta!);
+  const { totalETL } = getExerciseETL(exercise, exerciseMeta as Exercise);
 
   const addSet = () => {
     const newSet = {

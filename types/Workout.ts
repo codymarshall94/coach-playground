@@ -8,6 +8,8 @@ export type SetInfo = {
 
 export type WorkoutExercise = {
   id: string; // lookup back to full exercise data
+  exercise_id: string;
+  order_num: number;
   name: string;
   sets: SetInfo[]; // reps, rpe, rest, etc.
   notes?: string;
@@ -34,6 +36,7 @@ export type ProgramBlock = {
 export type ProgramDay = {
   id: string;
   name: string;
+  block_id?: string;
   description: string;
   workout: Workout[];
   order: number;
@@ -53,6 +56,10 @@ export type Program = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+export type NewProgramDay = Omit<ProgramDay, "id">;
+export type NewProgram = Omit<Program, "id">;
+export type NewProgramBlock = Omit<ProgramBlock, "id">;
 
 export type IntensitySystem = "rpe" | "oneRepMaxPercent" | "rir" | "none";
 

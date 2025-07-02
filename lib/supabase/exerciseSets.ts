@@ -1,11 +1,14 @@
 import { SetInfo } from "@/types/Workout";
 import { createClient } from "@/utils/supabase/client";
 
-export async function insertExerciseSets(exerciseId: string, sets: SetInfo[]) {
+export async function insertExerciseSets(
+  workoutExerciseId: string,
+  sets: SetInfo[]
+) {
   const supabase = createClient();
 
   const payload = sets.map((set, index) => ({
-    workout_exercise_id: exerciseId,
+    exercise_id: workoutExerciseId, // ✅ from workout_exercises, not exercises
     reps: set.reps,
     rest: set.rest,
     rpe: set.rpe ?? null,
@@ -14,5 +17,11 @@ export async function insertExerciseSets(exerciseId: string, sets: SetInfo[]) {
     order_num: index,
   }));
 
-  return supabase.from("exercise_sets").insert(payload);
+  const { data, error } = await supabase.from("exercise_sets").insert(payload);
+
+  if (error) {
+    console.error("Error inserting exercise sets", error);
+  }
+
+  return data;
 }

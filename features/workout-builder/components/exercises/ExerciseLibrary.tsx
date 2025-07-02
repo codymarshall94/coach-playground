@@ -17,7 +17,7 @@ import { ExerciseCard } from "@/features/workout-builder/components/exercises/Ex
 import { FilterPopover } from "@/features/workout-builder/components/exercises/FilterPopover";
 import { SortPopover } from "@/features/workout-builder/components/exercises/SortPopover";
 import { useExerciseFilter } from "@/hooks/useExerciseFilter";
-import type { Exercise } from "@/types/Workout";
+import type { Exercise } from "@/types/Exercise";
 import { Book, Dumbbell } from "lucide-react";
 
 export const ExerciseLibrary = ({

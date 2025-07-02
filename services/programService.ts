@@ -4,117 +4,223 @@ import { insertProgramDays } from "@/lib/supabase/programDays";
 import { insertProgram } from "@/lib/supabase/programs";
 import { insertWorkoutExercises } from "@/lib/supabase/workoutExercises";
 import { insertWorkout } from "@/lib/supabase/workouts";
-import { Program } from "@/types/Workout";
+import { Program, ProgramDay, WorkoutExercise } from "@/types/Workout";
 import { createClient } from "@/utils/supabase/client";
-import { redirect } from "next/navigation";
 
-export async function saveProgramService(program: Program) {
+async function insertDaysWithWorkouts(
+  insertedDays: ProgramDay[],
+  originalDays: ProgramDay[]
+) {
+  let failureCount = 0;
+
+  for (let i = 0; i < insertedDays.length; i++) {
+    const insertedDay = insertedDays[i];
+    const originalDay = originalDays[i];
+    const workout = originalDay.workout?.[0];
+    if (!workout || !Array.isArray(workout.exercises)) continue;
+
+    const { data: workoutData, error: workoutError } = await insertWorkout(
+      insertedDay.id
+    );
+    if (workoutError || !workoutData) {
+      console.error("❌ Failed to create workout", workoutError);
+      failureCount++;
+      continue;
+    }
+
+    const workoutExercisePayloads = workout.exercises.map((ex, index) => ({
+      workout_id: workoutData.id,
+      exercise_id: ex.exercise_id,
+      name: ex.name,
+      intensity: ex.intensity,
+      notes: ex.notes ?? "",
+      order_num: index,
+    }));
+
+    const { data: insertedExercises, error } = await insertWorkoutExercises(
+      workoutData.id,
+      workoutExercisePayloads as unknown as WorkoutExercise[]
+    );
+
+    if (error || !insertedExercises?.length) {
+      console.error("❌ Failed to insert workout_exercises", error);
+      failureCount++;
+      continue;
+    }
+
+    for (let i = 0; i < insertedExercises.length; i++) {
+      const setData = await insertExerciseSets(
+        insertedExercises[i].id,
+        workout.exercises[i].sets
+      );
+
+      if (!setData) {
+        console.error("❌ Failed to insert sets");
+        failureCount++;
+      }
+    }
+  }
+
+  if (failureCount > 0) {
+    throw new Error(`insertDaysWithWorkouts failed for ${failureCount} day(s)`);
+  }
+}
+
+// Save or update the entire program
+export async function saveOrUpdateProgramService(program: Program) {
   const supabase = createClient();
   const {
     data: { session },
   } = await supabase.auth.getSession();
+
   const user = session?.user;
   if (!user) throw new Error("Not authenticated");
 
-  // Insert program
-  const { data: programData, error } = await insertProgram({
-    user_id: user.id,
-    name: program.name,
-    description: program.description,
-    goal: program.goal,
-    mode: program.mode,
-  });
+  const isNew = !(await doesProgramExist(program.id));
+  let programId = program.id;
 
-  if (error || !programData)
-    throw new Error(error?.message || "Failed to create program");
+  // === INSERT ===
+  if (isNew) {
+    const { data: programData, error } = await insertProgram({
+      user_id: user.id,
+      name: program.name,
+      description: program.description,
+      goal: program.goal,
+      mode: program.mode,
+    });
 
-  // MODE: "days"
-  if (program.mode === "days" && program.days) {
-    const { data: daysData } = await insertProgramDays(
-      programData.id,
-      program.days
-    );
+    if (error || !programData) {
+      throw new Error(error?.message || "Failed to create program");
+    }
 
-    if (daysData) {
-      for (let i = 0; i < program.days.length; i++) {
-        const originalDay = program.days[i];
-        const insertedDay = daysData[i];
+    programId = programData.id;
+  }
 
-        const { data: workoutData } = await insertWorkout(insertedDay.id);
+  // === UPDATE ===
+  else {
+    const { error: updateError } = await updateProgram(program);
+    if (updateError) throw new Error(updateError.message);
 
-        if (workoutData) {
-          for (const ex of originalDay.workout[0]?.exercises || []) {
-            const { data: insertedExercises } = await insertWorkoutExercises(
-              workoutData.id,
-              [ex]
-            );
-            if (insertedExercises && insertedExercises.length > 0) {
-              await insertExerciseSets(insertedExercises[0].id, ex.sets);
-            }
-          }
-        }
-      }
+    // Clear previous children
+    if (program.mode === "blocks") {
+      await supabase
+        .from("program_blocks")
+        .delete()
+        .eq("program_id", programId);
+    } else {
+      await supabase.from("program_days").delete().eq("program_id", programId);
     }
   }
 
-  // MODE: "blocks"
+  // === Insert Blocks or Days ===
+  if (program.mode === "days" && program.days) {
+    const { data: daysData } = await insertProgramDays(programId, program.days);
+    await insertDaysWithWorkouts(daysData || [], program.days);
+  }
+
+  // === Insert Blocks or Days ===
+  if (program.mode === "days" && program.days) {
+    const { data: daysData } = await insertProgramDays(programId, program.days);
+    await insertDaysWithWorkouts(daysData || [], program.days);
+  }
+
   if (program.mode === "blocks" && program.blocks) {
     const { data: blocksData } = await insertProgramBlocks(
-      programData.id,
+      programId,
       program.blocks
     );
 
-    if (blocksData) {
-      for (let b = 0; b < program.blocks.length; b++) {
-        const block = program.blocks[b];
-        const insertedBlock = blocksData[b];
+    for (let b = 0; b < program.blocks.length; b++) {
+      const block = program.blocks[b];
+      const insertedBlock = blocksData?.[b];
+      if (!insertedBlock) continue;
 
-        const { data: daysData } = await insertProgramDays(
-          insertedBlock.id,
-          block.days
-        );
+      const { data: daysData, error: daysError } = await insertProgramDays(
+        programId,
+        block.days,
+        insertedBlock.id
+      );
 
-        for (let d = 0; d < block.days.length; d++) {
-          const originalDay = block.days[d];
-          const insertedDay = daysData?.[d];
+      console.log("🧠 daysData", daysData);
+      console.log("🧠 daysError", daysError);
 
-          const { data: workoutData } = await insertWorkout(insertedDay.id);
-
-          if (workoutData) {
-            for (const ex of originalDay.workout[0]?.exercises || []) {
-              const { data: insertedExercises } = await insertWorkoutExercises(
-                workoutData.id,
-                [ex]
-              );
-              if (insertedExercises && insertedExercises.length > 0) {
-                await insertExerciseSets(insertedExercises[0].id, ex.sets);
-              }
-            }
-          }
-        }
-      }
+      await insertDaysWithWorkouts(daysData || [], block.days);
     }
   }
 
-  redirect(`/programs/${programData.id}`);
+  return programId;
 }
 
-export async function getAllProgramsForUser(): Promise<Program[]> {
+export async function doesProgramExist(programId: string) {
   const supabase = createClient();
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("programs")
     .select("*")
-    .order("created_at", { ascending: false });
+    .eq("id", programId)
+    .single();
+  return !!data;
+}
+
+export async function updateProgram(program: Program) {
+  const supabase = createClient();
+  return await supabase
+    .from("programs")
+    .update({
+      name: program.name,
+      description: program.description,
+      goal: program.goal,
+      mode: program.mode,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", program.id);
+}
+export async function getAllProgramsForUser(): Promise<Program[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase.from("programs").select("*");
 
   if (error) throw error;
-  return data ?? [];
+  return (
+    data?.map((p) => ({
+      ...p,
+      createdAt: new Date(p.created_at ?? ""),
+      updatedAt: new Date(p.updated_at ?? ""),
+    })) ?? []
+  );
 }
 
 export async function getProgramById(id: string): Promise<Program | null> {
   const supabase = createClient();
+
   const { data, error } = await supabase
     .from("programs")
-    .select()
+    .select(
+      `
+      *,
+      blocks:program_blocks (
+        *,
+        days:program_days (
+          *,
+          workout:workouts (
+            *,
+            exercises:workout_exercises (
+              *,
+              sets:exercise_sets (*)
+            )
+          )
+        )
+      ),
+      days:program_days (
+        *,
+        workout:workouts (
+          *,
+          exercises:workout_exercises (
+            *,
+            sets:exercise_sets (*)
+          )
+        )
+      )
+    `
+    )
     .eq("id", id)
     .single();
 
@@ -123,5 +229,5 @@ export async function getProgramById(id: string): Promise<Program | null> {
     throw error;
   }
 
-  return data;
+  return data as Program;
 }

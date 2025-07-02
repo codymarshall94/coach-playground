@@ -1,3 +1,5 @@
+import { getAllExercises } from "@/services/exerciseService";
+import { Exercise } from "@/types/Exercise";
 import {
   IntensitySystem,
   Program,
@@ -5,13 +7,11 @@ import {
   ProgramDay,
   WorkoutExercise,
 } from "@/types/Workout";
-import { Exercise } from "@/types/Exercise";
 import { createEmptyProgram } from "@/utils/createEmptyProgram";
 import { createWorkoutExercise } from "@/utils/workout";
 import { createRestDay, createWorkoutDay } from "@/utils/workoutDays";
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getAllExercises } from "@/services/exerciseService";
+import { useState } from "react";
 
 export function useWorkoutBuilder(initialProgram?: Program) {
   const [program, setProgram] = useState<Program>(
@@ -64,11 +64,10 @@ export function useWorkoutBuilder(initialProgram?: Program) {
   };
 
   const activeDay = getDayRef();
-  const isWorkoutDay =
-    activeDay?.type === "workout" && !!activeDay?.workout?.[0];
+  const isWorkoutDay = activeDay?.type === "workout";
 
   const workout: WorkoutExercise[] = isWorkoutDay
-    ? activeDay!.workout[0].exercises
+    ? activeDay?.workout?.[0]?.exercises ?? []
     : [];
 
   // === Mutators ===
@@ -79,8 +78,19 @@ export function useWorkoutBuilder(initialProgram?: Program) {
   const updateDayWorkout = (exercises: WorkoutExercise[]) => {
     updateProgram((prev) => {
       const day = { ...getDayRef(prev) } as ProgramDay;
-      if (!day || day.type !== "workout") return prev;
-      day.workout![0].exercises = exercises;
+      if (!day.workout || day.workout.length === 0) {
+        day.workout = [
+          {
+            exercises,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ];
+      } else {
+        day.workout[0].exercises = exercises;
+        day.workout[0].updatedAt = new Date();
+      }
+
       return setDayRef(prev, day);
     });
   };
@@ -301,7 +311,20 @@ export function useWorkoutBuilder(initialProgram?: Program) {
   };
 
   const reorderBlocks = (reordered: ProgramBlock[]) => {
-    updateProgram((prev) => ({ ...prev, blocks: reordered }));
+    updateProgram((prev) => {
+      const existingBlocks = prev.blocks ?? [];
+
+      const hydrated = reordered.map((b, i) => {
+        const original = existingBlocks.find((ob) => ob.id === b.id);
+        return {
+          ...b,
+          weeks: b.weeks ?? original?.weeks ?? 4, // fix here
+          order: i,
+        };
+      });
+
+      return { ...prev, blocks: hydrated };
+    });
   };
 
   const confirmModeSwitch = (newMode: "blocks" | "days") => {

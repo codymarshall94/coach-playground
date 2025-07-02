@@ -5,7 +5,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { ProgramDaySelector } from "@/features/workout-builder/components/program/ProgramDaySelector";
 import { useWorkoutBuilder } from "@/hooks/useWorkoutBuilder";
-import { saveProgramService } from "@/services/programService";
+import { saveOrUpdateProgramService } from "@/services/programService";
 import { Program } from "@/types/Workout";
 import { analyzeWorkoutDay } from "@/utils/analyzeWorkoutDay";
 import {
@@ -17,8 +17,8 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { User } from "@supabase/supabase-js";
 import { Bed, Plus, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DayHeader } from "./components/days/DayHeader";
@@ -63,15 +63,16 @@ export const WorkoutBuilder = ({
   } = useWorkoutBuilder(initialProgram);
 
   const [isSaving, setIsSaving] = useState(false);
-
+  const router = useRouter();
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await saveProgramService(program);
-      toast.success("Program saved successfully!");
+      const programId = await saveOrUpdateProgramService(program);
+      toast.success("Program saved!");
+      router.push(`/programs/${programId}`);
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to save program.");
+      console.error("❌ Save failed:", err);
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setIsSaving(false);
     }

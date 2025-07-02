@@ -105,9 +105,9 @@ export function analyzeWorkoutDay(
     increment(energySystemCounts, baseEx.energy_system);
 
     const volumePerSet =
-      (baseEx.volume_per_set_estimate.strength +
-        baseEx.volume_per_set_estimate.hypertrophy) /
-      2;
+      (baseEx.volume_per_set_estimate?.strength +
+        baseEx.volume_per_set_estimate?.hypertrophy) /
+        2 || 0;
 
     for (const _set of workoutEx.sets) {
       setCount++;
