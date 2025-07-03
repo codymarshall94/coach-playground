@@ -13,7 +13,7 @@ function estimateIntensityFromRPE(rpe: number): number {
 }
 
 function getIntensityFromSet(set: WorkoutExercise["sets"][0]): number {
-  if (set.oneRepMaxPercent != null) return set.oneRepMaxPercent / 100;
+  if (set.one_rep_max_percent != null) return set.one_rep_max_percent / 100;
 
   if (set.rir != null) {
     // RIR to intensity estimation (lower RIR = higher intensity)

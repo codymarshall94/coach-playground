@@ -1,9 +1,10 @@
 "use client";
 
-import type React from "react";
-import { CSS } from "@dnd-kit/utilities";
 import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
+import type React from "react";
+import { useEffect, useState } from "react";
 
 export function SortableItem({
   children,
@@ -27,6 +28,14 @@ export function SortableItem({
     transform: CSS.Transform.toString(transform),
     transition,
   };
+
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) return null; // Or a non-drag placeholder (e.g. a placeholder div)
 
   return (
     <div

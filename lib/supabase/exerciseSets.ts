@@ -8,19 +8,23 @@ export async function insertExerciseSets(
   const supabase = createClient();
 
   const payload = sets.map((set, index) => ({
-    exercise_id: workoutExerciseId, // ✅ from workout_exercises, not exercises
+    workout_exercise_id: workoutExerciseId,
     reps: set.reps,
     rest: set.rest,
     rpe: set.rpe ?? null,
     rir: set.rir ?? null,
-    one_rep_max_percent: set.oneRepMaxPercent ?? null,
-    order_num: index,
+    one_rep_max_percent: set.one_rep_max_percent ?? null,
+    set_index: index,
   }));
 
-  const { data, error } = await supabase.from("exercise_sets").insert(payload);
+  const { data, error } = await supabase
+    .from("exercise_sets")
+    .insert(payload)
+    .select();
 
   if (error) {
-    console.error("Error inserting exercise sets", error);
+    console.error("❌ insertExerciseSets error", error.message);
+    return null;
   }
 
   return data;

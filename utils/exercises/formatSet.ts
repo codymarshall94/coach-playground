@@ -6,8 +6,8 @@ export function formatSet(set: SetInfo, intensity: IntensitySystem): string {
   switch (intensity) {
     case "rpe":
       return `${base} @ RPE ${set.rpe ?? "?"}`;
-    case "oneRepMaxPercent":
-      return `${base} @ ${set.oneRepMaxPercent ?? "?"}% 1RM`;
+    case "one_rep_max_percent":
+      return `${base} @ ${set.one_rep_max_percent ?? "?"}% 1RM`;
     case "rir":
       return `${base} @ ${set.rir ?? "?"} RIR`;
     default:

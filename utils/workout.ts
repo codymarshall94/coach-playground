@@ -17,13 +17,13 @@ export function createWorkoutExercise(
   const getIntensity = (): Partial<SetInfo> => {
     switch (intensity) {
       case "rpe":
-        return { rpe: 8 };
-      case "oneRepMaxPercent":
-        return { oneRepMaxPercent: 75 };
+        return { rpe: 8, rir: null, one_rep_max_percent: null };
+      case "one_rep_max_percent":
+        return { one_rep_max_percent: 75, rir: null, rpe: null };
       case "rir":
-        return { rir: 2 };
+        return { rir: 2, rpe: null, one_rep_max_percent: null };
       default:
-        return {};
+        return { rpe: null, rir: null, one_rep_max_percent: null };
     }
   };
 
@@ -34,6 +34,9 @@ export function createWorkoutExercise(
     name: exercise.name,
     intensity,
     sets: Array.from({ length: sets }, () => ({
+      rpe: null,
+      rir: null,
+      one_rep_max_percent: null,
       reps,
       rest: 90,
       ...getIntensity(),

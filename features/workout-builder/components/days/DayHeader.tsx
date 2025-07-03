@@ -12,6 +12,8 @@ import type { Program, ProgramDay } from "@/types/Workout";
 import { FileText } from "lucide-react";
 import { DayNameEditor } from "./DayNameEditor";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { useEffect } from "react";
 
 interface DayHeaderProps {
   program: Program;
@@ -41,18 +43,32 @@ export const DayHeader = ({
       ? program.blocks![activeBlockIndex].days[activeDayIndex] ?? null
       : program.days![activeDayIndex];
 
+  const [localDescription, setLocalDescription] = useState(
+    day?.description || ""
+  );
+
+  // Sync local description when day changes
+  useEffect(() => {
+    setLocalDescription(day?.description || "");
+  }, [activeDayIndex, activeBlockIndex, program.mode]);
+
+  const handleDescriptionSave = () => {
+    updateDayDetails({ description: localDescription.trim() });
+  };
+
   return (
     <div className="flex items-center justify-between gap-4 pb-3 mb-4 border-b w-full">
-      {/* Left side: Name and Exercise count */}
       <DayNameEditor
-        program={program}
-        activeBlockIndex={activeBlockIndex}
-        activeDayIndex={activeDayIndex}
-        editedName={editedName}
-        setEditedName={setEditedName}
-        updateDayDetails={updateDayDetails}
-        isEditingName={isEditingName}
-        setIsEditingName={setIsEditingName}
+        {...{
+          program,
+          activeBlockIndex,
+          activeDayIndex,
+          editedName,
+          setEditedName,
+          updateDayDetails,
+          isEditingName,
+          setIsEditingName,
+        }}
       />
 
       <div className="flex items-center gap-2">
@@ -69,7 +85,7 @@ export const DayHeader = ({
               variant="ghost"
               size="sm"
               className={`h-6 px-2 text-xs ${
-                day.description
+                day?.description
                   ? "text-muted-foreground hover:text-foreground"
                   : "text-muted-foreground/50 hover:text-muted-foreground"
               }`}
@@ -77,24 +93,31 @@ export const DayHeader = ({
               <FileText
                 className={cn(
                   "h-3 w-3 mr-1",
-                  day.description && "text-blue-500"
+                  day?.description && "text-blue-500"
                 )}
               />
             </Button>
           </PopoverTrigger>
+
           <PopoverContent className="w-80" align="start">
             <div className="space-y-2">
               <h4 className="font-medium text-sm">Day Description</h4>
-              <div className="space-y-2">
-                <Textarea
-                  rows={3}
-                  value={day.description || ""}
-                  onChange={(e) =>
-                    updateDayDetails({ description: e.target.value })
-                  }
-                  placeholder="E.g. Focus on glutes, light accessories..."
-                  className="resize-none"
-                />
+              <Textarea
+                rows={3}
+                value={localDescription}
+                onChange={(e) => setLocalDescription(e.target.value)}
+                placeholder="E.g. Focus on glutes, light accessories..."
+                className="resize-none"
+              />
+              <div className="flex justify-end">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleDescriptionSave}
+                  className="text-xs"
+                >
+                  Save
+                </Button>
               </div>
             </div>
           </PopoverContent>

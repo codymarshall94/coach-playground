@@ -6,6 +6,8 @@ export async function insertProgramDays(
   days: ProgramDay[],
   blockId?: string
 ) {
+  console.log("🧠 insertProgramDays payload", days);
+
   const supabase = createClient();
   const payload = days.map((day, index) => ({
     program_id: programId,
@@ -15,8 +17,6 @@ export async function insertProgramDays(
     order_num: index,
     type: day.type,
   }));
-
-  console.log("🧠 insertProgramDays payload", payload);
 
   return supabase.from("program_days").insert(payload).select();
 }

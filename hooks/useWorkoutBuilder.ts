@@ -114,12 +114,12 @@ export function useWorkoutBuilder(initialProgram?: Program) {
               sets: ex.sets.map((set) => ({
                 reps: set.reps,
                 rest: set.rest,
-                rpe: intensity === "rpe" ? set.rpe ?? 8 : undefined,
-                oneRepMaxPercent:
-                  intensity === "oneRepMaxPercent"
-                    ? set.oneRepMaxPercent ?? 75
-                    : undefined,
-                rir: intensity === "rir" ? set.rir ?? 2 : undefined,
+                rpe: intensity === "rpe" ? set.rpe ?? 8 : null,
+                one_rep_max_percent:
+                  intensity === "one_rep_max_percent"
+                    ? set.one_rep_max_percent ?? 75
+                    : null,
+                rir: intensity === "rir" ? set.rir ?? 2 : null,
               })),
             }
           : ex

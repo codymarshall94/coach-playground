@@ -1,6 +1,7 @@
+import { IntensitySystem } from "@/types/Workout";
+import { Exercise } from "@/types/Exercise";
 import { WorkoutExercise } from "@/types/Workout";
 import { estimateExerciseDuration } from "@/utils/volume/estimateExerciseDuration";
-import { IntensitySystem, Exercise } from "@/types/Workout";
 import { ETLDisplay } from "./insights/EtlDisplay";
 
 export const ExerciseStatsFooter = ({
@@ -17,12 +18,12 @@ export const ExerciseStatsFooter = ({
     exercise.sets.reduce((sum, set) => {
       if (intensitySystem === "rpe") return sum + (set.rpe ?? 8);
       if (intensitySystem === "rir") return sum + (10 - (set.rir ?? 2));
-      if (intensitySystem === "oneRepMaxPercent")
-        return sum + (set.oneRepMaxPercent ?? 75) / 100;
+      if (intensitySystem === "one_rep_max_percent")
+        return sum + (set.one_rep_max_percent ?? 75) / 100;
       return sum + 0.8;
     }, 0) / exercise.sets.length;
 
-  const baseVolume = exerciseMeta?.volumePerSetEstimate?.hypertrophy ?? 10;
+  const baseVolume = exerciseMeta?.volume_per_set_estimate?.hypertrophy ?? 10;
 
   return (
     <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-100">

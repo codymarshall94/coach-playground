@@ -40,20 +40,17 @@ import { ETLDisplay } from "../insights/EtlDisplay";
 
 const intensityLabel: Record<IntensitySystem, string> = {
   rpe: "RPE",
-  oneRepMaxPercent: "%1RM",
+  one_rep_max_percent: "%1RM",
   rir: "RIR",
   none: "Effort",
 };
 
-const getIntensityValue = (
-  intensity: IntensitySystem,
-  set: SetInfo
-): Partial<SetInfo> => {
+const getIntensityValue = (intensity: IntensitySystem): Partial<SetInfo> => {
   switch (intensity) {
     case "rpe":
       return { rpe: 8 };
-    case "oneRepMaxPercent":
-      return { oneRepMaxPercent: 75 };
+    case "one_rep_max_percent":
+      return { one_rep_max_percent: 75 };
     case "rir":
       return { rir: 2 };
     default:
@@ -78,15 +75,22 @@ export const ExerciseBuilderCard = ({
 }) => {
   const [tempNotes, setTempNotes] = useState(exercise.notes || "");
 
-  const exerciseMeta = fetchExerciseById(exercise.exercise_id);
+  const exerciseMeta = fetchExerciseById(exercise.exercise_id).then(
+    (meta) => meta as unknown as Exercise
+  );
 
-  const { totalETL } = getExerciseETL(exercise, exerciseMeta as Exercise);
+  const { totalETL } = getExerciseETL(
+    exercise,
+    exerciseMeta as unknown as Exercise
+  );
 
   const addSet = () => {
     const newSet = {
       reps: 8,
       rest: 90,
-      ...getIntensityValue(exercise.intensity, { reps: 8, rest: 90 }),
+      rpe: null,
+      rir: null,
+      one_rep_max_percent: null,
     };
     onUpdateSets([...exercise.sets, newSet]);
   };
@@ -206,7 +210,7 @@ export const ExerciseBuilderCard = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="rpe">RPE</SelectItem>
-                <SelectItem value="oneRepMaxPercent">%1RM</SelectItem>
+                <SelectItem value="one_rep_max_percent">%1RM</SelectItem>
                 <SelectItem value="rir">RIR</SelectItem>
                 <SelectItem value="none">None</SelectItem>
               </SelectContent>
@@ -269,7 +273,7 @@ export const ExerciseBuilderCard = ({
                       min={5}
                       max={10}
                       step={0.5}
-                      value={set.rpe}
+                      value={set.rpe ?? ""}
                       onChange={(e) =>
                         updateSet(i, "rpe", Number.parseFloat(e.target.value))
                       }
@@ -277,17 +281,17 @@ export const ExerciseBuilderCard = ({
                       className="h-8 text-sm text-center"
                     />
                   )}
-                  {exercise.intensity === "oneRepMaxPercent" && (
+                  {exercise.intensity === "one_rep_max_percent" && (
                     <Input
                       type="number"
                       min={50}
                       max={100}
                       step={1}
-                      value={set.oneRepMaxPercent}
+                      value={set.one_rep_max_percent ?? ""}
                       onChange={(e) =>
                         updateSet(
                           i,
-                          "oneRepMaxPercent",
+                          "one_rep_max_percent",
                           Number.parseInt(e.target.value)
                         )
                       }
@@ -301,7 +305,7 @@ export const ExerciseBuilderCard = ({
                       min={0}
                       max={5}
                       step={1}
-                      value={set.rir}
+                      value={set.rir ?? ""}
                       onChange={(e) =>
                         updateSet(i, "rir", Number.parseInt(e.target.value))
                       }
@@ -317,7 +321,7 @@ export const ExerciseBuilderCard = ({
                     type="number"
                     min="0"
                     step="15"
-                    value={set.rest}
+                    value={set.rest ?? ""}
                     onChange={(e) =>
                       updateSet(i, "rest", Number.parseInt(e.target.value) || 0)
                     }
@@ -379,13 +383,15 @@ export const ExerciseBuilderCard = ({
                       return sum + (set.rpe ?? 8);
                     if (exercise.intensity === "rir")
                       return sum + (10 - (set.rir ?? 2)); // estimate
-                    if (exercise.intensity === "oneRepMaxPercent")
-                      return sum + (set.oneRepMaxPercent ?? 75) / 100;
+                    if (exercise.intensity === "one_rep_max_percent")
+                      return sum + (set.one_rep_max_percent ?? 75) / 100;
                     return sum + 0.8;
                   }, 0) / exercise.sets.length,
-                fatigue: exerciseMeta?.fatigue?.index ?? 1,
+                fatigue:
+                  (exerciseMeta as unknown as Exercise)?.fatigue?.index ?? 1,
                 baseVolume:
-                  exerciseMeta?.volume_per_set_estimate?.hypertrophy ?? 10,
+                  (exerciseMeta as unknown as Exercise)?.volume_per_set_estimate
+                    ?.hypertrophy ?? 10,
               }}
             />
             <span>

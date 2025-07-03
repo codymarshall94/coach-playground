@@ -1,9 +1,9 @@
 export type SetInfo = {
   reps: number;
   rest: number; // in seconds
-  rpe?: number;
-  rir?: number;
-  oneRepMaxPercent?: number;
+  rpe: number | null;
+  rir: number | null;
+  one_rep_max_percent: number | null;
 };
 
 export type WorkoutExercise = {
@@ -61,7 +61,7 @@ export type NewProgramDay = Omit<ProgramDay, "id">;
 export type NewProgram = Omit<Program, "id">;
 export type NewProgramBlock = Omit<ProgramBlock, "id">;
 
-export type IntensitySystem = "rpe" | "oneRepMaxPercent" | "rir" | "none";
+export type IntensitySystem = "rpe" | "one_rep_max_percent" | "rir" | "none";
 
 export type WorkoutTypes =
   | "strength"

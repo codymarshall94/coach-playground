@@ -69,8 +69,8 @@ function formatIntensity(set: SetInfo, system: IntensitySystem): string {
       return set.rpe ? `RPE ${set.rpe}` : "";
     case "rir":
       return set.rir !== undefined ? `RIR ${set.rir}` : "";
-    case "oneRepMaxPercent":
-      return set.oneRepMaxPercent ? `${set.oneRepMaxPercent}% 1RM` : "";
+    case "one_rep_max_percent":
+      return set.one_rep_max_percent ? `${set.one_rep_max_percent}% 1RM` : "";
     default:
       return "";
   }

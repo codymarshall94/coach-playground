@@ -7,7 +7,9 @@ import { insertWorkout } from "@/lib/supabase/workouts";
 import { Program, ProgramDay, WorkoutExercise } from "@/types/Workout";
 import { createClient } from "@/utils/supabase/client";
 
-async function insertDaysWithWorkouts(
+/* ---------------------------------------------------------------------------- */
+
+export async function insertDaysWithWorkouts(
   insertedDays: ProgramDay[],
   originalDays: ProgramDay[]
 ) {
@@ -17,13 +19,15 @@ async function insertDaysWithWorkouts(
     const insertedDay = insertedDays[i];
     const originalDay = originalDays[i];
     const workout = originalDay.workout?.[0];
-    if (!workout || !Array.isArray(workout.exercises)) continue;
+
+    if (!workout || !Array.isArray(workout.exercises)) {
+      continue;
+    }
 
     const { data: workoutData, error: workoutError } = await insertWorkout(
       insertedDay.id
     );
     if (workoutError || !workoutData) {
-      console.error("❌ Failed to create workout", workoutError);
       failureCount++;
       continue;
     }
@@ -43,7 +47,6 @@ async function insertDaysWithWorkouts(
     );
 
     if (error || !insertedExercises?.length) {
-      console.error("❌ Failed to insert workout_exercises", error);
       failureCount++;
       continue;
     }
@@ -55,7 +58,6 @@ async function insertDaysWithWorkouts(
       );
 
       if (!setData) {
-        console.error("❌ Failed to insert sets");
         failureCount++;
       }
     }
@@ -66,20 +68,49 @@ async function insertDaysWithWorkouts(
   }
 }
 
-// Save or update the entire program
+/* ---------------------------------------------------------------------------- */
+
 export async function saveOrUpdateProgramService(program: Program) {
+  const programId = await ensureProgramRecord(program);
+
+  await clearProgramChildren(programId, program.mode);
+
+  await insertProgramStructure(programId, program);
+
+  return programId;
+}
+
+/* ---------------------------------------------------------------------------- */
+
+export async function doesProgramExist(programId: string) {
   const supabase = createClient();
+  const { data, error } = await supabase
+    .from("programs")
+    .select("*")
+    .eq("id", programId)
+    .single();
+
+  if (error && error.code !== "PGRST116") {
+    console.error("❌ doesProgramExist error", error.message);
+  }
+
+  const exists = !!data;
+  return exists;
+}
+
+/* ---------------------------------------------------------------------------- */
+
+export async function ensureProgramRecord(program: Program): Promise<string> {
+  const supabase = createClient();
+
   const {
     data: { session },
   } = await supabase.auth.getSession();
-
   const user = session?.user;
   if (!user) throw new Error("Not authenticated");
 
   const isNew = !(await doesProgramExist(program.id));
-  let programId = program.id;
 
-  // === INSERT ===
   if (isNew) {
     const { data: programData, error } = await insertProgram({
       user_id: user.id,
@@ -90,76 +121,96 @@ export async function saveOrUpdateProgramService(program: Program) {
     });
 
     if (error || !programData) {
+      console.error("❌ Failed to insert new program", error?.message);
       throw new Error(error?.message || "Failed to create program");
     }
 
-    programId = programData.id;
-  }
-
-  // === UPDATE ===
-  else {
-    const { error: updateError } = await updateProgram(program);
-    if (updateError) throw new Error(updateError.message);
-
-    // Clear previous children
-    if (program.mode === "blocks") {
-      await supabase
-        .from("program_blocks")
-        .delete()
-        .eq("program_id", programId);
-    } else {
-      await supabase.from("program_days").delete().eq("program_id", programId);
+    return programData.id;
+  } else {
+    const { error } = await updateProgram(program);
+    if (error) {
+      console.error("❌ Failed to update program", error.message);
+      throw new Error(error.message);
     }
-  }
 
-  // === Insert Blocks or Days ===
-  if (program.mode === "days" && program.days) {
-    const { data: daysData } = await insertProgramDays(programId, program.days);
-    await insertDaysWithWorkouts(daysData || [], program.days);
+    return program.id;
   }
+}
 
-  // === Insert Blocks or Days ===
+/* ---------------------------------------------------------------------------- */
+
+export async function clearProgramChildren(
+  programId: string,
+  mode: Program["mode"]
+) {
+  const supabase = createClient();
+
+  if (mode === "blocks") {
+    const { error } = await supabase
+      .from("program_blocks")
+      .delete()
+      .eq("program_id", programId);
+    if (error) console.error("❌ Error deleting program_blocks", error.message);
+  } else {
+    const { error } = await supabase
+      .from("program_days")
+      .delete()
+      .eq("program_id", programId);
+    if (error) console.error("❌ Error deleting program_days", error.message);
+  }
+}
+
+/* ---------------------------------------------------------------------------- */
+
+export async function insertProgramStructure(
+  programId: string,
+  program: Program
+) {
   if (program.mode === "days" && program.days) {
-    const { data: daysData } = await insertProgramDays(programId, program.days);
+    const { data: daysData, error } = await insertProgramDays(
+      programId,
+      program.days
+    );
+    if (error) {
+      console.error("❌ insertProgramDays error", error.message);
+      throw error;
+    }
     await insertDaysWithWorkouts(daysData || [], program.days);
   }
 
   if (program.mode === "blocks" && program.blocks) {
-    const { data: blocksData } = await insertProgramBlocks(
+    const { data: blocksData, error: blockError } = await insertProgramBlocks(
       programId,
       program.blocks
     );
+    if (blockError) {
+      console.error("❌ insertProgramBlocks error", blockError.message);
+      throw blockError;
+    }
 
-    for (let b = 0; b < program.blocks.length; b++) {
-      const block = program.blocks[b];
-      const insertedBlock = blocksData?.[b];
-      if (!insertedBlock) continue;
+    for (let i = 0; i < program.blocks.length; i++) {
+      const insertedBlock = blocksData?.[i];
+      if (!insertedBlock) {
+        continue;
+      }
 
+      const block = program.blocks[i];
       const { data: daysData, error: daysError } = await insertProgramDays(
         programId,
         block.days,
         insertedBlock.id
       );
-
-      console.log("🧠 daysData", daysData);
-      console.log("🧠 daysError", daysError);
+      if (daysError) {
+        console.error("❌ insertProgramDays (block) error", daysError.message);
+        throw daysError;
+      }
 
       await insertDaysWithWorkouts(daysData || [], block.days);
     }
   }
-
-  return programId;
 }
 
-export async function doesProgramExist(programId: string) {
-  const supabase = createClient();
-  const { data } = await supabase
-    .from("programs")
-    .select("*")
-    .eq("id", programId)
-    .single();
-  return !!data;
-}
+/* ---------------------------------------------------------------------------- */
 
 export async function updateProgram(program: Program) {
   const supabase = createClient();
@@ -174,19 +225,29 @@ export async function updateProgram(program: Program) {
     })
     .eq("id", program.id);
 }
+
+/* ---------------------------------------------------------------------------- */
+
 export async function getAllProgramsForUser(): Promise<Program[]> {
   const supabase = createClient();
   const { data, error } = await supabase.from("programs").select("*");
 
-  if (error) throw error;
-  return (
+  if (error) {
+    console.error("❌ getAllProgramsForUser error", error.message);
+    throw error;
+  }
+
+  const mapped =
     data?.map((p) => ({
       ...p,
       createdAt: new Date(p.created_at ?? ""),
       updatedAt: new Date(p.updated_at ?? ""),
-    })) ?? []
-  );
+    })) ?? [];
+
+  return mapped;
 }
+
+/* ---------------------------------------------------------------------------- */
 
 export async function getProgramById(id: string): Promise<Program | null> {
   const supabase = createClient();
@@ -225,7 +286,7 @@ export async function getProgramById(id: string): Promise<Program | null> {
     .single();
 
   if (error) {
-    console.error("getProgramById error", error.message);
+    console.error("❌ getProgramById error", error.message);
     throw error;
   }
 
