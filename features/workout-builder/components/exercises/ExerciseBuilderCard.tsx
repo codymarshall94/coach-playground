@@ -18,11 +18,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { fetchExerciseById } from "@/lib/supabase/exercises";
 import { Exercise } from "@/types/Exercise";
-import type {
-  IntensitySystem,
-  SetInfo,
-  WorkoutExercise,
-} from "@/types/Workout";
+import type { IntensitySystem, WorkoutExercise } from "@/types/Workout";
 import { getExerciseETL } from "@/utils/etl";
 import { estimateExerciseDuration } from "@/utils/volume/estimateExerciseDuration";
 import {
@@ -43,19 +39,6 @@ const intensityLabel: Record<IntensitySystem, string> = {
   one_rep_max_percent: "%1RM",
   rir: "RIR",
   none: "Effort",
-};
-
-const getIntensityValue = (intensity: IntensitySystem): Partial<SetInfo> => {
-  switch (intensity) {
-    case "rpe":
-      return { rpe: 8 };
-    case "one_rep_max_percent":
-      return { one_rep_max_percent: 75 };
-    case "rir":
-      return { rir: 2 };
-    default:
-      return {};
-  }
 };
 
 export const ExerciseBuilderCard = ({
@@ -245,7 +228,7 @@ export const ExerciseBuilderCard = ({
           {exercise.sets.map((set, i) => (
             <div
               key={i}
-              className="grid grid-cols-12 gap-2 items-center p-3 bg-muted rounded-lg hover:bg-muted/50 transition-colors"
+              className="grid grid-cols-12 gap-2 items-center p-3  rounded-lg hover:bg-muted/50 transition-colors"
             >
               <div className="col-span-1">
                 <span className="text-sm font-medium text-muted-foreground">
@@ -363,7 +346,7 @@ export const ExerciseBuilderCard = ({
           <Button
             onClick={addSet}
             variant="outline"
-            className="flex-1 h-10 border-dashed border-border text-muted-foreground hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50 transition-colors bg-transparent"
+            className="flex-1 h-10 border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary hover:bg-primary/10 transition-colors bg-transparent"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Set

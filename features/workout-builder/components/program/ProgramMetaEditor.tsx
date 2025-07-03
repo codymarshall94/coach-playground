@@ -1,85 +1,78 @@
 "use client";
 
-import type React from "react";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Badge } from "@/components/ui/badge";
-import type { ProgramGoal } from "@/types/Workout";
+import type { Program, ProgramGoal } from "@/types/Workout";
+import { motion } from "framer-motion";
+import { Edit3, Settings2 } from "lucide-react";
 import { useState } from "react";
-import { Edit3, FileText, Target } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ProgramSettingsModal } from "./ProgramSettingsModal";
 
 interface ProgramMetaEditorProps {
-  name: string;
-  description: string;
-  goal: ProgramGoal;
+  program: Program;
   onChange: (
     fields: Partial<{ name: string; description: string; goal: ProgramGoal }>
   ) => void;
+  onSwitchMode: (updated: Program) => void;
 }
 
-export const ProgramMetaEditor: React.FC<ProgramMetaEditorProps> = ({
-  name,
-  description,
-  goal,
+export const ProgramMetaEditor = ({
+  program,
   onChange,
-}) => {
+  onSwitchMode,
+}: ProgramMetaEditorProps) => {
   const [isEditingName, setIsEditingName] = useState(false);
-  const [tempName, setTempName] = useState(name);
+  const [tempName, setTempName] = useState(program.name);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const handleNameSubmit = () => {
     onChange({ name: tempName });
     setIsEditingName(false);
   };
 
-  const handleNameKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleNameSubmit();
+  const handleKeyDown = (
+    e: React.KeyboardEvent,
+    submit: () => void,
+    cancel: () => void
+  ) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      submit();
     } else if (e.key === "Escape") {
-      setTempName(name);
-      setIsEditingName(false);
+      cancel();
     }
   };
 
-  const goalColors = {
-    strength: "bg-red-100 text-red-800 border-red-200",
-    hypertrophy: "bg-blue-100 text-blue-800 border-blue-200",
-    endurance: "bg-green-100 text-green-800 border-green-200",
-    power: "bg-purple-100 text-purple-800 border-purple-200",
-  };
-
   return (
-    <div className="flex items-center gap-4 py-2">
-      {/* Program Name */}
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-2">
       <div className="flex items-center gap-2">
         {isEditingName ? (
-          <Input
-            value={tempName}
-            onChange={(e) => setTempName(e.target.value)}
-            onBlur={handleNameSubmit}
-            onKeyDown={handleNameKeyDown}
-            className="text-xl font-bold border-none shadow-none p-0 h-auto focus-visible:ring-1 focus-visible:ring-offset-0"
-            autoFocus
-          />
+          <motion.div
+            key="name-edit"
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+          >
+            <Input
+              value={tempName}
+              onChange={(e) => setTempName(e.target.value)}
+              onBlur={handleNameSubmit}
+              onKeyDown={(e) =>
+                handleKeyDown(e, handleNameSubmit, () => {
+                  setTempName(program.name);
+                  setIsEditingName(false);
+                })
+              }
+              className="text-xl font-bold border-none shadow-none p-0 h-auto focus-visible:ring-1 focus-visible:ring-offset-0"
+              autoFocus
+            />
+          </motion.div>
         ) : (
           <h1
             className="text-xl font-bold cursor-pointer hover:text-muted-foreground transition-colors"
             onClick={() => setIsEditingName(true)}
           >
-            {name || "Untitled Program"}
+            {program.name || "Untitled Program"}
           </h1>
         )}
         <Button
@@ -92,69 +85,23 @@ export const ProgramMetaEditor: React.FC<ProgramMetaEditorProps> = ({
         </Button>
       </div>
 
-      {/* Goal Badge */}
-      <div className="flex items-center gap-2">
-        <Target className="h-4 w-4 text-muted-foreground" />
-        <Select
-          value={goal}
-          onValueChange={(goal) => onChange({ goal: goal as ProgramGoal })}
-        >
-          <SelectTrigger className="border-none shadow-none p-0 h-auto focus:ring-0">
-            <Badge
-              variant="outline"
-              className={`${goalColors[goal]} hover:opacity-80 cursor-pointer`}
-            >
-              {goal
-                ? goal.charAt(0).toUpperCase() + goal.slice(1)
-                : "Select Goal"}
-            </Badge>
-          </SelectTrigger>
-          <SelectContent>
-            {["strength", "hypertrophy", "endurance", "power"].map(
-              (goalOption) => (
-                <SelectItem key={goalOption} value={goalOption}>
-                  <Badge
-                    variant="outline"
-                    className={goalColors[goalOption as ProgramGoal]}
-                  >
-                    {goalOption.charAt(0).toUpperCase() + goalOption.slice(1)}
-                  </Badge>
-                </SelectItem>
-              )
-            )}
-          </SelectContent>
-        </Select>
-      </div>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setSettingsOpen(true)}
+        className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+      >
+        <Settings2 className="w-4 h-4" />
+        <span className="text-sm">Program Settings</span>
+      </Button>
 
-      {/* Description Popover */}
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-xs text-muted-foreground hover:text-foreground"
-          >
-            <FileText
-              className={cn("h-3 w-3 mr-1", description && "text-blue-500")}
-            />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-80" align="start">
-          <div className="space-y-2">
-            <h4 className="font-medium text-sm">Program Description</h4>
-            <Textarea
-              value={description}
-              onChange={(e) => onChange({ description: e.target.value })}
-              placeholder="Describe your program goals, structure, or notes..."
-              rows={3}
-              className="resize-none"
-            />
-            <p className="text-xs text-muted-foreground">
-              Add details about your program to help track your progress.
-            </p>
-          </div>
-        </PopoverContent>
-      </Popover>
+      <ProgramSettingsModal
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        program={program}
+        onChange={onChange}
+        onSwitchMode={onSwitchMode}
+      />
     </div>
   );
 };

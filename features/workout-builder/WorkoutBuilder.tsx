@@ -17,7 +17,8 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { Bed, Plus, Trash2 } from "lucide-react";
+import { Bed, Dumbbell, Plus, Trash2 } from "lucide-react";
+import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -26,7 +27,6 @@ import { ExerciseBuilderCard } from "./components/exercises/ExerciseBuilderCard"
 import { ExerciseCard } from "./components/exercises/ExerciseCard";
 import { WorkoutAnalyticsPanel } from "./components/insights/WorkoutAnalyticsPanel";
 import { BlockSelector } from "./components/program/BlockSelector";
-import { ModeSwitchDialog } from "./components/program/ModeSwitchDialog";
 import { ProgramMetaEditor } from "./components/program/ProgramMetaEditor";
 import { WorkoutBuilderHeader } from "./components/WorkoutBuilderHeader";
 
@@ -118,116 +118,101 @@ export const WorkoutBuilder = ({
       />
 
       {/* MAIN */}
-      <div className="p-6 flex-1 space-y-4">
-        <ProgramMetaEditor
-          name={program.name}
-          description={program.description}
-          goal={program.goal}
-          onChange={(fields) => setProgram((prev) => ({ ...prev, ...fields }))}
-        />
-        <ModeSwitchDialog
-          currentProgram={program}
-          onSwitchMode={(updated) => setProgram(updated)}
-        />
+      <div className="flex flex-1 overflow-hidden">
+        {/* LEFT PANEL – Settings & Day Selector */}
+        <aside className=" border-r border-border bg-muted/20 p-4 space-y-6 overflow-y-auto">
+          {/* Program Settings */}
+          <div className="space-y-4">
+            <ProgramMetaEditor
+              program={program}
+              onChange={(fields) =>
+                setProgram((prev) => ({ ...prev, ...fields }))
+              }
+              onSwitchMode={(updated) => setProgram(updated)}
+            />
+          </div>
 
-        {/* BLOCK + DAY SELECTORS */}
-        <div className="flex gap-6 mb-4">
-          {usingBlocks && (
-            <BlockSelector
-              blocks={program.blocks ?? []}
-              activeIndex={activeBlockIndex}
-              activeDayIndex={activeDayIndex}
-              onSelect={(i) => setActiveBlockIndex(i)}
-              onAddBlock={addTrainingBlock}
-              onRemoveBlock={(index) => removeTrainingBlock(index)}
-              onReorder={(reordered) => reorderBlocks(reordered)}
-              onSelectDay={setActiveDayIndex}
-              onAddWorkoutDay={() => handleAddDay("workout")}
-              onAddRestDay={() => handleAddDay("rest")}
-              onRemoveWorkoutDay={handleRemoveWorkoutDay}
-              onDuplicateWorkoutDay={handleDuplicateWorkoutDay}
-              onReorderDays={(reordered) =>
-                setProgram((prev) => {
-                  if (usingBlocks && typeof activeBlockIndex === "number") {
+          {/* Day/Block Selector */}
+          <div className="pt-4 border-t border-border">
+            {usingBlocks ? (
+              <BlockSelector
+                blocks={program.blocks ?? []}
+                activeIndex={activeBlockIndex}
+                activeDayIndex={activeDayIndex}
+                onSelect={(i) => setActiveBlockIndex(i)}
+                onAddBlock={addTrainingBlock}
+                onRemoveBlock={(index) => removeTrainingBlock(index)}
+                onReorder={(reordered) => reorderBlocks(reordered)}
+                onSelectDay={setActiveDayIndex}
+                onAddWorkoutDay={() => handleAddDay("workout")}
+                onAddRestDay={() => handleAddDay("rest")}
+                onRemoveWorkoutDay={handleRemoveWorkoutDay}
+                onDuplicateWorkoutDay={handleDuplicateWorkoutDay}
+                onReorderDays={(reordered) =>
+                  setProgram((prev) => {
                     const blocks = [...(prev.blocks ?? [])];
                     blocks[activeBlockIndex].days = reordered;
                     return { ...prev, blocks };
-                  } else {
-                    return { ...prev, days: reordered };
-                  }
-                })
-              }
-              onUpdateBlockDetails={updateBlockDetails}
-            />
-          )}
-          {program.mode === "days" && (
-            <ProgramDaySelector
-              days={currentDays}
-              activeIndex={activeDayIndex}
-              onSelect={setActiveDayIndex}
-              onAddWorkoutDay={() => handleAddDay("workout")}
-              onAddRestDay={() => handleAddDay("rest")}
-              onRemoveWorkoutDay={handleRemoveWorkoutDay}
-              onDuplicateWorkoutDay={handleDuplicateWorkoutDay}
-              onReorder={(reordered) =>
-                setProgram((prev) => {
-                  if (usingBlocks && typeof activeBlockIndex === "number") {
-                    const blocks = [...(prev.blocks ?? [])];
-                    blocks[activeBlockIndex].days = reordered;
-                    return { ...prev, blocks };
-                  } else {
-                    return { ...prev, days: reordered };
-                  }
-                })
-              }
-            />
-          )}
+                  })
+                }
+                onUpdateBlockDetails={updateBlockDetails}
+              />
+            ) : (
+              <ProgramDaySelector
+                days={currentDays}
+                activeIndex={activeDayIndex}
+                onSelect={setActiveDayIndex}
+                onAddWorkoutDay={() => handleAddDay("workout")}
+                onAddRestDay={() => handleAddDay("rest")}
+                onRemoveWorkoutDay={handleRemoveWorkoutDay}
+                onDuplicateWorkoutDay={handleDuplicateWorkoutDay}
+                onReorder={(reordered) =>
+                  setProgram((prev) => ({ ...prev, days: reordered }))
+                }
+              />
+            )}
+          </div>
+        </aside>
 
-          {/* WORKOUT CONTENT */}
+        {/* RIGHT PANEL – Workout Builder */}
+        <main className="flex-1 p-6 overflow-y-auto">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragStart={handleDragStart}
           >
-            <div className="grid w-full max-w-4xl">
-              <div className="flex items-center justify-between mb-6 w-full">
-                <div className="w-full">
-                  <DayHeader
-                    program={program}
-                    activeBlockIndex={activeBlockIndex}
-                    activeDayIndex={activeDayIndex}
-                    editedName={editedName}
-                    setEditedName={setEditedName}
-                    isEditingName={isEditingName}
-                    setIsEditingName={setIsEditingName}
-                    updateDayDetails={updateDayDetails}
-                    exerciseCount={workout.length}
-                  />
-
-                  {workout.length > 0 && (
-                    <div className="flex items-center gap-2 mt-2">
-                      <WorkoutAnalyticsPanel
-                        workout={workout}
-                        summary={insights!}
-                        open={analyticsOpen}
-                        setOpen={setAnalyticsOpen}
-                      />
-                      <Button
-                        onClick={clearWorkout}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        Clear All
-                      </Button>
-                    </div>
-                  )}
+            <div className="w-full max-w-4xl mx-auto">
+              <DayHeader
+                program={program}
+                activeBlockIndex={activeBlockIndex}
+                activeDayIndex={activeDayIndex}
+                editedName={editedName}
+                setEditedName={setEditedName}
+                isEditingName={isEditingName}
+                setIsEditingName={setIsEditingName}
+                updateDayDetails={updateDayDetails}
+                exerciseCount={workout.length}
+              />
+              {isWorkoutDay && workout.length > 0 && (
+                <div className="flex justify-between items-center mt-2 mb-2 px-1">
+                  <div className="flex gap-2">
+                    <WorkoutAnalyticsPanel
+                      workout={workout}
+                      summary={insights!}
+                      open={analyticsOpen}
+                      setOpen={setAnalyticsOpen}
+                    />
+                    <Button onClick={clearWorkout} variant="ghost" size="sm">
+                      <Trash2 className="w-4 h-4" />
+                      Clear All
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {noWorkoutDays ? (
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-1 text-sm font-medium bg-muted text-muted-foreground rounded-md whitespace-nowrap">
+                <div className="mt-6">
+                  <span className="px-2 py-1 text-sm font-medium bg-muted text-muted-foreground rounded-md">
                     {currentDays.length} Days
                   </span>
                 </div>
@@ -235,21 +220,37 @@ export const WorkoutBuilder = ({
                 <Droppable id="workout-drop">
                   {!isWorkoutDay ? (
                     <EmptyState
-                      className="w-full"
+                      className="w-full mt-6"
                       icon={<Bed className="w-10 h-10 text-muted-foreground" />}
                       title="Rest Day"
                       description="You have programmed a rest day for this workout"
                     />
                   ) : workout.length === 0 ? (
-                    <EmptyState
-                      icon={
-                        <Plus className="w-10 h-10 text-muted-foreground" />
-                      }
-                      title="Start Building Your Workout"
-                      description="Open the exercise library to add exercises to your workout"
-                    />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <EmptyState
+                        title="No Workouts Added"
+                        description="Start building your program by adding exercises or rest days."
+                        icon={
+                          <Dumbbell className="w-10 h-10 text-muted-foreground" />
+                        }
+                        action={
+                          <Button
+                            onClick={() => setExerciseLibraryOpen(true)}
+                            variant="outline"
+                            size="sm"
+                          >
+                            Add First Exercise
+                          </Button>
+                        }
+                        center
+                      />
+                    </motion.div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-3 mt-6">
                       {workout.map((exercise, index) => (
                         <ExerciseBuilderCard
                           key={`${exercise.id}-${index}`}
@@ -272,15 +273,15 @@ export const WorkoutBuilder = ({
                 </Droppable>
               )}
 
-              {isWorkoutDay && (
-                <div className="mt-6 flex justify-center">
+              {isWorkoutDay && workout.length > 0 && (
+                <div className="mt-8 flex justify-center">
                   <Button
                     onClick={() => setExerciseLibraryOpen(true)}
                     variant="outline"
-                    className="flex items-center gap-2 px-6 py-3 border-2 border-dashed border-border hover:border-border hover:bg-muted/50 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 mt-4  border-border rounded-md bg-muted/40 text-muted-foreground hover:bg-muted/60 hover:text-foreground transition"
                   >
                     <Plus className="w-4 h-4" />
-                    Add Exercise
+                    Browse Exercise Library
                   </Button>
                 </div>
               )}
@@ -297,10 +298,8 @@ export const WorkoutBuilder = ({
               )}
             </DragOverlay>
           </DndContext>
-        </div>
+        </main>
       </div>
-
-      {/* <WorkoutFooter workout={workout} /> */}
     </div>
   );
 };

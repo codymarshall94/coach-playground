@@ -76,14 +76,14 @@ export const WorkoutAnalyticsPanel = ({
       <SheetTrigger asChild>
         <Button variant="outline" className="flex items-center gap-2">
           <BarChart2 className="w-4 h-4" />
-          Workout Analytics
+          Day Summary
         </Button>
       </SheetTrigger>
 
       <SheetContent className="space-y-6 overflow-y-auto w-full max-w-3xl min-w-1/2 p-6">
         <SheetHeader>
           <SheetTitle className="text-xl font-bold text-foreground">
-            Workout Analytics
+            Day Summary
           </SheetTitle>
         </SheetHeader>
 

@@ -8,12 +8,17 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
-import type { Program, ProgramDay } from "@/types/Workout";
-import { FileText } from "lucide-react";
-import { DayNameEditor } from "./DayNameEditor";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
-import { useEffect } from "react";
+import type { Program, ProgramDay } from "@/types/Workout";
+import { motion } from "framer-motion";
+import { FileText } from "lucide-react";
+import { useEffect, useState } from "react";
+import { DayNameEditor } from "./DayNameEditor";
 
 interface DayHeaderProps {
   program: Program;
@@ -40,14 +45,13 @@ export const DayHeader = ({
 }: DayHeaderProps) => {
   const day =
     program.mode === "blocks"
-      ? program.blocks![activeBlockIndex].days[activeDayIndex] ?? null
-      : program.days![activeDayIndex];
+      ? program.blocks?.[activeBlockIndex]?.days?.[activeDayIndex] ?? null
+      : program.days?.[activeDayIndex] ?? null;
 
   const [localDescription, setLocalDescription] = useState(
     day?.description || ""
   );
 
-  // Sync local description when day changes
   useEffect(() => {
     setLocalDescription(day?.description || "");
   }, [activeDayIndex, activeBlockIndex, program.mode]);
@@ -57,72 +61,92 @@ export const DayHeader = ({
   };
 
   return (
-    <div className="flex items-center justify-between gap-4 pb-3 mb-4 border-b w-full">
-      <DayNameEditor
-        {...{
-          program,
-          activeBlockIndex,
-          activeDayIndex,
-          editedName,
-          setEditedName,
-          updateDayDetails,
-          isEditingName,
-          setIsEditingName,
-        }}
-      />
+    <motion.div
+      key={`day-header-${activeBlockIndex}-${activeDayIndex}`}
+      initial={{ opacity: 0, y: -5 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+      className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-6 pb-3 mb-4 border-b border-border w-full"
+    >
+      <div>
+        <DayNameEditor
+          program={program}
+          activeBlockIndex={activeBlockIndex}
+          activeDayIndex={activeDayIndex}
+          editedName={editedName}
+          setEditedName={setEditedName}
+          updateDayDetails={updateDayDetails}
+          isEditingName={isEditingName}
+          setIsEditingName={setIsEditingName}
+        />
+      </div>
 
-      <div className="flex items-center gap-2">
+      {/* Right: Notes + exercise count */}
+      <div className="flex items-center gap-2 flex-wrap">
         <Badge
           variant="secondary"
-          className="bg-blue-50 text-blue-700 border-blue-200 text-xs"
+          className="rounded-full px-3 py-1 text-xs bg-muted text-muted-foreground border border-border"
         >
           {exerciseCount} {exerciseCount === 1 ? "Exercise" : "Exercises"}
         </Badge>
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`h-6 px-2 text-xs ${
-                day?.description
-                  ? "text-muted-foreground hover:text-foreground"
-                  : "text-muted-foreground/50 hover:text-muted-foreground"
-              }`}
-            >
-              <FileText
-                className={cn(
-                  "h-3 w-3 mr-1",
-                  day?.description && "text-blue-500"
-                )}
-              />
-            </Button>
-          </PopoverTrigger>
-
-          <PopoverContent className="w-80" align="start">
-            <div className="space-y-2">
-              <h4 className="font-medium text-sm">Day Description</h4>
-              <Textarea
-                rows={3}
-                value={localDescription}
-                onChange={(e) => setLocalDescription(e.target.value)}
-                placeholder="E.g. Focus on glutes, light accessories..."
-                className="resize-none"
-              />
-              <div className="flex justify-end">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Popover>
+              <PopoverTrigger asChild>
                 <Button
-                  size="sm"
                   variant="outline"
-                  onClick={handleDescriptionSave}
-                  className="text-xs"
+                  size="sm"
+                  className="flex items-center gap-1 px-2 py-1 text-xs border-muted-foreground/20 hover:bg-muted"
                 >
-                  Save
+                  <FileText
+                    className={cn(
+                      "w-4 h-4",
+                      day?.description && "text-blue-500"
+                    )}
+                  />
+                  <span>{day?.description ? "Edit Notes" : "Add Notes"}</span>
                 </Button>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
+              </PopoverTrigger>
+
+              <PopoverContent
+                className="w-80 p-4 border border-border bg-background rounded-lg shadow-md"
+                align="start"
+              >
+                <motion.div
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-3"
+                >
+                  <h4 className="font-medium text-sm text-muted-foreground">
+                    Day Notes
+                  </h4>
+                  <Textarea
+                    rows={3}
+                    value={localDescription}
+                    onChange={(e) => setLocalDescription(e.target.value)}
+                    placeholder="E.g. Focus on glutes, light accessories..."
+                    className="resize-none"
+                  />
+                  <div className="flex justify-end">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleDescriptionSave}
+                    >
+                      Save
+                    </Button>
+                  </div>
+                </motion.div>
+              </PopoverContent>
+            </Popover>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            {day?.description ? "Edit Day Notes" : "Add Notes"}
+          </TooltipContent>
+        </Tooltip>
       </div>
-    </div>
+    </motion.div>
   );
 };
