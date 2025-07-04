@@ -1,8 +1,11 @@
-import { EXERCISES } from "@/data/exercises";
-import { Exercise, WorkoutExercise } from "@/types/Workout";
+import { Exercise } from "@/types/Exercise";
+import { WorkoutExercise } from "@/types/Workout";
 
-export function getExerciseDetails(workout: WorkoutExercise[]): Exercise[] {
+export function getExerciseDetails(
+  workout: WorkoutExercise[],
+  exercises: Exercise[]
+): Exercise[] | undefined {
   return workout
-    .map((we) => EXERCISES.find((ex) => ex.id === we.id))
-    .filter(Boolean) as Exercise[];
+    .map((we) => exercises.find((ex) => ex.id === we.id))
+    .filter(Boolean) as Exercise[] | undefined;
 }

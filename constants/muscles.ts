@@ -1,4 +1,4 @@
-import { Muscle } from "@/types/Workout";
+import { Muscle } from "@/types/Exercise";
 
 export interface MuscleInfo {
   id: Muscle;

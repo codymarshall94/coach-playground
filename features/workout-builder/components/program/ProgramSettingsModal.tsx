@@ -26,22 +26,6 @@ type ProgramSettingsModalProps = {
   onSwitchMode: (updated: Program) => void;
 };
 
-const modes = [
-  {
-    label: "Blocks",
-    description:
-      "Blocks mode lets you organize days into multi-week blocks. 'Days' is simpler.",
-    warning:
-      "Switching to Blocks wraps your current days into one block. This change cannot be undone.",
-  },
-  {
-    label: "Days",
-    description: "Days mode lets you organize days into a single list.",
-    warning:
-      "Switching to Days flattens your blocks and removes all block-specific info. This change cannot be undone.",
-  },
-];
-
 export const ProgramSettingsModal = ({
   open,
   onOpenChange,
@@ -49,7 +33,7 @@ export const ProgramSettingsModal = ({
   onChange,
   onSwitchMode,
 }: ProgramSettingsModalProps) => {
-  const usingBlocks = program.blocks?.length && program.blocks.length > 0;
+  const usingBlocks = program.mode === "blocks";
 
   const handleSwitch = () => {
     const prev = program;
@@ -86,6 +70,8 @@ export const ProgramSettingsModal = ({
     onOpenChange(false);
   };
 
+  const nextMode = usingBlocks ? "Days" : "Blocks";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -94,38 +80,35 @@ export const ProgramSettingsModal = ({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="space-y-4"
+          className="space-y-6"
         >
+          {/* === FORMAT SWITCH === */}
           <div className="space-y-2">
             <Label className="text-sm">Format</Label>
-            <div className="flex gap-4 items-center">
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={!!usingBlocks}
-                  onCheckedChange={handleSwitch}
-                />
-                <Label
-                  htmlFor="format-switch"
-                  className="text-muted-foreground"
-                >
-                  {usingBlocks ? "Blocks" : "Days"}
-                </Label>
-              </div>
+            <div className="flex items-center gap-4">
+              <Switch checked={usingBlocks} onCheckedChange={handleSwitch} />
+              <Label className="text-muted-foreground">
+                Switch to {nextMode}
+              </Label>
             </div>
+            <p className="text-xs text-muted-foreground">
+              Current format: <strong>{usingBlocks ? "Blocks" : "Days"}</strong>
+            </p>
             <p className="text-xs text-muted-foreground max-w-sm">
-              {
-                modes.find((m) => m.label === (usingBlocks ? "Blocks" : "Days"))
-                  ?.description
-              }
+              {usingBlocks
+                ? "Days mode lets you organize days into a single list."
+                : "Blocks mode lets you organize days into multi-week blocks for more complex training."}
             </p>
             <p className="text-xs text-destructive max-w-sm">
-              {
-                modes.find((m) => m.label === (usingBlocks ? "Blocks" : "Days"))
-                  ?.warning
-              }
+              {usingBlocks
+                ? "Switching to Days flattens your blocks and removes all block-specific info."
+                : "Switching to Blocks wraps your current days into one block."}
+              <br />
+              This change cannot be undone.
             </p>
           </div>
 
+          {/* === GOAL === */}
           <div className="space-y-2">
             <Label className="text-sm">Goal</Label>
             <Select
@@ -147,6 +130,7 @@ export const ProgramSettingsModal = ({
             </Select>
           </div>
 
+          {/* === NOTES === */}
           <div className="space-y-2">
             <Label className="text-sm">Program Notes</Label>
             <Textarea

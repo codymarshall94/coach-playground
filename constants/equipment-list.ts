@@ -1,4 +1,4 @@
-import { Equipment } from "@/types/Workout";
+import { Equipment } from "@/types/Exercise";
 
 export const EQUIPMENT_LIST: Equipment[] = [
   "barbell",

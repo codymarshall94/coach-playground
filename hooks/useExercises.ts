@@ -3,7 +3,6 @@ import { getAllExercises } from "@/services/exerciseService";
 import { Exercise } from "@/types/Exercise";
 
 export function useExercises() {
-  console.log("🧠 useExercises");
   return useQuery<Exercise[]>({
     queryKey: ["exercises"],
     queryFn: getAllExercises,

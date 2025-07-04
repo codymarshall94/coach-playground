@@ -20,7 +20,12 @@ export async function insertDaysWithWorkouts(
     const originalDay = originalDays[i];
     const workout = originalDay.workout?.[0];
 
-    if (!workout || !Array.isArray(workout.exercises)) {
+    // ✅ Skip if no workout or no exercises
+    if (
+      !workout ||
+      !Array.isArray(workout.exercises) ||
+      workout.exercises.length === 0
+    ) {
       continue;
     }
 

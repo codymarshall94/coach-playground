@@ -1,3 +1,5 @@
+"use client";
+
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -27,14 +29,23 @@ export const WorkoutBuilderHeader = ({
 }) => {
   return (
     <header className="sticky top-0 z-30 bg-background border-b border-border px-6 py-3 flex justify-between items-center shadow-sm">
-      <Logo size="xs" lineBreak={false} />
-      <div className="flex gap-2">
-        <ThemeToggle />
-        <Button onClick={handleSave} disabled={isSaving}>
-          <Save className="w-4 h-4" />
+      {/* Logo */}
+      <Logo size="xs" showIcon={false} />
+
+      {/* Right Actions */}
+      <div className="flex items-center gap-1 sm:gap-2">
+        {/* Core Actions */}
+        <Button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="h-9 sm:h-10"
+        >
+          <Save className="w-4 h-4 mr-2" />
           {isSaving ? "Saving..." : "Save"}
         </Button>
+
         <ProgramPreview program={program} />
+
         {isWorkoutDay && (
           <ExerciseLibrary
             addExercise={addExercise}
@@ -42,9 +53,23 @@ export const WorkoutBuilderHeader = ({
             setOpen={setExerciseLibraryOpen}
           />
         )}
-        <Avatar>
+
+        {/* Settings Button (optional for future features) */}
+        {/* <Button variant="ghost" size="sm" className="hidden sm:flex">
+          <Settings className="w-4 h-4 mr-1" />
+          Settings
+        </Button> */}
+
+        {/* Divider */}
+        <div className="h-6 w-px bg-border mx-1 sm:mx-2" />
+
+        {/* Theme Toggle */}
+        <ThemeToggle />
+
+        {/* Avatar */}
+        <Avatar className="ml-2 hover:ring-2 hover:ring-muted-foreground/20 transition">
           <AvatarImage src={""} />
-          <AvatarFallback>{"A"}</AvatarFallback>
+          <AvatarFallback>A</AvatarFallback>
         </Avatar>
       </div>
     </header>

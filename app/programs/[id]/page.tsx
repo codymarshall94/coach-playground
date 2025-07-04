@@ -9,7 +9,7 @@ export default async function ProgramEditPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("programs")
     .select(
       `
