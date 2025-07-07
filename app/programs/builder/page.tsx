@@ -1,7 +1,5 @@
 import { templateConfigs } from "@/config/templateConfigs";
 import { WorkoutBuilder } from "@/features/workout-builder/WorkoutBuilder";
-import { createClient } from "@/utils/supabase/server";
-import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "Workout Builder | PRGRM",
@@ -16,16 +14,6 @@ export default async function BuilderPage({
 }: {
   searchParams?: Promise<{ template?: string }>;
 }) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
   const templateSlug = (await searchParams)?.template;
   const template = templateConfigs.find((t) => t.id === templateSlug);
 

@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import ProgramPreview from "@/features/workout-builder/components/program/ProgramPreview";
 import { Exercise } from "@/types/Exercise";
 import { Program } from "@/types/Workout";
+import { User } from "@supabase/supabase-js";
 import { Save } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { ExerciseLibrary } from "./exercises/ExerciseLibrary";
 
 export const WorkoutBuilderHeader = ({
@@ -18,6 +20,7 @@ export const WorkoutBuilderHeader = ({
   addExercise,
   exerciseLibraryOpen,
   setExerciseLibraryOpen,
+  user,
 }: {
   program: Program;
   isSaving: boolean;
@@ -26,7 +29,10 @@ export const WorkoutBuilderHeader = ({
   addExercise: (exercise: Exercise) => void;
   exerciseLibraryOpen: boolean;
   setExerciseLibraryOpen: (open: boolean) => void;
+  user: User | null;
 }) => {
+  const router = useRouter();
+
   return (
     <header className="sticky top-0 z-30 bg-background border-b border-border px-6 py-3 flex justify-between items-center shadow-sm">
       {/* Logo */}
@@ -41,7 +47,7 @@ export const WorkoutBuilderHeader = ({
           className="h-9 sm:h-10"
         >
           <Save className="w-4 h-4 mr-2" />
-          {isSaving ? "Saving..." : "Save"}
+          {isSaving ? "Saving..." : "Save Draft"}
         </Button>
 
         <ProgramPreview program={program} />
@@ -67,10 +73,14 @@ export const WorkoutBuilderHeader = ({
         <ThemeToggle />
 
         {/* Avatar */}
-        <Avatar className="ml-2 hover:ring-2 hover:ring-muted-foreground/20 transition">
-          <AvatarImage src={""} />
-          <AvatarFallback>A</AvatarFallback>
-        </Avatar>
+        {user ? (
+          <Avatar className="ml-2 hover:ring-2 hover:ring-muted-foreground/20 transition">
+            <AvatarImage src={""} />
+            <AvatarFallback>A</AvatarFallback>
+          </Avatar>
+        ) : (
+          <Button onClick={() => router.push("/login")}>Log in</Button>
+        )}
       </div>
     </header>
   );

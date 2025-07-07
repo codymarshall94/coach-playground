@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
 import { QueryProvider } from "./query-provider";
+import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,6 +43,10 @@ export default function RootLayout({
             <Toaster />
           </ThemeProvider>
         </QueryProvider>
+        <Script
+          src="https://accounts.google.com/gsi/client"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

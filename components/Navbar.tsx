@@ -29,12 +29,14 @@ export function Navbar() {
   const router = useRouter();
   const supabase = createClient();
 
+  if (pathname.includes("/programs/builder")) return null;
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/70 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="text-xl font-bold tracking-tight">
-          <Logo size="xs" />
+          <Logo size="md" showIcon />
         </Link>
 
         {/* Desktop Nav */}

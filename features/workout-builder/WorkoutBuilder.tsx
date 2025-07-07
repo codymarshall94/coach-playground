@@ -4,6 +4,7 @@ import { Droppable } from "@/components/Droppable";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { ProgramDaySelector } from "@/features/workout-builder/components/program/ProgramDaySelector";
+import { useUser } from "@/hooks/useUser";
 import { useWorkoutBuilder } from "@/hooks/useWorkoutBuilder";
 import { saveOrUpdateProgramService } from "@/services/programService";
 import { Program } from "@/types/Workout";
@@ -28,6 +29,7 @@ import { ExerciseCard } from "./components/exercises/ExerciseCard";
 import { WorkoutAnalyticsPanel } from "./components/insights/WorkoutAnalyticsPanel";
 import { BlockSelector } from "./components/program/BlockSelector";
 import { ProgramMetaEditor } from "./components/program/ProgramMetaEditor";
+import { SavePromptModal } from "./components/SavePromptModal";
 import { WorkoutBuilderHeader } from "./components/WorkoutBuilderHeader";
 
 export const WorkoutBuilder = ({
@@ -35,6 +37,7 @@ export const WorkoutBuilder = ({
 }: {
   initialProgram?: Program;
 }) => {
+  const { user } = useUser();
   const {
     exercises,
     program,
@@ -66,6 +69,10 @@ export const WorkoutBuilder = ({
   const router = useRouter();
   const handleSave = async () => {
     setIsSaving(true);
+    if (!user) {
+      setSavePromptOpen(true);
+      return;
+    }
     try {
       const programId = await saveOrUpdateProgramService(program);
       toast.success("Program saved!");
@@ -83,6 +90,7 @@ export const WorkoutBuilder = ({
   const [editedName, setEditedName] = useState("");
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [exerciseLibraryOpen, setExerciseLibraryOpen] = useState(false);
+  const [savePromptOpen, setSavePromptOpen] = useState(false);
 
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -106,6 +114,14 @@ export const WorkoutBuilder = ({
 
   return (
     <div className="flex flex-col h-screen">
+      <SavePromptModal
+        open={savePromptOpen}
+        onClose={() => {
+          setSavePromptOpen(false);
+          setIsSaving(false);
+        }}
+        onSave={handleSave}
+      />
       {/* HEADER */}
       <WorkoutBuilderHeader
         program={program}
@@ -115,6 +131,7 @@ export const WorkoutBuilder = ({
         addExercise={addExercise}
         exerciseLibraryOpen={exerciseLibraryOpen}
         setExerciseLibraryOpen={setExerciseLibraryOpen}
+        user={user}
       />
 
       {/* MAIN */}

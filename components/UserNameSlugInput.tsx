@@ -56,7 +56,7 @@ export function UsernameSlugInput({
   return (
     <div className="space-y-1">
       <Label htmlFor="username" className="text-sm font-medium">
-        Username
+        Profile URL
       </Label>
       <div className="relative">
         <Input
