@@ -83,10 +83,7 @@ export const DayHeader = ({
 
       {/* Right: Notes + exercise count */}
       <div className="flex items-center gap-2 flex-wrap">
-        <Badge
-          variant="secondary"
-          className="rounded-full px-3 py-1 text-xs bg-muted text-muted-foreground border border-border"
-        >
+        <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs">
           {exerciseCount} {exerciseCount === 1 ? "Exercise" : "Exercises"}
         </Badge>
 
@@ -102,7 +99,7 @@ export const DayHeader = ({
                   <FileText
                     className={cn(
                       "w-4 h-4",
-                      day?.description && "text-blue-500"
+                      day?.description && "text-primary"
                     )}
                   />
                   <span>{day?.description ? "Edit Notes" : "Add Notes"}</span>

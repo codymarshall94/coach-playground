@@ -18,11 +18,11 @@ export function Logo({
   };
 
   return (
-    <div className={cn("flex items-center gap-2", className)}>
+    <div className={cn("flex items-center gap-2 group", className)}>
       {showIcon && (
         <svg
           viewBox="0 0 100 100"
-          className="w-5 h-5 md:w-6 md:h-6 text-purple-600"
+          className="w-5 h-5 md:w-6 md:h-6 text-primary transition-colors group-hover:text-accent"
           fill="currentColor"
         >
           <rect x="0" y="40" width="10" height="20" rx="1" />
@@ -32,10 +32,11 @@ export function Logo({
           <rect x="80" y="40" width="10" height="20" rx="1" />
         </svg>
       )}
-
-      <h1 className={`font-bold tracking-tight ${sizeVariants[size]}`}>
+      <h1
+        className={`font-geist font-bold tracking-tight ${sizeVariants[size]}`}
+      >
         <span className="text-foreground">PR</span>
-        <span className="bg-gradient-to-r from-sky-500 to-purple-600 bg-clip-text text-transparent">
+        <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent group-hover:from-accent group-hover:to-primary transition-colors duration-500">
           GRM
         </span>
       </h1>

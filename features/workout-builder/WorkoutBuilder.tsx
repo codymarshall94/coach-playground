@@ -7,6 +7,7 @@ import { ProgramDaySelector } from "@/features/workout-builder/components/progra
 import { useUser } from "@/hooks/useUser";
 import { useWorkoutBuilder } from "@/hooks/useWorkoutBuilder";
 import { saveOrUpdateProgramService } from "@/services/programService";
+import { Exercise } from "@/types/Exercise";
 import { Program } from "@/types/Workout";
 import { analyzeWorkoutDay } from "@/utils/analyzeWorkoutDay";
 import {
@@ -18,14 +19,16 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { Bed, Dumbbell, Plus, Trash2 } from "lucide-react";
+import { Bed, Dumbbell, Plus } from "lucide-react";
 import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { createRef, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { ClearWorkoutDayModal } from "./components/days/ClearWorkoutDayModal";
 import { DayHeader } from "./components/days/DayHeader";
 import { ExerciseBuilderCard } from "./components/exercises/ExerciseBuilderCard";
 import { ExerciseCard } from "./components/exercises/ExerciseCard";
+import { ExerciseSuggestions } from "./components/exercises/ExerciseSuggestions";
 import { WorkoutAnalyticsPanel } from "./components/insights/WorkoutAnalyticsPanel";
 import { BlockSelector } from "./components/program/BlockSelector";
 import { ProgramMetaEditor } from "./components/program/ProgramMetaEditor";
@@ -66,13 +69,30 @@ export const WorkoutBuilder = ({
   } = useWorkoutBuilder(initialProgram);
 
   const [isSaving, setIsSaving] = useState(false);
+  const [lastAddedIndex, setLastAddedIndex] = useState<number | null>(null);
   const router = useRouter();
+
+  const exerciseRefs = useMemo(
+    () => workout.map(() => createRef<HTMLDivElement>()),
+    [workout.length]
+  );
+
   const handleSave = async () => {
-    setIsSaving(true);
     if (!user) {
       setSavePromptOpen(true);
       return;
     }
+
+    await doSave();
+  };
+
+  const handleAddExercise = (exercise: Exercise) => {
+    addExercise(exercise);
+    setLastAddedIndex(workout.length);
+  };
+
+  const doSave = async () => {
+    setIsSaving(true);
     try {
       const programId = await saveOrUpdateProgramService(program);
       toast.success("Program saved!");
@@ -93,6 +113,16 @@ export const WorkoutBuilder = ({
   const [savePromptOpen, setSavePromptOpen] = useState(false);
 
   const sensors = useSensors(useSensor(PointerSensor));
+
+  useEffect(() => {
+    if (lastAddedIndex !== null && exerciseRefs[lastAddedIndex]?.current) {
+      exerciseRefs[lastAddedIndex]?.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      setLastAddedIndex(null);
+    }
+  }, [lastAddedIndex, exerciseRefs]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
@@ -120,7 +150,7 @@ export const WorkoutBuilder = ({
           setSavePromptOpen(false);
           setIsSaving(false);
         }}
-        onSave={handleSave}
+        onSave={doSave}
       />
       {/* HEADER */}
       <WorkoutBuilderHeader
@@ -219,10 +249,7 @@ export const WorkoutBuilder = ({
                       open={analyticsOpen}
                       setOpen={setAnalyticsOpen}
                     />
-                    <Button onClick={clearWorkout} variant="ghost" size="sm">
-                      <Trash2 className="w-4 h-4" />
-                      Clear All
-                    </Button>
+                    <ClearWorkoutDayModal onConfirm={clearWorkout} />
                   </div>
                 </div>
               )}
@@ -269,21 +296,25 @@ export const WorkoutBuilder = ({
                   ) : (
                     <div className="space-y-3 mt-6">
                       {workout.map((exercise, index) => (
-                        <ExerciseBuilderCard
+                        <div
                           key={`${exercise.id}-${index}`}
-                          order={index}
-                          exercise={exercise}
-                          onRemove={() => removeExercise(index)}
-                          onUpdateSets={(sets) =>
-                            updateExerciseSets(index, sets)
-                          }
-                          onUpdateIntensity={(intensity) =>
-                            updateExerciseIntensity(index, intensity)
-                          }
-                          onUpdateNotes={(notes) =>
-                            updateExerciseNotes(index, notes)
-                          }
-                        />
+                          ref={exerciseRefs[index]}
+                        >
+                          <ExerciseBuilderCard
+                            order={index}
+                            exercise={exercise}
+                            onRemove={() => removeExercise(index)}
+                            onUpdateSets={(sets) =>
+                              updateExerciseSets(index, sets)
+                            }
+                            onUpdateIntensity={(intensity) =>
+                              updateExerciseIntensity(index, intensity)
+                            }
+                            onUpdateNotes={(notes) =>
+                              updateExerciseNotes(index, notes)
+                            }
+                          />
+                        </div>
                       ))}
                     </div>
                   )}
@@ -295,12 +326,18 @@ export const WorkoutBuilder = ({
                   <Button
                     onClick={() => setExerciseLibraryOpen(true)}
                     variant="outline"
-                    className="flex items-center gap-2 px-4 py-2 mt-4  border-border rounded-md bg-muted/40 text-muted-foreground hover:bg-muted/60 hover:text-foreground transition"
                   >
                     <Plus className="w-4 h-4" />
                     Browse Exercise Library
                   </Button>
                 </div>
+              )}
+              {isWorkoutDay && workout.length > 0 && (
+                <ExerciseSuggestions
+                  workout={currentDays}
+                  allExercises={exercises ?? []}
+                  onAddExercise={handleAddExercise}
+                />
               )}
             </div>
 
@@ -309,7 +346,7 @@ export const WorkoutBuilder = ({
                 <div className="transform rotate-2 scale-105">
                   <ExerciseCard
                     exercise={activeExercise}
-                    onAdd={() => addExercise(activeExercise)}
+                    onAdd={() => handleAddExercise(activeExercise)}
                   />
                 </div>
               )}

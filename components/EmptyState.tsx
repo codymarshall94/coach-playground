@@ -30,7 +30,7 @@ export const EmptyState = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className={cn(
-        "flex flex-col items-center justify-center text-center border border-dashed rounded-md",
+        "flex flex-col items-center justify-center text-center  rounded-md",
         compact ? "py-6 px-4 text-sm" : "py-12 px-6 text-base",
         center && "h-[60vh]",
         className

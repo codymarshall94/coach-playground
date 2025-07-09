@@ -5,13 +5,15 @@ export function useUser() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const refreshUser = async () => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data?.user ?? null);
-      setLoading(false);
-    });
+    const { data } = await supabase.auth.getUser();
+    setUser(data?.user ?? null);
+  };
+
+  useEffect(() => {
+    refreshUser().finally(() => setLoading(false));
   }, []);
 
-  return { user, loading };
+  return { user, loading, refreshUser };
 }

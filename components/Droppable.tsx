@@ -13,10 +13,10 @@ export function Droppable({
     <div
       ref={setNodeRef}
       className={`
-          min-h-[400px] border-2 border-dashed rounded-xl p-6 transition-all duration-200
+          min-h-[400px] border-2 border-dashed rounded-xl p-6 transition-all duration-200 bg-muted 
           ${
             isOver
-              ? "border-blue-400 bg-blue-50/50"
+              ? "border-primary bg-primary/10"
               : "border-gray-300 bg-gray-50/50"
           }
         `}

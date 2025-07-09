@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 import type { ProgramDay } from "@/types/Workout";
 import {
   DndContext,
@@ -85,16 +86,15 @@ function DayButton({
           <Dumbbell className="w-4 h-4 ml-2 flex-shrink-0" />
         )}
         {day.type === "workout" && totalExercises > 0 && (
-          <div className="flex items-center justify-center ml-auto bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full min-w-[24px] h-6 px-2 text-xs font-medium shadow-sm">
+          <div
+            className={cn(
+              "flex items-center justify-center ml-auto bg-secondary  text-secondary-foreground rounded-full min-w-[24px] h-6 px-2 text-xs font-medium shadow-sm",
+              isActive && "bg-background text-foreground"
+            )}
+          >
             {totalExercises}
           </div>
         )}
-        {day.type === "workout" &&
-          (!day.workout || day.workout.length === 0) && (
-            <div className="flex items-center justify-center ml-auto bg-muted text-muted-foreground rounded-full min-w-[24px] h-6 px-2 text-xs font-medium">
-              0
-            </div>
-          )}
       </Button>
 
       {/* Actions */}
@@ -104,9 +104,9 @@ function DayButton({
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 hover:bg-gray-100 transition-colors"
+              className="h-8 w-8 p-0 hover:bg-gray-100 transition-colors text-muted-foreground"
             >
-              <MoreVertical className="w-4 h-4" />
+              <MoreVertical className="w-4 h-4 text-muted-foreground" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
@@ -184,7 +184,13 @@ export function ProgramDaySelector({
       >
         <div className="flex flex-col gap-3">
           {days.map((day, i) => (
-            <SortableItem key={day.id} id={day.id}>
+            <SortableItem
+              key={day.id}
+              id={day.id}
+              className={cn(
+                i === activeIndex && "shadow-lg ring-2 ring-primary/30"
+              )}
+            >
               <DayButton
                 day={day}
                 index={i}

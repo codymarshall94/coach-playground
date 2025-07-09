@@ -97,7 +97,8 @@ export function analyzeWorkoutDay(
   let totalJointStress = 0;
 
   for (const workoutEx of workout) {
-    const baseEx = exercises?.find((e) => e.id === workoutEx.id);
+    const baseEx = exercises?.find((e) => e.id === workoutEx.exercise_id);
+
     if (!baseEx) continue;
 
     // ✅ Count once per exercise (not per set)
@@ -105,15 +106,14 @@ export function analyzeWorkoutDay(
     increment(energySystemCounts, baseEx.energy_system);
 
     const volumePerSet =
-      (baseEx.volume_per_set_estimate?.strength +
-        baseEx.volume_per_set_estimate?.hypertrophy) /
+      (baseEx.volume_per_set?.strength + baseEx.volume_per_set?.hypertrophy) /
         2 || 0;
 
     for (const _set of workoutEx.sets) {
       setCount++;
-      totalFatigue += baseEx.fatigue.index;
+      totalFatigue += baseEx.fatigue_index;
       totalRecovery += baseEx.recovery_days;
-      totalJointStress += baseEx.fatigue.joint_stress;
+      totalJointStress += baseEx.joint_stress;
       totalVolume += volumePerSet;
 
       for (const [muscleId, activation] of Object.entries(

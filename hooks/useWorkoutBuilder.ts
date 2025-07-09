@@ -18,6 +18,8 @@ export function useWorkoutBuilder(initialProgram?: Program) {
     initialProgram ?? createEmptyProgram()
   );
 
+  console.log("🧠 program", program);
+
   const usingBlocks = program.mode === "blocks";
   const [activeBlockIndex, setActiveBlockIndex] = useState(0);
   const [activeDayIndex, setActiveDayIndex] = useState<number>(0);
@@ -263,7 +265,6 @@ export function useWorkoutBuilder(initialProgram?: Program) {
   };
 
   const addTrainingBlock = () => {
-    console.log(`current blocks: ${program.blocks?.length}`);
     updateProgram((prev) => {
       const newDay = createWorkoutDay(0);
 

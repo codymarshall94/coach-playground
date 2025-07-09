@@ -1,0 +1,9 @@
+export type Profile = {
+  id: string;
+  email: string;
+  full_name: string;
+  username: string;
+  avatar_url: string;
+  created_at: string;
+  updated_at: string;
+};

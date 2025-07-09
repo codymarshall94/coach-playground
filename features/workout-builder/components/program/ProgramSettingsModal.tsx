@@ -1,6 +1,12 @@
 "use client";
 
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -9,7 +15,6 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import type {
   Program,
   ProgramBlock,
@@ -17,6 +22,7 @@ import type {
   ProgramGoal,
 } from "@/types/Workout";
 import { motion } from "framer-motion";
+import { Settings2 } from "lucide-react";
 
 type ProgramSettingsModalProps = {
   open: boolean;
@@ -74,7 +80,16 @@ export const ProgramSettingsModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+        >
+          <Settings2 className="w-4 h-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="min-w-2xl">
         <DialogTitle>Program Settings</DialogTitle>
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -128,19 +143,6 @@ export const ProgramSettingsModal = ({
                 ))}
               </SelectContent>
             </Select>
-          </div>
-
-          {/* === NOTES === */}
-          <div className="space-y-2">
-            <Label className="text-sm">Program Notes</Label>
-            <Textarea
-              placeholder="Optional notes, structure, tags, reminders..."
-              rows={3}
-              value={program.description}
-              onChange={(e) =>
-                onChange({ ...program, description: e.target.value })
-              }
-            />
           </div>
         </motion.div>
       </DialogContent>

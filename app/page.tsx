@@ -4,7 +4,7 @@ import type React from "react";
 
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
@@ -32,10 +32,6 @@ function FloatingElement({
 }
 
 export default function Home() {
-  // const { scrollYProgress } = useScroll();
-  // const heroY = useTransform(scrollYProgress, [0, 0], [0, -200]);
-  // const heroOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
-
   return (
     <div className="min-h-screen bg-white overflow-hidden">
       {/* Floating Background Elements */}
@@ -52,10 +48,7 @@ export default function Home() {
       </div>
 
       {/* Hero Section */}
-      <motion.section
-        // style={{ y: heroY, opacity: heroOpacity }}
-        className="relative z-10 min-h-screen flex items-center justify-center px-6 sm:px-12"
-      >
+      <motion.section className="relative z-10 min-h-screen flex items-center justify-center px-6 sm:px-12">
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}

@@ -1,88 +1,41 @@
 "use client";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useUser } from "@/hooks/useUser";
-import { cn } from "@/lib/utils";
+import AvatarDropdown from "@/features/workout-builder/components/AvatarDropdown";
 import { createClient } from "@/utils/supabase/client";
-import { Menu } from "lucide-react";
+import { User } from "@supabase/supabase-js";
+import { Menu, Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Logo } from "./Logo";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
 
-const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/programs", label: "My Programs" },
-  { href: "/programs/new", label: "Create" },
-];
-
-export function Navbar() {
-  const { user } = useUser();
+export function Navbar({ user }: { user: User | null }) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
 
-  if (pathname.includes("/programs/builder")) return null;
+  const isBuilderPage = pathname.includes("/programs/builder");
+  const isProgramPage = pathname.includes("/programs/");
+
+  if (isBuilderPage || isProgramPage) return null;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/70 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        {/* Logo */}
         <Link href="/" className="text-xl font-bold tracking-tight">
-          <Logo size="md" showIcon />
+          <Logo size="xs" showIcon />
         </Link>
 
         {/* Desktop Nav */}
         <nav className="hidden sm:flex items-center gap-6">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                "text-sm font-medium transition hover:text-black",
-                pathname === link.href ? "text-black" : "text-muted-foreground"
-              )}
-            >
-              {link.label}
-            </Link>
-          ))}
+          <Button size="sm" className="flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:block">Create</span>
+          </Button>
 
           {user ? (
-            <>
-              <DropdownMenu>
-                <DropdownMenuTrigger>
-                  <Avatar className="h-8 w-8">
-                    {/* <AvatarImage src={user?.avatar_url} /> */}
-                    <AvatarFallback>{user?.email?.[0] ?? "U"}</AvatarFallback>
-                  </Avatar>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem>
-                    <Link href="/u">Profile</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Button
-                      size="sm"
-                      className="text-sm font-semibold"
-                      onClick={() =>
-                        supabase.auth.signOut().then(() => {
-                          router.refresh();
-                        })
-                      }
-                    >
-                      Logout
-                    </Button>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
+            <AvatarDropdown />
           ) : (
             <Link href="/login">
               <Button size="sm" className="text-sm font-semibold">
@@ -99,15 +52,7 @@ export function Navbar() {
           </SheetTrigger>
           <SheetContent side="right">
             <div className="flex flex-col gap-4 mt-8">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="text-base font-medium"
-                >
-                  {link.label}
-                </Link>
-              ))}
+              <Link href="/">Home</Link>
               {user ? (
                 <>
                   <Link href="/profile">Profile</Link>

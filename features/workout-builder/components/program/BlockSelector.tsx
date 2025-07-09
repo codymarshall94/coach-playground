@@ -107,7 +107,7 @@ export function BlockSelector({
           {blocks.map((block, i) => (
             <SortableItem key={block.id} id={block.id}>
               <div
-                className="border rounded-lg p-4 space-y-4 shadow-sm bg-white"
+                className="border rounded-lg p-4 space-y-4 shadow-sm bg-card"
                 onClick={() => onSelect(i)}
               >
                 <div className="flex justify-between items-center">

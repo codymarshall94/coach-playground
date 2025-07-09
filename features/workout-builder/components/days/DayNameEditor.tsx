@@ -52,7 +52,7 @@ export const DayNameEditor = ({
             <Input
               value={editedName}
               onChange={(e) => setEditedName(e.target.value)}
-              className="text-xl font-semibold border-none bg-transparent p-0 h-auto focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0"
+              className="text-xl font-semibold border-none bg-transparent  h-auto focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0"
               placeholder="Day name"
               autoFocus
               onKeyDown={(e) => {
@@ -79,7 +79,7 @@ export const DayNameEditor = ({
             transition={{ duration: 0.15 }}
             className="flex items-center gap-2"
           >
-            <h2 className="text-xl font-semibold truncate">{currentName}</h2>
+            <h2 className="text-xl font-bold truncate">{currentName}</h2>
             <Button
               variant="ghost"
               size="icon"

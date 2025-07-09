@@ -14,17 +14,15 @@ export interface Exercise {
   force_curve: ForceCurve;
   ideal_rep_range: [number, number];
   intensity_ceiling: number; // 0-1 (% of true 1 RM attainable)
-  fatigue: {
-    index: number; // 0-1 overall
-    cns_demand: number; // 0-1
-    metabolic_demand: number; // 0-1
-    joint_stress: number; // 0-1
-  };
+  fatigue_index: number; // 0-1 overall
+  cns_demand: number; // 0-1
+  metabolic_demand: number; // 0-1
+  joint_stress: number; // 0-1
   recovery_days: number; // typical after hard session
   base_calorie_cost: number; // kcals per hard set (est.)
   activation_map: ActivationMap; // 0-1 per muscle
   energy_system: EnergySystem;
-  volume_per_set_estimate: { strength: number; hypertrophy: number }; // kg-reps
+  volume_per_set: { strength: number; hypertrophy: number }; // kg-reps
   cues: string[];
   variations: ExerciseVariation[];
   contra_indications: string[];

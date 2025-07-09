@@ -7,7 +7,7 @@ export type SetInfo = {
 };
 
 export type WorkoutExercise = {
-  id: string; // lookup back to full exercise data
+  id: string;
   exercise_id: string;
   order_num: number;
   name: string;

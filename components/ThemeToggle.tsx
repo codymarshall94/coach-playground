@@ -22,10 +22,10 @@ export function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2
         ${
           isDark
-            ? "bg-gradient-to-r from-blue-600 to-purple-600"
+            ? "bg-gradient-to-r from-primary to-accent"
             : "bg-gradient-to-r from-gray-200 to-gray-300"
         }`}
       role="switch"

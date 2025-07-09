@@ -45,7 +45,7 @@ const Metric = ({
 
 export const ExerciseCard = ({ exercise, onAdd }: ExerciseCardProps) => {
   const [expanded, setExpanded] = useState(false);
-  const fatigueScore = exercise.fatigue.index * 10;
+  const fatigueScore = exercise.fatigue_index * 10;
 
   const getFatigueColor = (value: number) => {
     if (value <= 3) return "text-load-low";
@@ -125,19 +125,19 @@ export const ExerciseCard = ({ exercise, onAdd }: ExerciseCardProps) => {
                 <Metric
                   icon={<Brain className="w-3 h-3" />}
                   label="CNS"
-                  value={exercise.fatigue.cns_demand * 10}
+                  value={exercise.cns_demand * 10}
                   size="text-xs"
                 />
                 <Metric
                   icon={<Activity className="w-3 h-3" />}
                   label="Met"
-                  value={exercise.fatigue.metabolic_demand * 10}
+                  value={exercise.metabolic_demand * 10}
                   size="text-xs"
                 />
                 <Metric
                   icon={<AlertTriangle className="w-3 h-3" />}
                   label="Joint"
-                  value={exercise.fatigue.joint_stress * 10}
+                  value={exercise.joint_stress * 10}
                   size="text-xs"
                 />
               </div>

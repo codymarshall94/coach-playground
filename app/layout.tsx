@@ -1,25 +1,21 @@
 import { ThemeProvider } from "@/contexts/ThemeProvider";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Outfit } from "next/font/google";
+import Script from "next/script";
 import { Toaster } from "sonner";
 import "./globals.css";
 import { QueryProvider } from "./query-provider";
-import Script from "next/script";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const outfit = Outfit({
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: "--font-outfit",
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Workout Sandbox",
-  description:
-    "Build, preview, and customize your training sessions in the Workout Sandbox.",
+  title: "PRGRM",
+  description: "Build, preview, and customize your training sessions.",
 };
 
 export default function RootLayout({
@@ -29,9 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${outfit.variable} antialiased`}>
         <QueryProvider>
           <ThemeProvider
             attribute="class"

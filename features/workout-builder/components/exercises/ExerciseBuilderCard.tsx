@@ -105,18 +105,18 @@ export const ExerciseBuilderCard = ({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">
+            <div className="flex-shrink-0 w-8 h-8 bg-secondary rounded-full flex items-center justify-center text-sm font-bold">
               {order + 1}
             </div>
             <div className="flex flex-col gap-2">
-              <h3 className="font-semibold text-foreground text-lg">
+              <h3 className="font-bold text-foreground text-lg">
                 {exercise.name}
               </h3>
 
               <div className="flex items-center gap-2">
                 {exercise.notes && (
                   <div className="flex items-center gap-2">
-                    <p className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded">
+                    <p className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded italic">
                       {exercise.notes}
                     </p>
                   </div>
@@ -132,8 +132,8 @@ export const ExerciseBuilderCard = ({
                   variant="ghost"
                   size="sm"
                   className={`p-2 ${
-                    exercise.notes ? "text-blue-600" : "text-gray-400"
-                  } hover:text-blue-700`}
+                    exercise.notes ? "text-primary" : "text-muted-foreground"
+                  } hover:text-primary`}
                 >
                   <FileText className="w-4 h-4" />
                 </Button>
@@ -354,29 +354,9 @@ export const ExerciseBuilderCard = ({
         </div>
 
         {/* Quick Stats */}
-        <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border">
+        <div className="flex items-center justify-between bg-muted p-2 rounded-sm text-xs text-muted-foreground pt-2  ">
           <div className="flex items-center gap-4">
-            <ETLDisplay
-              etl={totalETL}
-              formula={{
-                reps: exercise.sets.reduce((sum, set) => sum + set.reps, 0),
-                intensity:
-                  exercise.sets.reduce((sum, set) => {
-                    if (exercise.intensity === "rpe")
-                      return sum + (set.rpe ?? 8);
-                    if (exercise.intensity === "rir")
-                      return sum + (10 - (set.rir ?? 2)); // estimate
-                    if (exercise.intensity === "one_rep_max_percent")
-                      return sum + (set.one_rep_max_percent ?? 75) / 100;
-                    return sum + 0.8;
-                  }, 0) / exercise.sets.length,
-                fatigue:
-                  (exerciseMeta as unknown as Exercise)?.fatigue?.index ?? 1,
-                baseVolume:
-                  (exerciseMeta as unknown as Exercise)?.volume_per_set_estimate
-                    ?.hypertrophy ?? 10,
-              }}
-            />
+            <ETLDisplay etl={totalETL} />
             <span>
               Total Reps:{" "}
               <span className="font-medium text-muted-foreground">

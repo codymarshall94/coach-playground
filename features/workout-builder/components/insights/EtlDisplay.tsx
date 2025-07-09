@@ -9,12 +9,6 @@ type Props = {
   etl: number;
   label?: string;
   className?: string;
-  formula?: {
-    reps: number;
-    intensity: number;
-    fatigue: number;
-    baseVolume: number;
-  };
 };
 
 function getETLCategory(etl: number) {
@@ -26,21 +20,17 @@ function getETLCategory(etl: number) {
   return { label: "Max Load", color: "text-rose-600" };
 }
 
-export const ETLDisplay = ({
-  etl,
-  label = "ETL",
-  className = "",
-  formula,
-}: Props) => {
-  const showFormula = !!formula;
+export const ETLDisplay = ({ etl, label = "ETL", className = "" }: Props) => {
   const category = getETLCategory(etl);
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span className={`flex items-center gap-1 cursor-help ${className}`}>
+        <span
+          className={`flex items-center gap-1 cursor-help ${className} text-muted-foreground`}
+        >
           {label}:{" "}
-          <span className={`font-semibold ${category.color}`}>
+          <span className={`font-bold ${category.color}`}>
             {etl.toFixed(1)}
           </span>
           <span className="text-xs font-medium text-gray-400">
@@ -50,7 +40,7 @@ export const ETLDisplay = ({
         </span>
       </TooltipTrigger>
 
-      <TooltipContent className="max-w-[260px] text-xs">
+      <TooltipContent className="max-w-[260px] text-xs bg-background text-foreground border border-border">
         <p className="font-medium mb-1">What is ETL?</p>
         <p>
           ETL (Estimated Training Load) represents training stress by combining:
@@ -60,19 +50,6 @@ export const ETLDisplay = ({
         <p className={`mt-2 text-xs font-semibold ${category.color}`}>
           Category: {category.label}
         </p>
-
-        {showFormula && (
-          <div className="mt-2 text-gray-500">
-            <div className="font-semibold">Formula:</div>
-            <div>
-              {formula.reps} reps × {formula.intensity.toFixed(2)} intensity ×{" "}
-              {formula.fatigue.toFixed(2)} fatigue × {formula.baseVolume} volume
-            </div>
-            <div className="mt-1">
-              = <span className="font-semibold">{etl.toFixed(1)} ETL</span>
-            </div>
-          </div>
-        )}
       </TooltipContent>
     </Tooltip>
   );

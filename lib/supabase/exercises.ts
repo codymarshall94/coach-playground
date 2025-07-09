@@ -9,7 +9,6 @@ export async function fetchExerciseById(id: string | null | undefined) {
   if (!id) return null; // ⛔️ Don't query if no ID
 
   const supabase = createClient();
-  console.log("🧠 fetchExerciseById", id);
 
   const { data, error } = await supabase
     .from("exercises")

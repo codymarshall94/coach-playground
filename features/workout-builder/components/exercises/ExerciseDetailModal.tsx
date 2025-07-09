@@ -107,19 +107,19 @@ export function ExerciseDetailModal({ exercise }: { exercise: Exercise }) {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <ProgressIndicator
-                    value={exercise.fatigue.cns_demand * 10}
+                    value={exercise.cns_demand * 10}
                     label="CNS Demand"
                     max={10}
                     field="cnsDemand"
                   />
                   <ProgressIndicator
-                    value={exercise.fatigue.metabolic_demand * 10}
+                    value={exercise.metabolic_demand * 10}
                     label="Metabolic Demand"
                     max={10}
                     field="metabolicDemand"
                   />
                   <ProgressIndicator
-                    value={exercise.fatigue.joint_stress * 10}
+                    value={exercise.joint_stress * 10}
                     label="Joint Stress"
                     max={10}
                     field="jointStress"

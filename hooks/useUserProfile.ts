@@ -2,38 +2,40 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { Profile } from "@/types/Profile";
 
 export function useUserProfile() {
-  const supabase = createClient();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const getProfile = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+  const refreshProfile = async () => {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      if (!user) {
-        setProfile(null);
-        setLoading(false);
-        return;
-      }
+    if (!user) {
+      setProfile(null);
+      return;
+    }
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
 
-      if (error) console.error("Error loading profile:", error);
-
+    if (error) {
+      console.error("Error loading profile:", error);
+      setProfile(null);
+    } else {
       setProfile(data);
-      setLoading(false);
-    };
+    }
+  };
 
-    getProfile();
+  useEffect(() => {
+    refreshProfile().finally(() => setLoading(false));
   }, []);
 
-  return { profile, loading };
+  return { profile, loading, refreshProfile };
 }

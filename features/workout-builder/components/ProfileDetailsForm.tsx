@@ -23,7 +23,11 @@ export function ProfileDetailsForm({
 
   const handleSubmit = async () => {
     setLoading(true);
-    const result = await setUserProfile({ userId, name, username });
+    const result = await setUserProfile({
+      userId,
+      fullName: name,
+      username,
+    });
     setLoading(false);
     if (result.success) onComplete();
     else toast.error(result.error);

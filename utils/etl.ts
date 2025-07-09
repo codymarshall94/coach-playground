@@ -41,8 +41,8 @@ export function getExerciseETL(
   exerciseMeta: Exercise,
   goal: "strength" | "hypertrophy" = "hypertrophy"
 ): { totalETL: number; normalizedETL: number } {
-  const fatigue = exerciseMeta.fatigue?.index ?? 1;
-  const baseVolumePerSet = exerciseMeta.volume_per_set_estimate?.[goal] ?? 10; // fallback if not defined
+  const fatigue = exerciseMeta.fatigue_index ?? 1;
+  const baseVolumePerSet = exerciseMeta.volume_per_set?.[goal] ?? 10; // fallback if not defined
 
   let totalETL = 0;
 
