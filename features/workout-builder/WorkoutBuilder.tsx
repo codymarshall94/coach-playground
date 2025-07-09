@@ -8,26 +8,27 @@ import { useUser } from "@/hooks/useUser";
 import { useWorkoutBuilder } from "@/hooks/useWorkoutBuilder";
 import { saveOrUpdateProgramService } from "@/services/programService";
 import { Exercise } from "@/types/Exercise";
-import { Program } from "@/types/Workout";
+import { Program, WorkoutExercise } from "@/types/Workout";
 import { analyzeWorkoutDay } from "@/utils/analyzeWorkoutDay";
 import {
-  closestCenter,
   DndContext,
+  DragEndEvent,
   DragOverlay,
   DragStartEvent,
-  PointerSensor,
-  useSensor,
-  useSensors,
 } from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { Bed, Dumbbell, Plus } from "lucide-react";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { createRef, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ClearWorkoutDayModal } from "./components/days/ClearWorkoutDayModal";
 import { DayHeader } from "./components/days/DayHeader";
 import { ExerciseBuilderCard } from "./components/exercises/ExerciseBuilderCard";
-import { ExerciseCard } from "./components/exercises/ExerciseCard";
 import { ExerciseSuggestions } from "./components/exercises/ExerciseSuggestions";
 import { WorkoutAnalyticsPanel } from "./components/insights/WorkoutAnalyticsPanel";
 import { BlockSelector } from "./components/program/BlockSelector";
@@ -66,6 +67,7 @@ export const WorkoutBuilder = ({
     reorderBlocks,
     usingBlocks,
     updateBlockDetails,
+    updateDayWorkout,
   } = useWorkoutBuilder(initialProgram);
 
   const [isSaving, setIsSaving] = useState(false);
@@ -105,14 +107,12 @@ export const WorkoutBuilder = ({
     }
   };
 
-  const [activeId, setActiveId] = useState<string | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [exerciseLibraryOpen, setExerciseLibraryOpen] = useState(false);
   const [savePromptOpen, setSavePromptOpen] = useState(false);
-
-  const sensors = useSensors(useSensor(PointerSensor));
+  const [draggingId, setDraggingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (lastAddedIndex !== null && exerciseRefs[lastAddedIndex]?.current) {
@@ -125,10 +125,9 @@ export const WorkoutBuilder = ({
   }, [lastAddedIndex, exerciseRefs]);
 
   const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
+    setDraggingId(event.active.id as string);
   };
 
-  const activeExercise = exercises?.find((ex) => ex.id === activeId);
   const insights = isWorkoutDay
     ? analyzeWorkoutDay(workout, exercises ?? [])
     : null;
@@ -139,6 +138,29 @@ export const WorkoutBuilder = ({
     }
     return program.days ?? [];
   }, [program, activeBlockIndex, usingBlocks]);
+
+  const reorderExercises = (exercises: WorkoutExercise[]): WorkoutExercise[] =>
+    exercises.map((exercise, index) => ({
+      ...exercise,
+      order_num: index,
+    }));
+
+  const handleDragEndExercise = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    setDraggingId(null);
+
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = workout.findIndex((e) => e.id === active.id);
+    const newIndex = workout.findIndex((e) => e.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const moved = arrayMove(workout, oldIndex, newIndex);
+    const reordered = reorderExercises(moved);
+
+    updateDayWorkout(reordered);
+  };
 
   const noWorkoutDays = currentDays.length === 0;
 
@@ -224,9 +246,11 @@ export const WorkoutBuilder = ({
         {/* RIGHT PANEL – Workout Builder */}
         <main className="flex-1 p-6 overflow-y-auto">
           <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
             onDragStart={handleDragStart}
+            onDragEnd={(event) => {
+              handleDragEndExercise(event);
+            }}
+            onDragCancel={() => setDraggingId(null)}
           >
             <div className="w-full max-w-4xl mx-auto">
               <DayHeader
@@ -294,29 +318,41 @@ export const WorkoutBuilder = ({
                       />
                     </motion.div>
                   ) : (
-                    <div className="space-y-3 mt-6">
-                      {workout.map((exercise, index) => (
-                        <div
-                          key={`${exercise.id}-${index}`}
-                          ref={exerciseRefs[index]}
+                    <AnimatePresence mode="popLayout">
+                      <div className="space-y-3">
+                        <SortableContext
+                          items={workout.map((e) => e.id)}
+                          strategy={verticalListSortingStrategy}
                         >
-                          <ExerciseBuilderCard
-                            order={index}
-                            exercise={exercise}
-                            onRemove={() => removeExercise(index)}
-                            onUpdateSets={(sets) =>
-                              updateExerciseSets(index, sets)
-                            }
-                            onUpdateIntensity={(intensity) =>
-                              updateExerciseIntensity(index, intensity)
-                            }
-                            onUpdateNotes={(notes) =>
-                              updateExerciseNotes(index, notes)
-                            }
-                          />
-                        </div>
-                      ))}
-                    </div>
+                          {workout.map((exercise, index) => (
+                            <motion.div
+                              key={`${exercise.id}-${index}`}
+                              ref={exerciseRefs[index]}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -10 }}
+                              transition={{ duration: 0.1 }}
+                            >
+                              <ExerciseBuilderCard
+                                order={index}
+                                exercise={exercise}
+                                isDraggingAny={!!draggingId} // 👈 NEW
+                                onRemove={() => removeExercise(index)}
+                                onUpdateSets={(sets) =>
+                                  updateExerciseSets(index, sets)
+                                }
+                                onUpdateIntensity={(intensity) =>
+                                  updateExerciseIntensity(index, intensity)
+                                }
+                                onUpdateNotes={(notes) =>
+                                  updateExerciseNotes(index, notes)
+                                }
+                              />
+                            </motion.div>
+                          ))}
+                        </SortableContext>
+                      </div>
+                    </AnimatePresence>
                   )}
                 </Droppable>
               )}
@@ -341,14 +377,26 @@ export const WorkoutBuilder = ({
               )}
             </div>
 
-            <DragOverlay>
-              {activeExercise && (
-                <div className="transform rotate-2 scale-105">
-                  <ExerciseCard
-                    exercise={activeExercise}
-                    onAdd={() => handleAddExercise(activeExercise)}
+            <DragOverlay dropAnimation={{ duration: 200, easing: "ease-out" }}>
+              {draggingId && (
+                <motion.div
+                  initial={{ scale: 0.95, opacity: 0.7 }}
+                  animate={{ scale: 1.02, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="z-[999] pointer-events-none"
+                >
+                  <ExerciseBuilderCard
+                    order={0}
+                    isDraggingAny={true}
+                    exercise={workout.find((ex) => ex.id === draggingId)!}
+                    onRemove={() => {}}
+                    onUpdateSets={() => {}}
+                    onUpdateIntensity={() => {}}
+                    onUpdateNotes={() => {}}
+                    dragging={true}
                   />
-                </div>
+                </motion.div>
               )}
             </DragOverlay>
           </DndContext>

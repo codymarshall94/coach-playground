@@ -80,7 +80,7 @@ export const WorkoutAnalyticsPanel = ({
         </Button>
       </SheetTrigger>
 
-      <SheetContent className="space-y-6 overflow-y-auto w-full max-w-3xl min-w-1/2 p-6">
+      <SheetContent className="space-y-6 overflow-y-auto w-full max-w-3xl min-w-1/2 md:min-w-1/3 p-6">
         <SheetHeader>
           <SheetTitle className="text-xl font-bold text-foreground">
             Day Summary

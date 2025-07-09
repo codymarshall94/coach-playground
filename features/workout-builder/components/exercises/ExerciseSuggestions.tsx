@@ -106,7 +106,7 @@ export function ExerciseSuggestions({
     <div ref={ref} className="fixed bottom-6 right-6 z-50">
       <motion.button
         onClick={toggleOpen}
-        className="relative w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow duration-200"
+        className="relative w-12 h-12 rounded-full cursor-pointer bg-primary text-white flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow duration-200"
         whileTap={{ scale: 0.95 }}
         whileHover={{ scale: 1.05 }}
         transition={{

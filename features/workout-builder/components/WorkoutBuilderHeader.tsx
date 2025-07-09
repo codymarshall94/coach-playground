@@ -4,10 +4,11 @@ import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import ProgramPreview from "@/features/workout-builder/components/program/ProgramPreview";
+import { cn } from "@/lib/utils";
 import { Exercise } from "@/types/Exercise";
 import { Program } from "@/types/Workout";
 import { User } from "@supabase/supabase-js";
-import { Save } from "lucide-react";
+import { Loader2, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
 import AvatarDropdown from "./AvatarDropdown";
 import { ExerciseLibrary } from "./exercises/ExerciseLibrary";
@@ -41,10 +42,22 @@ export const WorkoutBuilderHeader = ({
         <Button
           onClick={handleSave}
           disabled={isSaving}
-          className="h-9 sm:h-10"
+          className={cn(
+            "h-9 sm:h-10 flex items-center justify-center gap-2 px-4 transition-all duration-200",
+            isSaving && " cursor-wait"
+          )}
         >
-          <Save className="w-4 h-4 mr-2" />
-          {isSaving ? "Saving..." : "Save Draft"}
+          {isSaving ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Saving...</span>
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4" />
+              Save Draft
+            </>
+          )}
         </Button>
 
         <ProgramPreview program={program} />

@@ -18,8 +18,6 @@ export function useWorkoutBuilder(initialProgram?: Program) {
     initialProgram ?? createEmptyProgram()
   );
 
-  console.log("🧠 program", program);
-
   const usingBlocks = program.mode === "blocks";
   const [activeBlockIndex, setActiveBlockIndex] = useState(0);
   const [activeDayIndex, setActiveDayIndex] = useState<number>(0);
@@ -137,7 +135,10 @@ export function useWorkoutBuilder(initialProgram?: Program) {
 
   const addExercise = (exercise: Exercise) => {
     const intensity = workout.length > 0 ? workout[0].intensity : "rpe";
-    updateDayWorkout([...workout, createWorkoutExercise(exercise, intensity)]);
+    updateDayWorkout([
+      ...workout,
+      createWorkoutExercise(exercise, intensity, workout.length),
+    ]);
   };
 
   const removeExercise = (index: number) => {
@@ -233,7 +234,10 @@ export function useWorkoutBuilder(initialProgram?: Program) {
         order: sourceDay.order + 1,
         workout: sourceDay.workout.map((w) => ({
           ...w,
-          exercises: w.exercises.map((ex) => ({ ...ex })),
+          exercises: w.exercises.map((ex) => ({
+            ...ex,
+            order_num: ex.order_num + 1,
+          })),
           createdAt: new Date(),
           updatedAt: new Date(),
         })),

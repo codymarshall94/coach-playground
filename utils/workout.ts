@@ -8,6 +8,7 @@ import type {
 export function createWorkoutExercise(
   exercise: Exercise,
   intensity: IntensitySystem,
+  order: number,
   sets: number = 3
 ): WorkoutExercise {
   const reps = Math.round(
@@ -30,7 +31,7 @@ export function createWorkoutExercise(
   return {
     id: exercise.id,
     exercise_id: exercise.id,
-    order_num: 0,
+    order_num: order,
     name: exercise.name,
     intensity,
     sets: Array.from({ length: sets }, () => ({
