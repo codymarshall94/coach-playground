@@ -30,6 +30,8 @@ interface DayHeaderProps {
   setIsEditingName: (value: boolean) => void;
   updateDayDetails: (updates: Partial<ProgramDay>) => void;
   exerciseCount: number;
+  setCollapsedIndex: (index: number | null) => void;
+  collapsedIndex: number | null;
 }
 
 export const DayHeader = ({
@@ -42,6 +44,8 @@ export const DayHeader = ({
   setIsEditingName,
   updateDayDetails,
   exerciseCount,
+  setCollapsedIndex,
+  collapsedIndex,
 }: DayHeaderProps) => {
   const day =
     program.mode === "blocks"
@@ -86,7 +90,15 @@ export const DayHeader = ({
         <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs">
           {exerciseCount} {exerciseCount === 1 ? "Exercise" : "Exercises"}
         </Badge>
-
+        <div className="flex justify-end mb-4">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setCollapsedIndex(collapsedIndex === -1 ? null : -1)}
+          >
+            {collapsedIndex === -1 ? "Expand All" : "Collapse All"}
+          </Button>
+        </div>
         <Tooltip>
           <TooltipTrigger asChild>
             <Popover>

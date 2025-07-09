@@ -22,7 +22,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { Bed, Dumbbell, Plus } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { createRef, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -113,6 +113,7 @@ export const WorkoutBuilder = ({
   const [exerciseLibraryOpen, setExerciseLibraryOpen] = useState(false);
   const [savePromptOpen, setSavePromptOpen] = useState(false);
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [collapsedIndex, setCollapsedIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (lastAddedIndex !== null && exerciseRefs[lastAddedIndex]?.current) {
@@ -263,6 +264,8 @@ export const WorkoutBuilder = ({
                 setIsEditingName={setIsEditingName}
                 updateDayDetails={updateDayDetails}
                 exerciseCount={workout.length}
+                setCollapsedIndex={setCollapsedIndex}
+                collapsedIndex={collapsedIndex}
               />
               {isWorkoutDay && workout.length > 0 && (
                 <div className="flex justify-between items-center mt-2 mb-2 px-1">
@@ -318,41 +321,38 @@ export const WorkoutBuilder = ({
                       />
                     </motion.div>
                   ) : (
-                    <AnimatePresence mode="popLayout">
-                      <div className="space-y-3">
-                        <SortableContext
-                          items={workout.map((e) => e.id)}
-                          strategy={verticalListSortingStrategy}
-                        >
-                          {workout.map((exercise, index) => (
-                            <motion.div
-                              key={`${exercise.id}-${index}`}
-                              ref={exerciseRefs[index]}
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -10 }}
-                              transition={{ duration: 0.1 }}
-                            >
-                              <ExerciseBuilderCard
-                                order={index}
-                                exercise={exercise}
-                                isDraggingAny={!!draggingId} // 👈 NEW
-                                onRemove={() => removeExercise(index)}
-                                onUpdateSets={(sets) =>
-                                  updateExerciseSets(index, sets)
-                                }
-                                onUpdateIntensity={(intensity) =>
-                                  updateExerciseIntensity(index, intensity)
-                                }
-                                onUpdateNotes={(notes) =>
-                                  updateExerciseNotes(index, notes)
-                                }
-                              />
-                            </motion.div>
-                          ))}
-                        </SortableContext>
-                      </div>
-                    </AnimatePresence>
+                    <div className="space-y-3">
+                      <SortableContext
+                        items={workout.map((e) => e.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {workout.map((exercise, index) => (
+                          <div ref={exerciseRefs[index]}>
+                            <ExerciseBuilderCard
+                              order={index}
+                              exercise={exercise}
+                              isDraggingAny={!!draggingId}
+                              collapsed={
+                                collapsedIndex === -1 ||
+                                (collapsedIndex !== null &&
+                                  collapsedIndex !== index)
+                              }
+                              onExpand={() => setCollapsedIndex(index)}
+                              onRemove={() => removeExercise(index)}
+                              onUpdateSets={(sets) =>
+                                updateExerciseSets(index, sets)
+                              }
+                              onUpdateIntensity={(intensity) =>
+                                updateExerciseIntensity(index, intensity)
+                              }
+                              onUpdateNotes={(notes) =>
+                                updateExerciseNotes(index, notes)
+                              }
+                            />
+                          </div>
+                        ))}
+                      </SortableContext>
+                    </div>
                   )}
                 </Droppable>
               )}
