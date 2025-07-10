@@ -7,8 +7,7 @@ import { ProgramDaySelector } from "@/features/workout-builder/components/progra
 import { useUser } from "@/hooks/useUser";
 import { useWorkoutBuilder } from "@/hooks/useWorkoutBuilder";
 import { saveOrUpdateProgramService } from "@/services/programService";
-import { Exercise } from "@/types/Exercise";
-import { Program, WorkoutExercise } from "@/types/Workout";
+import { Program } from "@/types/Workout";
 import { analyzeWorkoutDay } from "@/utils/analyzeWorkoutDay";
 import {
   DndContext,
@@ -27,7 +26,7 @@ import { useRouter } from "next/navigation";
 import { createRef, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DayHeader } from "./components/days/DayHeader";
-import { ExerciseBuilderCard } from "./components/exercises/ExerciseBuilderCard";
+import { ExerciseGroupCard } from "./components/exercises/ExerciseGroupCard";
 import { ExerciseSuggestions } from "./components/exercises/ExerciseSuggestions";
 import { WorkoutAnalyticsPanel } from "./components/insights/WorkoutAnalyticsPanel";
 import { BlockSelector } from "./components/program/BlockSelector";
@@ -49,7 +48,7 @@ export const WorkoutBuilder = ({
     setActiveDayIndex,
     activeBlockIndex,
     setActiveBlockIndex,
-    workout,
+    exerciseGroups,
     isWorkoutDay,
     updateDayDetails,
     handleAddDay,
@@ -67,15 +66,25 @@ export const WorkoutBuilder = ({
     usingBlocks,
     updateBlockDetails,
     updateDayWorkout,
+    updateGroupType,
+    updateGroupRest,
+    addExerciseToGroup,
+    moveExerciseToGroup,
+    targetGroupIndex,
+    setTargetGroupIndex,
+    moveExerciseByIdToGroup,
   } = useWorkoutBuilder(initialProgram);
+
+  console.log(program);
 
   const [isSaving, setIsSaving] = useState(false);
   const [lastAddedIndex, setLastAddedIndex] = useState<number | null>(null);
+
   const router = useRouter();
 
-  const exerciseRefs = useMemo(
-    () => workout.map(() => createRef<HTMLDivElement>()),
-    [workout.length]
+  const groupRefs = useMemo(
+    () => exerciseGroups.map(() => createRef<HTMLDivElement>()),
+    [exerciseGroups.length]
   );
 
   const handleSave = async () => {
@@ -85,11 +94,6 @@ export const WorkoutBuilder = ({
     }
 
     await doSave();
-  };
-
-  const handleAddExercise = (exercise: Exercise) => {
-    addExercise(exercise);
-    setLastAddedIndex(workout.length);
   };
 
   const doSave = async () => {
@@ -115,21 +119,21 @@ export const WorkoutBuilder = ({
   const [collapsedIndex, setCollapsedIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    if (lastAddedIndex !== null && exerciseRefs[lastAddedIndex]?.current) {
-      exerciseRefs[lastAddedIndex]?.current?.scrollIntoView({
+    if (lastAddedIndex !== null && groupRefs[lastAddedIndex]?.current) {
+      groupRefs[lastAddedIndex]?.current?.scrollIntoView({
         behavior: "smooth",
         block: "center",
       });
       setLastAddedIndex(null);
     }
-  }, [lastAddedIndex, exerciseRefs]);
+  }, [lastAddedIndex, groupRefs]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setDraggingId(event.active.id as string);
   };
 
   const insights = isWorkoutDay
-    ? analyzeWorkoutDay(workout, exercises ?? [])
+    ? analyzeWorkoutDay(exerciseGroups, exercises ?? [])
     : null;
 
   const currentDays = useMemo(() => {
@@ -139,26 +143,18 @@ export const WorkoutBuilder = ({
     return program.days ?? [];
   }, [program, activeBlockIndex, usingBlocks]);
 
-  const reorderExercises = (exercises: WorkoutExercise[]): WorkoutExercise[] =>
-    exercises.map((exercise, index) => ({
-      ...exercise,
-      order_num: index,
-    }));
+  console.log(currentDays);
 
   const handleDragEndExercise = (event: DragEndEvent) => {
     const { active, over } = event;
-
     setDraggingId(null);
-
     if (!over || active.id === over.id) return;
 
-    const oldIndex = workout.findIndex((e) => e.id === active.id);
-    const newIndex = workout.findIndex((e) => e.id === over.id);
+    const oldIndex = exerciseGroups.findIndex((g) => g.id === active.id);
+    const newIndex = exerciseGroups.findIndex((g) => g.id === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
 
-    const moved = arrayMove(workout, oldIndex, newIndex);
-    const reordered = reorderExercises(moved);
-
+    const reordered = arrayMove(exerciseGroups, oldIndex, newIndex);
     updateDayWorkout(reordered);
   };
 
@@ -261,16 +257,16 @@ export const WorkoutBuilder = ({
                 isEditingName={isEditingName}
                 setIsEditingName={setIsEditingName}
                 updateDayDetails={updateDayDetails}
-                exerciseCount={workout.length}
+                exerciseCount={exerciseGroups.length}
                 setCollapsedIndex={setCollapsedIndex}
                 collapsedIndex={collapsedIndex}
                 clearWorkout={clearWorkout}
               />
-              {isWorkoutDay && workout.length > 0 && (
+              {isWorkoutDay && exerciseGroups.length > 0 && (
                 <div className="flex justify-between items-center mt-2 mb-2 px-1">
                   <div className="flex gap-2">
                     <WorkoutAnalyticsPanel
-                      workout={workout}
+                      workout={exerciseGroups}
                       summary={insights!}
                       open={analyticsOpen}
                       setOpen={setAnalyticsOpen}
@@ -294,7 +290,7 @@ export const WorkoutBuilder = ({
                       title="Rest Day"
                       description="You have programmed a rest day for this workout"
                     />
-                  ) : workout.length === 0 ? (
+                  ) : exerciseGroups.length === 0 ? (
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -321,37 +317,30 @@ export const WorkoutBuilder = ({
                   ) : (
                     <div className="space-y-3">
                       <SortableContext
-                        items={workout.map((e) => e.id)}
+                        items={exerciseGroups.map((e) => e.id)}
                         strategy={verticalListSortingStrategy}
                       >
-                        {workout.map((exercise, index) => (
-                          <div
-                            ref={exerciseRefs[index]}
-                            key={exercise.id}
-                            className="w-full"
-                          >
-                            <ExerciseBuilderCard
-                              order={index}
-                              exercise={exercise}
-                              isDraggingAny={!!draggingId}
-                              collapsed={
-                                collapsedIndex === -1 ||
-                                (collapsedIndex !== null &&
-                                  collapsedIndex !== index)
-                              }
-                              onExpand={() => setCollapsedIndex(index)}
-                              onRemove={() => removeExercise(index)}
-                              onUpdateSets={(sets) =>
-                                updateExerciseSets(index, sets)
-                              }
-                              onUpdateIntensity={(intensity) =>
-                                updateExerciseIntensity(index, intensity)
-                              }
-                              onUpdateNotes={(notes) =>
-                                updateExerciseNotes(index, notes)
-                              }
-                            />
-                          </div>
+                        {exerciseGroups.map((group, groupIndex) => (
+                          <ExerciseGroupCard
+                            key={group.id}
+                            exerciseGroups={exerciseGroups}
+                            group={group}
+                            groupIndex={groupIndex}
+                            isDraggingAny={!!draggingId}
+                            collapsedIndex={collapsedIndex}
+                            onExpand={() => setCollapsedIndex(groupIndex)}
+                            onRemoveExercise={removeExercise}
+                            onUpdateSets={updateExerciseSets}
+                            onUpdateIntensity={updateExerciseIntensity}
+                            onUpdateNotes={updateExerciseNotes}
+                            onUpdateGroupType={updateGroupType}
+                            onUpdateGroupRest={updateGroupRest}
+                            onAddExerciseToGroup={addExerciseToGroup}
+                            targetGroupIndex={targetGroupIndex}
+                            setTargetGroupIndex={setTargetGroupIndex}
+                            onMoveExerciseToGroup={moveExerciseToGroup}
+                            onMoveExerciseByIdToGroup={moveExerciseByIdToGroup}
+                          />
                         ))}
                       </SortableContext>
                     </div>
@@ -359,7 +348,7 @@ export const WorkoutBuilder = ({
                 </Droppable>
               )}
 
-              {isWorkoutDay && workout.length > 0 && (
+              {isWorkoutDay && exerciseGroups.length > 0 && (
                 <div className="mt-8 flex justify-center">
                   <Button
                     onClick={() => setExerciseLibraryOpen(true)}
@@ -370,11 +359,11 @@ export const WorkoutBuilder = ({
                   </Button>
                 </div>
               )}
-              {isWorkoutDay && workout.length > 0 && (
+              {isWorkoutDay && exerciseGroups.length > 0 && (
                 <ExerciseSuggestions
                   workout={currentDays}
                   allExercises={exercises ?? []}
-                  onAddExercise={handleAddExercise}
+                  onAddExercise={addExercise}
                 />
               )}
             </div>
@@ -388,15 +377,24 @@ export const WorkoutBuilder = ({
                   transition={{ duration: 0.15 }}
                   className="z-[999] pointer-events-none"
                 >
-                  <ExerciseBuilderCard
-                    order={0}
+                  <ExerciseGroupCard
+                    exerciseGroups={exerciseGroups}
+                    group={exerciseGroups.find((g) => g.id === draggingId)!}
+                    groupIndex={0}
                     isDraggingAny={true}
-                    exercise={workout.find((ex) => ex.id === draggingId)!}
-                    onRemove={() => {}}
+                    collapsedIndex={null}
+                    onExpand={() => {}}
+                    onRemoveExercise={() => {}}
                     onUpdateSets={() => {}}
                     onUpdateIntensity={() => {}}
                     onUpdateNotes={() => {}}
-                    dragging={true}
+                    onUpdateGroupType={() => {}}
+                    onUpdateGroupRest={() => {}}
+                    onAddExerciseToGroup={() => {}}
+                    targetGroupIndex={null}
+                    setTargetGroupIndex={() => {}}
+                    onMoveExerciseToGroup={() => {}}
+                    onMoveExerciseByIdToGroup={() => {}}
                   />
                 </motion.div>
               )}

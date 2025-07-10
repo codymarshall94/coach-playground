@@ -11,7 +11,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { CATEGORY_DISPLAY_MAP } from "@/constants/movement-category";
-import { WorkoutExercise } from "@/types/Workout";
+import { WorkoutExerciseGroup } from "@/types/Workout";
 import { WorkoutSummaryStats } from "@/types/WorkoutSummary";
 import { BarChart2, Dumbbell } from "lucide-react";
 
@@ -24,7 +24,7 @@ import { MuscleVolumeRow } from "./MuscleVolumeRow";
 import { RatioIndicator } from "./RatioIndicator";
 
 interface Props {
-  workout: WorkoutExercise[];
+  workout: WorkoutExerciseGroup[];
   summary: WorkoutSummaryStats;
   open: boolean;
   setOpen: (open: boolean) => void;
@@ -41,7 +41,7 @@ export const WorkoutAnalyticsPanel = ({
     queryFn: () => getAllExercises() as Promise<Exercise[]>,
   });
 
-  if (workout.length === 0) {
+  if (workout.flatMap((g) => g.exercises).length === 0) {
     return (
       <EmptyState
         icon={<Dumbbell />}
@@ -193,7 +193,7 @@ export const WorkoutAnalyticsPanel = ({
               setCount={muscle_set_counts[muscle]}
               weightedVolume={volume}
               maxVolume={maxVolume}
-              workout={workout}
+              workout={workout.flatMap((g) => g.exercises)}
               exercises={exercises ?? []}
             />
           ))}
@@ -204,7 +204,7 @@ export const WorkoutAnalyticsPanel = ({
           <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4 p-5 text-center text-sm text-muted-foreground">
             <div>
               <div className="text-lg font-bold text-foreground">
-                {workout.length}
+                {workout.flatMap((g) => g.exercises).length}
               </div>
               <div>Total Exercises</div>
             </div>

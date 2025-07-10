@@ -23,25 +23,25 @@ export function scoreExerciseSuggestion({
   }
 
   // 🤝 Complementary movement pattern
-  const hasSameCategory = currentWorkout.some((ex) =>
-    ex.workout.some((w) =>
-      w.exercises.some((e) => e.exercise_id === candidate.id)
+  const hasSameCategory = currentWorkout.some((day) =>
+    day.workout?.[0]?.exercise_groups?.some((g) =>
+      g.exercises.some((e) => e.exercise_id === candidate.id)
     )
   );
   if (!hasSameCategory) score += 5;
 
   // 🔄 Alternate movement plane
-  const hasSamePlane = currentWorkout.some((ex) =>
-    ex.workout.some((w) =>
-      w.exercises.some((e) => e.exercise_id === candidate.id)
+  const hasSamePlane = currentWorkout.some((day) =>
+    day.workout?.[0]?.exercise_groups?.some((g) =>
+      g.exercises.some((e) => e.exercise_id === candidate.id)
     )
   );
   if (!hasSamePlane) score += 3;
 
   // 🦾 Load profile variety
-  const hasSameLoadProfile = currentWorkout.some((ex) =>
-    ex.workout.some((w) =>
-      w.exercises.some((e) => e.exercise_id === candidate.id)
+  const hasSameLoadProfile = currentWorkout.some((day) =>
+    day.workout?.[0]?.exercise_groups?.some((g) =>
+      g.exercises.some((e) => e.exercise_id === candidate.id)
     )
   );
   if (!hasSameLoadProfile) score += 2;

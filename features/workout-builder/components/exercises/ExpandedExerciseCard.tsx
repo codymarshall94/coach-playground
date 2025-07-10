@@ -19,7 +19,6 @@ import { estimateExerciseDuration } from "@/utils/volume/estimateExerciseDuratio
 import {
   Clock,
   FileText,
-  GripVertical,
   Plus,
   RotateCcw,
   Trash2,
@@ -46,8 +45,6 @@ export function ExpandedExerciseCard({
   onUpdateIntensity,
   onUpdateNotes,
   totalETL,
-  listeners,
-  attributes,
 }: {
   order: number;
   exercise: WorkoutExercise;
@@ -57,8 +54,6 @@ export function ExpandedExerciseCard({
   onUpdateIntensity: (intensity: IntensitySystem) => void;
   onUpdateNotes: (notes: string) => void;
   totalETL: number;
-  listeners: any;
-  attributes: any;
 }) {
   const [tempNotes, setTempNotes] = useState(exercise.notes || "");
 
@@ -100,13 +95,6 @@ export function ExpandedExerciseCard({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div
-              className="cursor-move text-muted-foreground p-1"
-              {...attributes}
-              {...listeners}
-            >
-              <GripVertical className="w-4 h-4" />
-            </div>
             <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center text-sm font-bold">
               {order + 1}
             </div>

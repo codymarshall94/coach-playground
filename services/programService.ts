@@ -1,18 +1,42 @@
-import { insertExerciseSets } from "@/lib/supabase/exerciseSets";
-import { insertProgramBlocks } from "@/lib/supabase/programBlocks";
-import { insertProgramDays } from "@/lib/supabase/programDays";
-import { insertProgram } from "@/lib/supabase/programs";
-import { insertWorkoutExercises } from "@/lib/supabase/workoutExercises";
-import { insertWorkout } from "@/lib/supabase/workouts";
-import { Program, ProgramDay, WorkoutExercise } from "@/types/Workout";
+import {
+  Program,
+  ProgramBlock,
+  ProgramDay,
+  SetInfo,
+  WorkoutExercise,
+} from "@/types/Workout";
 import { createClient } from "@/utils/supabase/client";
 
 /* ---------------------------------------------------------------------------- */
+
+export async function insertWorkout(dayId: string) {
+  const supabase = createClient();
+
+  return supabase.from("workouts").insert({ day_id: dayId }).select().single();
+}
+
+export async function insertProgramBlocks(
+  programId: string,
+  blocks: ProgramBlock[]
+) {
+  const supabase = createClient();
+
+  const payload = blocks.map((block, index) => ({
+    program_id: programId,
+    name: block.name,
+    description: block.description,
+    order_num: index,
+    weeks: block.weeks ?? 4, // <-- safeguard
+  }));
+
+  return supabase.from("program_blocks").insert(payload).select();
+}
 
 export async function insertDaysWithWorkouts(
   insertedDays: ProgramDay[],
   originalDays: ProgramDay[]
 ) {
+  const supabase = createClient();
   let failureCount = 0;
 
   for (let i = 0; i < insertedDays.length; i++) {
@@ -20,11 +44,10 @@ export async function insertDaysWithWorkouts(
     const originalDay = originalDays[i];
     const workout = originalDay.workout?.[0];
 
-    // ✅ Skip if no workout or no exercises
     if (
       !workout ||
-      !Array.isArray(workout.exercises) ||
-      workout.exercises.length === 0
+      !Array.isArray(workout.exercise_groups) ||
+      workout.exercise_groups.length === 0
     ) {
       continue;
     }
@@ -37,33 +60,46 @@ export async function insertDaysWithWorkouts(
       continue;
     }
 
-    const workoutExercisePayloads = workout.exercises.map((ex, index) => ({
-      workout_id: workoutData.id,
-      exercise_id: ex.exercise_id,
-      name: ex.name,
-      intensity: ex.intensity,
-      notes: ex.notes ?? "",
-      order_num: index,
-    }));
+    for (
+      let groupIndex = 0;
+      groupIndex < workout.exercise_groups.length;
+      groupIndex++
+    ) {
+      const group = workout.exercise_groups[groupIndex];
 
-    const { data: insertedExercises, error } = await insertWorkoutExercises(
-      workoutData.id,
-      workoutExercisePayloads as unknown as WorkoutExercise[]
-    );
+      const { data: groupData, error: groupError } = await supabase
+        .from("workout_exercise_groups")
+        .insert({
+          workout_id: workoutData.id,
+          order_num: groupIndex,
+          type: group.type,
+          notes: group.notes ?? "",
+          rest_after_group: group.rest_after_group ?? null,
+        })
+        .select()
+        .single();
 
-    if (error || !insertedExercises?.length) {
-      failureCount++;
-      continue;
-    }
-
-    for (let i = 0; i < insertedExercises.length; i++) {
-      const setData = await insertExerciseSets(
-        insertedExercises[i].id,
-        workout.exercises[i].sets
-      );
-
-      if (!setData) {
+      if (groupError || !groupData) {
         failureCount++;
+        continue;
+      }
+
+      const { data: insertedExercises, error: exerciseError } =
+        await insertWorkoutExercises(groupData.id, group.exercises);
+
+      if (exerciseError || !insertedExercises?.length) {
+        failureCount++;
+        continue;
+      }
+
+      for (let i = 0; i < insertedExercises.length; i++) {
+        const setData = await insertExerciseSets(
+          insertedExercises[i].id,
+          group.exercises[i].sets
+        );
+        if (!setData) {
+          failureCount++;
+        }
       }
     }
   }
@@ -213,6 +249,87 @@ export async function insertProgramStructure(
       await insertDaysWithWorkouts(daysData || [], block.days);
     }
   }
+}
+
+export async function insertProgramDays(
+  programId: string,
+  days: ProgramDay[],
+  blockId?: string
+) {
+  const supabase = createClient();
+  const payload = days.map((day, index) => ({
+    program_id: programId,
+    block_id: blockId,
+    name: day.name,
+    description: day.description,
+    order_num: index,
+    type: day.type,
+  }));
+
+  return supabase.from("program_days").insert(payload).select();
+}
+
+export async function insertProgram({
+  user_id,
+  name,
+  description,
+  goal,
+  mode,
+}: {
+  user_id: string;
+  name: string;
+  description: string;
+  goal: string;
+  mode: "days" | "blocks";
+}) {
+  const supabase = createClient();
+
+  return supabase
+    .from("programs")
+    .insert({ user_id, name, description, goal, mode })
+    .select()
+    .single();
+}
+
+export async function insertExerciseSets(
+  workoutExerciseId: string,
+  sets: SetInfo[]
+) {
+  const supabase = createClient();
+  const payload = sets.map((set, index) => ({
+    workout_exercise_id: workoutExerciseId,
+    reps: set.reps,
+    rest: set.rest,
+    rpe: set.rpe ?? null,
+    rir: set.rir ?? null,
+    one_rep_max_percent: set.one_rep_max_percent ?? null,
+    set_index: index,
+  }));
+  const { data, error } = await supabase
+    .from("exercise_sets")
+    .insert(payload)
+    .select();
+  if (error) {
+    console.error("❌ insertExerciseSets error", error.message);
+    return null;
+  }
+  return data;
+}
+
+export async function insertWorkoutExercises(
+  groupId: string,
+  exercises: WorkoutExercise[]
+) {
+  const supabase = createClient();
+  const payload = exercises.map((ex, index) => ({
+    workout_group_id: groupId,
+    exercise_id: ex.exercise_id,
+    name: ex.name,
+    intensity: ex.intensity,
+    notes: ex.notes ?? "",
+    order_num: index,
+  }));
+  return supabase.from("workout_exercises").insert(payload).select();
 }
 
 /* ---------------------------------------------------------------------------- */

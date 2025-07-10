@@ -9,40 +9,49 @@ export default async function ProgramEditPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("programs")
     .select(
       `
-    *,
-    blocks:program_blocks (
       *,
+      blocks:program_blocks (
+        *,
+        days:program_days (
+          *,
+          workout:workouts (
+            *,
+            exercise_groups:workout_exercise_groups (
+              *,
+              exercises:workout_exercises (
+                *,
+                sets:exercise_sets (*)
+              )
+            )
+          )
+        )
+      ),
       days:program_days (
         *,
         workout:workouts (
           *,
-          exercises:workout_exercises (
+          exercise_groups:workout_exercise_groups (
             *,
-            sets:exercise_sets (*)
+            exercises:workout_exercises (
+              *,
+              sets:exercise_sets (*)
+            )
           )
         )
       )
-    ),
-    days:program_days (
-      *,
-      workout:workouts (
-        *,
-        exercises:workout_exercises (
-          *,
-          sets:exercise_sets (*)
-        )
-      )
-    )
-  `
+      `
     )
     .eq("id", id)
     .single();
 
-  if (!data) return <p>Failed to load program</p>;
+  if (error || !data) {
+    console.error("❌ Failed to fetch program", error?.message);
+    return <p>Failed to load program</p>;
+  }
 
   return <WorkoutBuilder initialProgram={data} />;
 }

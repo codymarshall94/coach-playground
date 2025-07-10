@@ -1,5 +1,6 @@
+import { Button } from "@/components/ui/button";
 import { WorkoutExercise } from "@/types/Workout";
-import { ChevronDown, GripVertical } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 import { ETLDisplay } from "../insights/EtlDisplay";
 
 export function CollapsedExerciseCard({
@@ -8,16 +9,16 @@ export function CollapsedExerciseCard({
   totalETL,
   durationMin,
   onExpand,
-  listeners,
-  attributes,
+  showAddToGroup,
+  onAddToGroupClick,
 }: {
   order: number;
   exercise: WorkoutExercise;
   totalETL: number;
   durationMin: number;
   onExpand?: () => void;
-  listeners: any;
-  attributes: any;
+  showAddToGroup?: boolean;
+  onAddToGroupClick?: () => void;
 }) {
   const totalReps = exercise.sets.reduce((sum, set) => sum + set.reps, 0);
 
@@ -27,14 +28,18 @@ export function CollapsedExerciseCard({
       onClick={onExpand}
     >
       <div className="flex items-center gap-3">
-        <div
-          className="cursor-move text-muted-foreground"
-          {...attributes}
-          {...listeners}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <GripVertical className="w-4 h-4" />
-        </div>
+        {showAddToGroup && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddToGroupClick?.();
+            }}
+          >
+            <Plus className="w-4 h-4 text-muted-foreground" />
+          </Button>
+        )}
 
         <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center font-bold">
           {order + 1}

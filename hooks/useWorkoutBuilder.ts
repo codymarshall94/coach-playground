@@ -6,6 +6,7 @@ import {
   ProgramBlock,
   ProgramDay,
   WorkoutExercise,
+  WorkoutExerciseGroup,
 } from "@/types/Workout";
 import { createEmptyProgram } from "@/utils/createEmptyProgram";
 import { createWorkoutExercise } from "@/utils/workout";
@@ -21,6 +22,7 @@ export function useWorkoutBuilder(initialProgram?: Program) {
   const usingBlocks = program.mode === "blocks";
   const [activeBlockIndex, setActiveBlockIndex] = useState(0);
   const [activeDayIndex, setActiveDayIndex] = useState<number>(0);
+  const [targetGroupIndex, setTargetGroupIndex] = useState<number | null>(null);
 
   const { data: exercises } = useQuery({
     queryKey: ["exercises"],
@@ -66,8 +68,8 @@ export function useWorkoutBuilder(initialProgram?: Program) {
   const activeDay = getDayRef();
   const isWorkoutDay = activeDay?.type === "workout";
 
-  const workout: WorkoutExercise[] = isWorkoutDay
-    ? activeDay?.workout?.[0]?.exercises ?? []
+  const exerciseGroups: WorkoutExerciseGroup[] = isWorkoutDay
+    ? activeDay?.workout?.[0]?.exercise_groups ?? []
     : [];
 
   // === Mutators ===
@@ -75,19 +77,19 @@ export function useWorkoutBuilder(initialProgram?: Program) {
     setProgram((prev) => updater(prev));
   };
 
-  const updateDayWorkout = (exercises: WorkoutExercise[]) => {
+  const updateDayWorkout = (groups: WorkoutExerciseGroup[]) => {
     updateProgram((prev) => {
       const day = { ...getDayRef(prev) } as ProgramDay;
       if (!day.workout || day.workout.length === 0) {
         day.workout = [
           {
-            exercises,
+            exercise_groups: groups,
             createdAt: new Date(),
             updatedAt: new Date(),
           },
         ];
       } else {
-        day.workout[0].exercises = exercises;
+        day.workout[0].exercise_groups = groups;
         day.workout[0].updatedAt = new Date();
       }
 
@@ -95,31 +97,40 @@ export function useWorkoutBuilder(initialProgram?: Program) {
     });
   };
 
-  const updateExerciseSets = (index: number, sets: WorkoutExercise["sets"]) => {
-    updateDayWorkout(
-      workout.map((ex, i) => (i === index ? { ...ex, sets } : ex))
-    );
+  const updateExerciseSets = (
+    groupIndex: number,
+    exerciseIndex: number,
+    sets: WorkoutExercise["sets"]
+  ) => {
+    const updatedGroups = [...exerciseGroups];
+    const group = updatedGroups[groupIndex];
+    if (!group) return;
+
+    group.exercises[exerciseIndex] = {
+      ...group.exercises[exerciseIndex],
+      sets,
+    };
+
+    updateDayWorkout(updatedGroups);
   };
 
   const updateExerciseIntensity = (
-    index: number,
+    groupIndex: number,
+    exerciseIndex: number,
     intensity: IntensitySystem
   ) => {
     updateDayWorkout(
-      workout.map((ex, i) =>
-        i === index
+      exerciseGroups.map((ex, i) =>
+        i === groupIndex
           ? {
               ...ex,
               intensity,
-              sets: ex.sets.map((set) => ({
-                reps: set.reps,
-                rest: set.rest,
-                rpe: intensity === "rpe" ? set.rpe ?? 8 : null,
-                one_rep_max_percent:
-                  intensity === "one_rep_max_percent"
-                    ? set.one_rep_max_percent ?? 75
-                    : null,
-                rir: intensity === "rir" ? set.rir ?? 2 : null,
+              exercises: ex.exercises.map((exercise) => ({
+                ...exercise,
+                sets: exercise.sets.map((set) => ({
+                  ...set,
+                  rpe: intensity === "rpe" ? set.rpe ?? 8 : null,
+                })),
               })),
             }
           : ex
@@ -127,28 +138,141 @@ export function useWorkoutBuilder(initialProgram?: Program) {
     );
   };
 
-  const updateExerciseNotes = (index: number, notes: string) => {
+  const updateExerciseNotes = (
+    groupIndex: number,
+    exerciseIndex: number,
+    notes: string
+  ) => {
     updateDayWorkout(
-      workout.map((ex, i) => (i === index ? { ...ex, notes } : ex))
+      exerciseGroups.map((ex, i) =>
+        i === groupIndex
+          ? {
+              ...ex,
+              notes,
+              exercises: ex.exercises.map((exercise) => ({
+                ...exercise,
+                notes,
+              })),
+            }
+          : ex
+      )
     );
   };
 
-  const addExercise = (exercise: Exercise) => {
-    const intensity = workout.length > 0 ? workout[0].intensity : "rpe";
-    updateDayWorkout([
-      ...workout,
-      createWorkoutExercise(exercise, intensity, workout.length),
-    ]);
+  const updateGroupType = (
+    groupIndex: number,
+    type: WorkoutExerciseGroup["type"]
+  ) => {
+    const updated = [...exerciseGroups];
+    updated[groupIndex].type = type;
+    if (type === "standard" && updated[groupIndex].exercises.length > 1) {
+      updated[groupIndex].exercises = [updated[groupIndex].exercises[0]];
+    }
+    updateDayWorkout(updated);
   };
 
-  const removeExercise = (index: number) => {
-    updateDayWorkout(workout.filter((_, i) => i !== index));
+  const updateGroupRest = (groupIndex: number, rest: number) => {
+    const updated = [...exerciseGroups];
+    updated[groupIndex].rest_after_group = rest;
+    updateDayWorkout(updated);
+  };
+
+  const moveExerciseToGroup = (
+    fromGroupIndex: number,
+    exerciseIndex: number,
+    toGroupIndex: number
+  ) => {
+    if (fromGroupIndex === toGroupIndex) return;
+
+    const updated = [...exerciseGroups];
+    const [movedExercise] = updated[fromGroupIndex].exercises.splice(
+      exerciseIndex,
+      1
+    );
+    updated[toGroupIndex].exercises.push({
+      ...movedExercise,
+      order_num: updated[toGroupIndex].exercises.length,
+    });
+
+    updateDayWorkout(updated);
+    setTargetGroupIndex(null);
+  };
+
+  const addExerciseToGroup = (groupIndex: number, exercise: Exercise) => {
+    const intensity =
+      exerciseGroups[groupIndex]?.exercises?.[0]?.intensity ?? "rpe";
+    const updated = [...exerciseGroups];
+    updated[groupIndex].exercises.push(
+      createWorkoutExercise(
+        exercise,
+        intensity,
+        updated[groupIndex].exercises.length
+      )
+    );
+    updateDayWorkout(updated);
+  };
+
+  const addExercise = (exercise: Exercise) => {
+    const intensity = exerciseGroups[0]?.exercises[0]?.intensity ?? "rpe";
+    const newExercise = createWorkoutExercise(exercise, intensity, 0);
+
+    const newGroup: WorkoutExerciseGroup = {
+      id: crypto.randomUUID(),
+      type: "standard",
+      exercises: [newExercise],
+    };
+
+    updateDayWorkout([...exerciseGroups, newGroup]);
+  };
+
+  const removeExercise = (groupIndex: number, exerciseIndex: number) => {
+    const updatedGroups = [...exerciseGroups];
+    const group = updatedGroups[groupIndex];
+
+    if (!group) return;
+
+    if (group.exercises.length === 1) {
+      updatedGroups.splice(groupIndex, 1);
+    } else {
+      group.exercises.splice(exerciseIndex, 1);
+    }
+
+    updateDayWorkout(updatedGroups);
+  };
+
+  const addSuperset = (exercises: Exercise[]) => {
+    const intensity = exerciseGroups[0]?.exercises[0]?.intensity ?? "rpe";
+
+    const supersetGroup: WorkoutExerciseGroup = {
+      id: crypto.randomUUID(),
+      type: "superset",
+      rest_after_group: 60,
+      exercises: exercises.map((ex, i) =>
+        createWorkoutExercise(ex, intensity, i)
+      ),
+    };
+
+    updateDayWorkout([...exerciseGroups, supersetGroup]);
+  };
+
+  const addGiantSet = (exercises: Exercise[]) => {
+    const intensity = exerciseGroups[0]?.exercises[0]?.intensity ?? "rpe";
+
+    const giantSetGroup: WorkoutExerciseGroup = {
+      id: crypto.randomUUID(),
+      type: "giant_set",
+      rest_after_group: 120,
+      exercises: exercises.map((ex, i) =>
+        createWorkoutExercise(ex, intensity, i)
+      ),
+    };
+
+    updateDayWorkout([...exerciseGroups, giantSetGroup]);
   };
 
   const clearWorkout = () => {
     updateDayWorkout([]);
   };
-
   // === Day Control ===
 
   const updateDayDetails = (updates: Partial<ProgramDay>) => {
@@ -216,6 +340,52 @@ export function useWorkoutBuilder(initialProgram?: Program) {
     });
   };
 
+  function updateGroupAtIndex(
+    index: number,
+    updater: (group: WorkoutExerciseGroup) => WorkoutExerciseGroup
+  ) {
+    const updated = [...exerciseGroups];
+    updated[index] = updater(updated[index]);
+    updateDayWorkout(updated);
+  }
+
+  function updateExerciseAtIndex(
+    groupIndex: number,
+    exerciseIndex: number,
+    updater: (ex: WorkoutExercise) => WorkoutExercise
+  ) {
+    const updated = [...exerciseGroups];
+    const group = updated[groupIndex];
+    group.exercises[exerciseIndex] = updater(group.exercises[exerciseIndex]);
+    updateDayWorkout(updated);
+  }
+
+  function createGroupWithExercises(
+    exercises: Exercise[],
+    type: WorkoutExerciseGroup["type"],
+    restAfterGroup: number
+  ): WorkoutExerciseGroup {
+    const intensity = exerciseGroups[0]?.exercises[0]?.intensity ?? "rpe";
+    return {
+      id: crypto.randomUUID(),
+      type,
+      rest_after_group: restAfterGroup,
+      exercises: exercises.map((ex, i) =>
+        createWorkoutExercise(ex, intensity, i)
+      ),
+    };
+  }
+
+  function createSingleExerciseGroup(ex: Exercise): WorkoutExerciseGroup {
+    const intensity = exerciseGroups[0]?.exercises[0]?.intensity ?? "rpe";
+    const newExercise = createWorkoutExercise(ex, intensity, 0);
+    return {
+      id: crypto.randomUUID(),
+      type: "standard",
+      exercises: [newExercise],
+    };
+  }
+
   const handleDuplicateWorkoutDay = (index: number) => {
     updateProgram((prev) => {
       const isBlockMode = prev.mode === "blocks";
@@ -234,9 +404,12 @@ export function useWorkoutBuilder(initialProgram?: Program) {
         order: sourceDay.order + 1,
         workout: sourceDay.workout.map((w) => ({
           ...w,
-          exercises: w.exercises.map((ex) => ({
-            ...ex,
-            order_num: ex.order_num + 1,
+          exercise_groups: w.exercise_groups.map((group) => ({
+            ...group,
+            exercises: group.exercises.map((ex, i) => ({
+              ...ex,
+              order_num: ex.order_num + 1,
+            })),
           })),
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -332,6 +505,46 @@ export function useWorkoutBuilder(initialProgram?: Program) {
     });
   };
 
+  function moveExerciseByIdToGroup(
+    exerciseId: string,
+    targetGroupIndex: number
+  ) {
+    const updatedGroups = [...exerciseGroups];
+    let movedExercise: WorkoutExercise | null = null;
+    let fromGroupIndex = -1;
+
+    // Step 1: Find and remove the exercise from its current group
+    for (let i = 0; i < updatedGroups.length; i++) {
+      const group = updatedGroups[i];
+      const index = group.exercises.findIndex((ex) => ex.id === exerciseId);
+      if (index !== -1) {
+        [movedExercise] = group.exercises.splice(index, 1);
+        fromGroupIndex = i;
+        break;
+      }
+    }
+
+    // Guard clause
+    if (!movedExercise) return;
+
+    // Step 2: Optionally remove the old group if now empty
+    if (updatedGroups[fromGroupIndex].exercises.length === 0) {
+      updatedGroups.splice(fromGroupIndex, 1);
+
+      // Adjust target index if it shifted from above
+      if (fromGroupIndex < targetGroupIndex) {
+        targetGroupIndex -= 1;
+      }
+    }
+
+    // Step 3: Add to target group
+    const targetGroup = updatedGroups[targetGroupIndex];
+    movedExercise.order_num = targetGroup.exercises.length;
+    targetGroup.exercises.push(movedExercise);
+
+    updateDayWorkout(updatedGroups);
+  }
+
   const confirmModeSwitch = (newMode: "blocks" | "days") => {
     const safeToSwitch =
       program.mode === newMode ||
@@ -384,7 +597,7 @@ export function useWorkoutBuilder(initialProgram?: Program) {
     setActiveDayIndex,
     activeBlockIndex,
     setActiveBlockIndex,
-    workout,
+    exerciseGroups,
     isWorkoutDay,
     updateDayWorkout,
     updateExerciseSets,
@@ -405,5 +618,14 @@ export function useWorkoutBuilder(initialProgram?: Program) {
     getCurrentDays,
     getActiveDaySafe,
     confirmModeSwitch,
+    addSuperset,
+    addGiantSet,
+    updateGroupType,
+    updateGroupRest,
+    addExerciseToGroup,
+    moveExerciseToGroup,
+    targetGroupIndex,
+    setTargetGroupIndex,
+    moveExerciseByIdToGroup,
   };
 }

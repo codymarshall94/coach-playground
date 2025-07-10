@@ -29,6 +29,8 @@ export const ExerciseBuilderCard = ({
   collapsed = false,
   onExpand,
   dragging = false,
+  showAddToGroup = false,
+  onAddToGroupClick,
 }: {
   order: number;
   exercise: WorkoutExercise;
@@ -40,15 +42,9 @@ export const ExerciseBuilderCard = ({
   collapsed?: boolean;
   onExpand?: () => void;
   dragging?: boolean;
+  showAddToGroup?: boolean;
+  onAddToGroupClick?: () => void;
 }) => {
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: exercise.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
   const exerciseMeta = exercise as unknown as Exercise;
   const { totalETL } = getExerciseETL(exercise, exerciseMeta);
   const durationMin = Math.ceil(estimateExerciseDuration(exercise) / 60);
@@ -63,8 +59,6 @@ export const ExerciseBuilderCard = ({
         totalETL={totalETL}
         durationMin={durationMin}
         onExpand={onExpand}
-        listeners={listeners}
-        attributes={attributes}
       />
     </motion.div>
   );
@@ -80,16 +74,12 @@ export const ExerciseBuilderCard = ({
         onUpdateIntensity={onUpdateIntensity}
         onUpdateNotes={onUpdateNotes}
         totalETL={totalETL}
-        listeners={listeners}
-        attributes={attributes}
       />
     </motion.div>
   );
 
   return (
     <motion.div
-      ref={setNodeRef}
-      style={style}
       layout
       className={cn(
         "rounded-xl border bg-background overflow-hidden transition-all",

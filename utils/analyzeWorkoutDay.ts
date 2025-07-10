@@ -1,6 +1,6 @@
 import { MUSCLES } from "@/constants/muscles";
 import { Exercise } from "@/types/Exercise";
-import { WorkoutExercise } from "@/types/Workout";
+import { WorkoutExerciseGroup } from "@/types/Workout";
 import { WorkoutSummaryStats } from "@/types/WorkoutSummary";
 
 // ───────────────────────────────────────────────
@@ -79,7 +79,7 @@ function determineWorkoutType(
 // Main Analysis Function
 
 export function analyzeWorkoutDay(
-  workout: WorkoutExercise[],
+  exerciseGroups: WorkoutExerciseGroup[],
   exercises: Exercise[]
 ): WorkoutAnalytics {
   const muscleVolumes: Record<string, number> = {};
@@ -96,7 +96,7 @@ export function analyzeWorkoutDay(
   let totalRecovery = 0;
   let totalJointStress = 0;
 
-  for (const workoutEx of workout) {
+  for (const workoutEx of exerciseGroups.flatMap((g) => g.exercises)) {
     const baseEx = exercises?.find((e) => e.id === workoutEx.exercise_id);
 
     if (!baseEx) continue;

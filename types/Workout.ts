@@ -16,8 +16,16 @@ export type WorkoutExercise = {
   intensity: IntensitySystem;
 };
 
-export type Workout = {
+export type WorkoutExerciseGroup = {
+  id: string;
+  type: "standard" | "superset" | "giant_set" | "circuit"; // extensible
+  rest_after_group?: number; // rest in seconds
+  notes?: string;
   exercises: WorkoutExercise[];
+};
+
+export type Workout = {
+  exercise_groups: WorkoutExerciseGroup[];
   createdAt: Date;
   updatedAt: Date;
 };

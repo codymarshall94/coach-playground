@@ -10,8 +10,8 @@ export function getSmartExerciseSuggestions({
   allExercises: Exercise[];
   currentWorkout: ProgramDay[];
 }) {
-  const currentWorkoutExercises = currentWorkout.flatMap((day) =>
-    day.workout.flatMap((w) => w.exercises)
+  const currentWorkoutExercises = currentWorkout.flatMap(
+    (day) => day.workout?.[0]?.exercise_groups ?? []
   );
   const insights = analyzeWorkoutDay(currentWorkoutExercises, allExercises);
 

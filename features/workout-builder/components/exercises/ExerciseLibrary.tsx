@@ -30,7 +30,6 @@ export const ExerciseLibrary = ({
   setOpen: (open: boolean) => void;
 }) => {
   const {
-    exercises,
     filtered,
     search,
     setSearch,

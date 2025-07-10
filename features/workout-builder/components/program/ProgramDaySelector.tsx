@@ -63,10 +63,12 @@ function DayButton({
   onDuplicate: () => void;
   isDragOverlay?: boolean;
 }) {
-  const totalExercises = day.workout.reduce(
-    (acc, workout) => acc + workout.exercises.length,
-    0
-  );
+  const totalExercises =
+    day.workout?.[0]?.exercise_groups?.reduce(
+      (acc, group) =>
+        acc + group.exercises.reduce((acc2, ex) => acc2 + ex.sets.length, 0),
+      0
+    ) ?? 0;
 
   return (
     <div className="flex items-center gap-3 w-full">
