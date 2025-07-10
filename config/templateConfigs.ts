@@ -49,9 +49,7 @@ export const templateConfigs: Program[] = [
     name: "Push Pull Legs",
     description: `<p><strong>Overview:</strong></p>
 <p>Push Pull Legs (PPL) is a balanced 3-day training split that targets all major muscle groups across the week. It’s designed to promote strength, hypertrophy, and recovery by organizing workouts based on movement patterns.</p>
-
 <hr />
-
 <p><strong>Structure:</strong></p>
 <ul>
   <li><strong>Day 1 – Push:</strong> Focuses on the chest, shoulders, and triceps. Includes both compound pressing movements and isolation work for full anterior upper-body stimulation.</li>
@@ -67,11 +65,8 @@ export const templateConfigs: Program[] = [
   <li>Wednesday – Pull</li>
   <li>Friday – Legs</li>
 </ul>
-
 <p>This structure allows for full recovery between muscle groups while maintaining intensity and frequency for optimal growth.</p>
-
 <hr />
-
 <p><strong>Ideal For:</strong></p>
 <ul>
   <li>Lifters seeking balanced upper/lower body development</li>
@@ -112,7 +107,8 @@ export const templateConfigs: Program[] = [
                 exercise_id: "bench_press_bb",
                 order_num: 0,
                 name: "Barbell Bench Press",
-                notes: "3 sets of 8–12 reps",
+                notes:
+                  "Control the eccentric for 3 seconds, light pause on chest, drive explosively. Focus on full range and bar path.",
                 sets: [
                   {
                     reps: 8,
@@ -143,7 +139,8 @@ export const templateConfigs: Program[] = [
                 exercise_id: "incline_press_db",
                 order_num: 1,
                 name: "Incline Dumbbell Press",
-                notes: "3 sets of 10–12 reps",
+                notes:
+                  "Lower slowly (3s), slight pause at the bottom, press up with intent. Keep shoulder blades pinned throughout.",
                 sets: [
                   {
                     reps: 10,
@@ -174,7 +171,8 @@ export const templateConfigs: Program[] = [
                 exercise_id: "shoulder_press_db",
                 order_num: 2,
                 name: "Dumbbell Shoulder Press",
-                notes: "3 sets of 8–10 reps",
+                notes:
+                  "2–3s negative, avoid locking out elbows fully. Keep core braced and wrists stacked. Slight pause at bottom.",
                 sets: [
                   {
                     reps: 8,
@@ -205,7 +203,8 @@ export const templateConfigs: Program[] = [
                 exercise_id: "lateral_raise_db",
                 order_num: 3,
                 name: "Dumbbell Lateral Raise",
-                notes: "3 sets of 12–15 reps",
+                notes:
+                  "1s lift, 1s hold at top, 3s lower. Lead with elbows, avoid shrugging. Keep constant tension throughout.",
                 sets: [
                   {
                     reps: 15,
@@ -236,7 +235,8 @@ export const templateConfigs: Program[] = [
                 exercise_id: "triceps_pushdown_cable",
                 order_num: 4,
                 name: "Triceps Pushdown (Cable)",
-                notes: "3 sets of 12–15 reps",
+                notes:
+                  "2s down, 1s squeeze at full extension, 3s controlled return. Keep elbows pinned, wrists neutral.",
                 sets: [
                   {
                     reps: 12,
@@ -282,7 +282,8 @@ export const templateConfigs: Program[] = [
                 exercise_id: "bent_over_row_bb",
                 order_num: 0,
                 name: "Bent-Over Barbell Row",
-                notes: "3 sets of 8–10 reps",
+                notes:
+                  "2–3s negative, avoid locking out elbows fully. Keep core braced and wrists stacked. Slight pause at bottom.",
                 sets: [
                   {
                     reps: 8,
@@ -313,7 +314,8 @@ export const templateConfigs: Program[] = [
                 exercise_id: "lat_pulldown_cable",
                 order_num: 1,
                 name: "Lat Pulldown (Cable)",
-                notes: "3 sets of 10–12 reps",
+                notes:
+                  "1s lift, 1s hold at top, 3s lower. Lead with elbows, avoid shrugging. Keep constant tension throughout.",
                 sets: [
                   {
                     reps: 10,
@@ -344,7 +346,8 @@ export const templateConfigs: Program[] = [
                 exercise_id: "trx_row",
                 order_num: 2,
                 name: "TRX Row",
-                notes: "3 sets of 10–12 reps",
+                notes:
+                  "2s down, 1s squeeze at full extension, 3s controlled return. Keep elbows pinned, wrists neutral.",
                 sets: [
                   {
                     reps: 12,
@@ -375,7 +378,8 @@ export const templateConfigs: Program[] = [
                 exercise_id: "curl_alt_db",
                 order_num: 3,
                 name: "Alternating DB Curl",
-                notes: "3 sets of 12–15 reps",
+                notes:
+                  "2s down, 1s squeeze at full extension, 3s controlled return. Keep elbows pinned, wrists neutral.",
                 sets: [
                   {
                     reps: 12,
@@ -421,7 +425,8 @@ export const templateConfigs: Program[] = [
                 exercise_id: "back_squat_bb",
                 order_num: 0,
                 name: "Barbell Back Squat",
-                notes: "3 sets of 8 reps",
+                notes:
+                  "2–3s negative, avoid locking out elbows fully. Keep core braced and wrists stacked. Slight pause at bottom.",
                 sets: [
                   {
                     reps: 8,
@@ -452,7 +457,8 @@ export const templateConfigs: Program[] = [
                 exercise_id: "bulgarian_split_squat_db",
                 order_num: 1,
                 name: "Bulgarian Split Squat (DB)",
-                notes: "3 sets of 10 reps each leg",
+                notes:
+                  "1s lift, 1s hold at top, 3s lower. Lead with elbows, avoid shrugging. Keep constant tension throughout.",
                 sets: [
                   {
                     reps: 10,
@@ -483,7 +489,8 @@ export const templateConfigs: Program[] = [
                 exercise_id: "hip_thrust_bb",
                 order_num: 2,
                 name: "Barbell Hip Thrust",
-                notes: "3 sets of 10–12 reps",
+                notes:
+                  "2s down, 1s squeeze at full extension, 3s controlled return. Keep elbows pinned, wrists neutral.",
                 sets: [
                   {
                     reps: 12,
@@ -514,7 +521,8 @@ export const templateConfigs: Program[] = [
                 exercise_id: "seated_calf_raise_machine",
                 order_num: 3,
                 name: "Seated Calf Raise (Machine)",
-                notes: "3 sets of 15–20 reps",
+                notes:
+                  "2s down, 1s squeeze at full extension, 3s controlled return. Keep elbows pinned, wrists neutral.",
                 sets: [
                   {
                     reps: 20,

@@ -114,11 +114,6 @@ export function ExpandedExerciseCard({
               <h3 className="font-bold text-foreground text-lg">
                 {exercise.name}
               </h3>
-              {exercise.notes && (
-                <p className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded italic">
-                  {exercise.notes}
-                </p>
-              )}
             </div>
           </div>
 
