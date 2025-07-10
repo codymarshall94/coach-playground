@@ -88,7 +88,7 @@ export function SignUpWithProfileForm({
       </p>
 
       <div className="space-y-6">
-        <div>
+        <div className="space-y-1.5">
           <Label htmlFor="name">Your full name</Label>
           <Input
             id="name"
@@ -99,7 +99,7 @@ export function SignUpWithProfileForm({
           />
         </div>
 
-        <div>
+        <div className="space-y-1.5">
           <Label htmlFor="email">Your email</Label>
           <Input
             id="email"
@@ -110,15 +110,16 @@ export function SignUpWithProfileForm({
           />
         </div>
 
-        <div>
+        <div className="space-y-1.5">
           <Label htmlFor="password">Create a password</Label>
           <div className="relative">
             <Input
               id="password"
-              placeholder="make it secret 🤫"
+              placeholder="********"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               type={showPassword ? "text" : "password"}
+              autoComplete="off"
             />
             <button
               type="button"
@@ -138,9 +139,9 @@ export function SignUpWithProfileForm({
         {usernameSlug && (
           <p className="text-xs text-muted-foreground flex items-center gap-1">
             Your profile will be:
-            <span className="text-blue-600 font-medium">/u/{usernameSlug}</span>
+            <span className="text-primary font-medium">/u/{usernameSlug}</span>
             {usernameAvailable ? (
-              <CheckCircle className="w-4 h-4 text-green-500" />
+              <CheckCircle className="w-4 h-4 text-primary" />
             ) : (
               <XCircle className="w-4 h-4 text-red-500" />
             )}

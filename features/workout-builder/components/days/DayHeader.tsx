@@ -8,16 +8,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { Program, ProgramDay } from "@/types/Workout";
 import { motion } from "framer-motion";
-import { FileText } from "lucide-react";
+import { ChevronDown, ChevronUp, FileText } from "lucide-react";
 import { useEffect, useState } from "react";
+import { ClearWorkoutDayModal } from "./ClearWorkoutDayModal";
 import { DayNameEditor } from "./DayNameEditor";
 
 interface DayHeaderProps {
@@ -32,6 +28,7 @@ interface DayHeaderProps {
   exerciseCount: number;
   setCollapsedIndex: (index: number | null) => void;
   collapsedIndex: number | null;
+  clearWorkout: () => void;
 }
 
 export const DayHeader = ({
@@ -46,6 +43,7 @@ export const DayHeader = ({
   exerciseCount,
   setCollapsedIndex,
   collapsedIndex,
+  clearWorkout,
 }: DayHeaderProps) => {
   const day =
     program.mode === "blocks"
@@ -55,6 +53,15 @@ export const DayHeader = ({
   const [localDescription, setLocalDescription] = useState(
     day?.description || ""
   );
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setScrolled(window.scrollY > 10);
+    };
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     setLocalDescription(day?.description || "");
@@ -68,11 +75,38 @@ export const DayHeader = ({
     <motion.div
       key={`day-header-${activeBlockIndex}-${activeDayIndex}`}
       initial={{ opacity: 0, y: -5 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
-      className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-6 pb-3 mb-4 border-b border-border w-full"
+      animate={{
+        opacity: 1,
+        y: 0,
+        scale: scrolled ? 1.02 : 1,
+      }}
+      transition={{
+        duration: 0.2,
+        scale: { duration: 0.3, ease: "easeOut" },
+      }}
+      className={cn(
+        "sticky top-0 z-20 flex py-6 flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-6 pb-3 mb-4 border-b w-full transition-all duration-300 ease-out",
+        // Base styles
+        "bg-background/70 backdrop-blur-sm border-border/50",
+        // Scrolled styles - much more prominent
+        scrolled && [
+          "bg-background/95 backdrop-blur-xl",
+          "shadow-2xl shadow-black/20",
+          "border-border",
+          "ring-1 ring-border/20",
+          // Optional: slight tint when scrolled
+          "bg-gradient-to-r from-background/95 to-background/90",
+        ]
+      )}
     >
-      <div>
+      <div
+        className={cn(
+          "absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary/0 via-primary/50 to-primary/0 transition-opacity duration-300",
+          scrolled ? "opacity-100" : "opacity-0"
+        )}
+      />
+
+      <div className="flex items-center gap-2">
         <DayNameEditor
           program={program}
           activeBlockIndex={activeBlockIndex}
@@ -83,78 +117,91 @@ export const DayHeader = ({
           isEditingName={isEditingName}
           setIsEditingName={setIsEditingName}
         />
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <FileText
+                className={cn(
+                  "w-4 h-4 text-muted-foreground hover:text-foreground",
+                  day?.description && "text-primary"
+                )}
+              />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            className="w-80 p-4 border border-border bg-background rounded-lg shadow-md"
+            align="start"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-3"
+            >
+              <h4 className="font-medium text-sm text-muted-foreground">
+                Day Notes
+              </h4>
+              <Textarea
+                rows={3}
+                value={localDescription}
+                onChange={(e) => setLocalDescription(e.target.value)}
+                placeholder="E.g. Focus on glutes, light accessories..."
+                className="resize-none"
+              />
+              <div className="flex justify-end">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleDescriptionSave}
+                >
+                  Save
+                </Button>
+              </div>
+            </motion.div>
+          </PopoverContent>
+        </Popover>
       </div>
 
-      {/* Right: Notes + exercise count */}
       <div className="flex items-center gap-2 flex-wrap">
-        <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs">
+        <Badge
+          variant="secondary"
+          className={cn(
+            "rounded-full px-3 py-1 text-xs transition-all duration-300",
+            scrolled && "bg-primary/10 text-primary border-primary/20"
+          )}
+        >
           {exerciseCount} {exerciseCount === 1 ? "Exercise" : "Exercises"}
         </Badge>
-        <div className="flex justify-end mb-4">
+
+        <div className="flex justify-end">
           <Button
             size="sm"
             variant="outline"
             onClick={() => setCollapsedIndex(collapsedIndex === -1 ? null : -1)}
+            className={cn(
+              "transition-all duration-300",
+              scrolled && "bg-primary/5 border-primary/30 hover:bg-primary/10"
+            )}
           >
-            {collapsedIndex === -1 ? "Expand All" : "Collapse All"}
+            {collapsedIndex === -1 ? (
+              <>
+                <ChevronDown className="w-4 h-4 mr-1" />
+                Expand All
+              </>
+            ) : (
+              <>
+                <ChevronUp className="w-4 h-4 mr-1" />
+                Collapse All
+              </>
+            )}
           </Button>
         </div>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1 px-2 py-1 text-xs border-muted-foreground/20 hover:bg-muted"
-                >
-                  <FileText
-                    className={cn(
-                      "w-4 h-4",
-                      day?.description && "text-primary"
-                    )}
-                  />
-                  <span>{day?.description ? "Edit Notes" : "Add Notes"}</span>
-                </Button>
-              </PopoverTrigger>
 
-              <PopoverContent
-                className="w-80 p-4 border border-border bg-background rounded-lg shadow-md"
-                align="start"
-              >
-                <motion.div
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="space-y-3"
-                >
-                  <h4 className="font-medium text-sm text-muted-foreground">
-                    Day Notes
-                  </h4>
-                  <Textarea
-                    rows={3}
-                    value={localDescription}
-                    onChange={(e) => setLocalDescription(e.target.value)}
-                    placeholder="E.g. Focus on glutes, light accessories..."
-                    className="resize-none"
-                  />
-                  <div className="flex justify-end">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={handleDescriptionSave}
-                    >
-                      Save
-                    </Button>
-                  </div>
-                </motion.div>
-              </PopoverContent>
-            </Popover>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">
-            {day?.description ? "Edit Day Notes" : "Add Notes"}
-          </TooltipContent>
-        </Tooltip>
+        <ClearWorkoutDayModal onConfirm={clearWorkout} />
       </div>
     </motion.div>
   );

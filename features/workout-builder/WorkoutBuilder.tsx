@@ -26,7 +26,6 @@ import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { createRef, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ClearWorkoutDayModal } from "./components/days/ClearWorkoutDayModal";
 import { DayHeader } from "./components/days/DayHeader";
 import { ExerciseBuilderCard } from "./components/exercises/ExerciseBuilderCard";
 import { ExerciseSuggestions } from "./components/exercises/ExerciseSuggestions";
@@ -244,8 +243,7 @@ export const WorkoutBuilder = ({
           </div>
         </aside>
 
-        {/* RIGHT PANEL – Workout Builder */}
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1  overflow-y-auto">
           <DndContext
             onDragStart={handleDragStart}
             onDragEnd={(event) => {
@@ -253,7 +251,7 @@ export const WorkoutBuilder = ({
             }}
             onDragCancel={() => setDraggingId(null)}
           >
-            <div className="w-full max-w-4xl mx-auto">
+            <div className="w-full max-w-4xl mx-auto relative">
               <DayHeader
                 program={program}
                 activeBlockIndex={activeBlockIndex}
@@ -266,6 +264,7 @@ export const WorkoutBuilder = ({
                 exerciseCount={workout.length}
                 setCollapsedIndex={setCollapsedIndex}
                 collapsedIndex={collapsedIndex}
+                clearWorkout={clearWorkout}
               />
               {isWorkoutDay && workout.length > 0 && (
                 <div className="flex justify-between items-center mt-2 mb-2 px-1">
@@ -276,7 +275,6 @@ export const WorkoutBuilder = ({
                       open={analyticsOpen}
                       setOpen={setAnalyticsOpen}
                     />
-                    <ClearWorkoutDayModal onConfirm={clearWorkout} />
                   </div>
                 </div>
               )}
@@ -327,7 +325,11 @@ export const WorkoutBuilder = ({
                         strategy={verticalListSortingStrategy}
                       >
                         {workout.map((exercise, index) => (
-                          <div ref={exerciseRefs[index]}>
+                          <div
+                            ref={exerciseRefs[index]}
+                            key={exercise.id}
+                            className="w-full"
+                          >
                             <ExerciseBuilderCard
                               order={index}
                               exercise={exercise}

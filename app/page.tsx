@@ -37,10 +37,10 @@ export default function Home() {
       {/* Floating Background Elements */}
       <div className="fixed inset-0 pointer-events-none">
         <FloatingElement delay={0}>
-          <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-purple-400/10 to-pink-400/10 rounded-full blur-xl" />
+          <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-primary/10 to-primary/10 rounded-full blur-xl" />
         </FloatingElement>
         <FloatingElement delay={1}>
-          <div className="absolute top-40 right-20 w-24 h-24 bg-gradient-to-r from-blue-400/10 to-cyan-400/10 rounded-full blur-xl" />
+          <div className="absolute top-40 right-20 w-24 h-24 bg-gradient-to-r from-primary/10 to-primary/10 rounded-full blur-xl" />
         </FloatingElement>
         <FloatingElement delay={2}>
           <div className="absolute bottom-40 left-1/4 w-40 h-40 bg-gradient-to-r from-green-400/10 to-emerald-400/10 rounded-full blur-xl" />
@@ -66,7 +66,7 @@ export default function Home() {
             className="text-5xl sm:text-7xl font-bold tracking-tight"
           >
             Your Training Lab,{" "}
-            <span className="bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-primary via-primary to-primary bg-clip-text text-transparent">
               Reimagined
             </span>
           </motion.h1>
@@ -91,7 +91,7 @@ export default function Home() {
             <Link href="/programs/new">
               <Button
                 size="lg"
-                className="text-lg px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="text-lg px-8 py-4 bg-gradient-to-r from-primary to-primary hover:from-primary/80 hover:to-primary/80 shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 Create a Program
                 <ArrowRight className="ml-2 w-5 h-5" />
