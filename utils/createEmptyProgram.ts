@@ -15,7 +15,7 @@ export const createEmptyProgram = (
       {
         createdAt: new Date(),
         updatedAt: new Date(),
-        exercises: [],
+        exercise_groups: [],
       },
     ],
   };

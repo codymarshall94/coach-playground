@@ -41,6 +41,7 @@ export function createWorkoutExercise(
       reps,
       rest: 90,
       ...getIntensity(),
+      set_type: "standard",
     })),
   };
 }

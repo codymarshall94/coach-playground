@@ -11,7 +11,7 @@ const styles = StyleSheet.create({
   setText: { fontSize: 11, marginLeft: 20, marginBottom: 2 },
 });
 
-export default function ProgramPDF({ program }: { program: Program }) {
+export function ProgramPDF({ program }: { program: Program }) {
   const blocks = program.blocks ?? [
     { id: "solo", name: "", days: program.days || [], order: 0 },
   ];
@@ -31,18 +31,24 @@ export default function ProgramPDF({ program }: { program: Program }) {
 
                 {day.workout?.map((workout, workoutIndex) => (
                   <View key={workoutIndex}>
-                    {workout.exercises.map((exercise) => (
-                      <View key={exercise.id}>
-                        <Text style={styles.exerciseName}>{exercise.name}</Text>
-                        {exercise.sets.map((set, idx) => (
-                          <Text key={idx} style={styles.setText}>
-                            • Set {idx + 1}: {set.reps} reps{" "}
-                            {set.one_rep_max_percent
-                              ? `@ ${set.one_rep_max_percent}%`
-                              : set.rpe
-                              ? `@ RPE ${set.rpe}`
-                              : ""}
-                          </Text>
+                    {workout.exercise_groups.map((group) => (
+                      <View key={group.id}>
+                        {group.exercises.map((exercise) => (
+                          <View key={exercise.id}>
+                            <Text style={styles.exerciseName}>
+                              {exercise.name}
+                            </Text>
+                            {exercise.sets.map((set, idx) => (
+                              <Text key={idx} style={styles.setText}>
+                                • Set {idx + 1}: {set.reps} reps{" "}
+                                {set.one_rep_max_percent
+                                  ? `@ ${set.one_rep_max_percent}%`
+                                  : set.rpe
+                                  ? `@ RPE ${set.rpe}`
+                                  : ""}
+                              </Text>
+                            ))}
+                          </View>
                         ))}
                       </View>
                     ))}

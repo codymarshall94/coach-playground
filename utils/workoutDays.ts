@@ -10,7 +10,7 @@ export const createWorkoutDay = (order = 0): ProgramDay => ({
     {
       createdAt: new Date(),
       updatedAt: new Date(),
-      exercises: [],
+      exercise_groups: [],
     },
   ],
 });

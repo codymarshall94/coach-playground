@@ -184,8 +184,12 @@ export function WorkoutDay({ day }: { day: ProgramDay }) {
       <div className="space-y-2">
         {day.workout.map((workout, workoutIndex) => (
           <div key={workoutIndex}>
-            {workout.exercises.map((exercise) => (
-              <ExerciseCard key={exercise.id} exercise={exercise} />
+            {workout.exercise_groups.map((group) => (
+              <div key={group.id}>
+                {group.exercises.map((exercise) => (
+                  <ExerciseCard key={exercise.id} exercise={exercise} />
+                ))}
+              </div>
             ))}
           </div>
         ))}

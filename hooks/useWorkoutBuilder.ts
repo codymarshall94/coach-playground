@@ -5,6 +5,7 @@ import {
   Program,
   ProgramBlock,
   ProgramDay,
+  SetInfo,
   WorkoutExercise,
   WorkoutExerciseGroup,
 } from "@/types/Workout";
@@ -100,7 +101,7 @@ export function useWorkoutBuilder(initialProgram?: Program) {
   const updateExerciseSets = (
     groupIndex: number,
     exerciseIndex: number,
-    sets: WorkoutExercise["sets"]
+    sets: SetInfo[]
   ) => {
     const updatedGroups = [...exerciseGroups];
     const group = updatedGroups[groupIndex];
@@ -119,23 +120,33 @@ export function useWorkoutBuilder(initialProgram?: Program) {
     exerciseIndex: number,
     intensity: IntensitySystem
   ) => {
-    updateDayWorkout(
-      exerciseGroups.map((ex, i) =>
-        i === groupIndex
-          ? {
-              ...ex,
-              intensity,
-              exercises: ex.exercises.map((exercise) => ({
-                ...exercise,
-                sets: exercise.sets.map((set) => ({
-                  ...set,
-                  rpe: intensity === "rpe" ? set.rpe ?? 8 : null,
-                })),
-              })),
-            }
-          : ex
-      )
-    );
+    const updatedGroups = [...exerciseGroups];
+    const group = updatedGroups[groupIndex];
+    if (!group) return;
+
+    const updatedExercises = [...group.exercises];
+    const targetExercise = updatedExercises[exerciseIndex];
+
+    updatedExercises[exerciseIndex] = {
+      ...targetExercise,
+      intensity,
+      sets: targetExercise.sets.map((set) => ({
+        ...set,
+        rpe: intensity === "rpe" ? set.rpe ?? 8 : null,
+        one_rep_max_percent:
+          intensity === "one_rep_max_percent"
+            ? set.one_rep_max_percent ?? 70
+            : null,
+        rir: intensity === "rir" ? set.rir ?? 2 : null,
+      })),
+    };
+
+    updatedGroups[groupIndex] = {
+      ...group,
+      exercises: updatedExercises,
+    };
+
+    updateDayWorkout(updatedGroups);
   };
 
   const updateExerciseNotes = (
@@ -219,6 +230,7 @@ export function useWorkoutBuilder(initialProgram?: Program) {
     const newGroup: WorkoutExerciseGroup = {
       id: crypto.randomUUID(),
       type: "standard",
+      order_num: exerciseGroups.length,
       exercises: [newExercise],
     };
 
@@ -247,6 +259,7 @@ export function useWorkoutBuilder(initialProgram?: Program) {
       id: crypto.randomUUID(),
       type: "superset",
       rest_after_group: 60,
+      order_num: exerciseGroups.length,
       exercises: exercises.map((ex, i) =>
         createWorkoutExercise(ex, intensity, i)
       ),
@@ -262,6 +275,7 @@ export function useWorkoutBuilder(initialProgram?: Program) {
       id: crypto.randomUUID(),
       type: "giant_set",
       rest_after_group: 120,
+      order_num: exerciseGroups.length,
       exercises: exercises.map((ex, i) =>
         createWorkoutExercise(ex, intensity, i)
       ),
@@ -358,32 +372,6 @@ export function useWorkoutBuilder(initialProgram?: Program) {
     const group = updated[groupIndex];
     group.exercises[exerciseIndex] = updater(group.exercises[exerciseIndex]);
     updateDayWorkout(updated);
-  }
-
-  function createGroupWithExercises(
-    exercises: Exercise[],
-    type: WorkoutExerciseGroup["type"],
-    restAfterGroup: number
-  ): WorkoutExerciseGroup {
-    const intensity = exerciseGroups[0]?.exercises[0]?.intensity ?? "rpe";
-    return {
-      id: crypto.randomUUID(),
-      type,
-      rest_after_group: restAfterGroup,
-      exercises: exercises.map((ex, i) =>
-        createWorkoutExercise(ex, intensity, i)
-      ),
-    };
-  }
-
-  function createSingleExerciseGroup(ex: Exercise): WorkoutExerciseGroup {
-    const intensity = exerciseGroups[0]?.exercises[0]?.intensity ?? "rpe";
-    const newExercise = createWorkoutExercise(ex, intensity, 0);
-    return {
-      id: crypto.randomUUID(),
-      type: "standard",
-      exercises: [newExercise],
-    };
   }
 
   const handleDuplicateWorkoutDay = (index: number) => {

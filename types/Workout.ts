@@ -1,9 +1,34 @@
+export type SetType =
+  | "standard"
+  | "amrap"
+  | "drop"
+  | "cluster"
+  | "myo_reps"
+  | "rest_pause";
+
 export type SetInfo = {
   reps: number;
-  rest: number; // in seconds
+  rest: number;
   rpe: number | null;
   rir: number | null;
   one_rep_max_percent: number | null;
+
+  set_type: SetType; //Standard is default
+
+  // Optional dynamic fields for special set types
+  drop_percent?: number;
+  drop_sets?: number;
+
+  cluster_reps?: number;
+  intra_rest?: number;
+
+  activation_set_reps?: number;
+  mini_sets?: number;
+
+  initial_reps?: number;
+  pause_duration?: number;
+
+  notes?: string; // custom notes per set
 };
 
 export type WorkoutExercise = {
@@ -20,6 +45,7 @@ export type WorkoutExerciseGroup = {
   id: string;
   type: "standard" | "superset" | "giant_set" | "circuit"; // extensible
   rest_after_group?: number; // rest in seconds
+  order_num: number;
   notes?: string;
   exercises: WorkoutExercise[];
 };

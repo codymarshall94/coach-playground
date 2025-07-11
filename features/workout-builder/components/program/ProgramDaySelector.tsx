@@ -64,15 +64,10 @@ function DayButton({
   isDragOverlay?: boolean;
 }) {
   const totalExercises =
-    day.workout?.[0]?.exercise_groups?.reduce(
-      (acc, group) =>
-        acc + group.exercises.reduce((acc2, ex) => acc2 + ex.sets.length, 0),
-      0
-    ) ?? 0;
+    day.workout?.[0]?.exercise_groups?.flatMap((g) => g.exercises).length ?? 0;
 
   return (
     <div className="flex items-center gap-3 w-full">
-      {/* Day Button */}
       <Button
         onClick={onClick}
         variant={isActive ? "default" : "outline"}
@@ -99,7 +94,6 @@ function DayButton({
         )}
       </Button>
 
-      {/* Actions */}
       {!isDragOverlay && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -204,7 +198,6 @@ export function ProgramDaySelector({
             </SortableItem>
           ))}
 
-          {/* Add buttons */}
           <div className="flex gap-2 mt-4 pt-2 border-t border-border">
             <Button
               onClick={onAddWorkoutDay}
@@ -226,7 +219,6 @@ export function ProgramDaySelector({
         </div>
       </SortableContext>
 
-      {/* Drag Overlay */}
       <DragOverlay>
         {activeDay && (
           <div className="bg-background border rounded-lg shadow-xl ring-2 ring-blue-300 p-3 opacity-95">

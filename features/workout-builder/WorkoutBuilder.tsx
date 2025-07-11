@@ -75,8 +75,6 @@ export const WorkoutBuilder = ({
     moveExerciseByIdToGroup,
   } = useWorkoutBuilder(initialProgram);
 
-  console.log(program);
-
   const [isSaving, setIsSaving] = useState(false);
   const [lastAddedIndex, setLastAddedIndex] = useState<number | null>(null);
 
@@ -143,9 +141,7 @@ export const WorkoutBuilder = ({
     return program.days ?? [];
   }, [program, activeBlockIndex, usingBlocks]);
 
-  console.log(currentDays);
-
-  const handleDragEndExercise = (event: DragEndEvent) => {
+  const handleDragEndExerciseGroup = (event: DragEndEvent) => {
     const { active, over } = event;
     setDraggingId(null);
     if (!over || active.id === over.id) return;
@@ -154,7 +150,13 @@ export const WorkoutBuilder = ({
     const newIndex = exerciseGroups.findIndex((g) => g.id === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
 
-    const reordered = arrayMove(exerciseGroups, oldIndex, newIndex);
+    const reordered = arrayMove(exerciseGroups, oldIndex, newIndex).map(
+      (group, index) => ({
+        ...group,
+        order_num: index,
+      })
+    );
+
     updateDayWorkout(reordered);
   };
 
@@ -243,7 +245,7 @@ export const WorkoutBuilder = ({
           <DndContext
             onDragStart={handleDragStart}
             onDragEnd={(event) => {
-              handleDragEndExercise(event);
+              handleDragEndExerciseGroup(event);
             }}
             onDragCancel={() => setDraggingId(null)}
           >
