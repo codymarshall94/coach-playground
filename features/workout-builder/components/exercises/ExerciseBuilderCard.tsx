@@ -16,20 +16,10 @@ const animationProps: MotionProps = {
   transition: { duration: 0.2, ease: "easeOut" },
 };
 
-export const ExerciseBuilderCard = ({
-  order,
-  exercise,
-  isDraggingAny,
-  onRemove,
-  onUpdateSets,
-  onUpdateIntensity,
-  onUpdateNotes,
-  collapsed = false,
-  onExpand,
-  dragging = false,
-}: {
+type Props = {
   order: number;
   exercise: WorkoutExercise;
+  exerciseMeta: Exercise;
   isDraggingAny: boolean;
   onRemove: () => void;
   onUpdateSets: (sets: WorkoutExercise["sets"]) => void;
@@ -38,9 +28,22 @@ export const ExerciseBuilderCard = ({
   collapsed?: boolean;
   onExpand?: () => void;
   dragging?: boolean;
-}) => {
-  const exerciseMeta = exercise as unknown as Exercise;
-  const { totalETL } = getExerciseETL(exercise, exerciseMeta);
+};
+
+export const ExerciseBuilderCard = ({
+  order,
+  exercise,
+  exerciseMeta,
+  isDraggingAny,
+  onRemove,
+  onUpdateSets,
+  onUpdateIntensity,
+  onUpdateNotes,
+  collapsed = false,
+  onExpand,
+  dragging = false,
+}: Props) => {
+  const { normalizedETL } = getExerciseETL(exercise, exerciseMeta);
   const durationMin = Math.ceil(estimateExerciseDuration(exercise) / 60);
 
   const showCollapsed = collapsed || isDraggingAny;
@@ -50,7 +53,7 @@ export const ExerciseBuilderCard = ({
       <CollapsedExerciseCard
         order={order}
         exercise={exercise}
-        totalETL={totalETL}
+        normalizedETL={normalizedETL}
         durationMin={durationMin}
         onExpand={onExpand}
       />
@@ -67,7 +70,7 @@ export const ExerciseBuilderCard = ({
         onUpdateSets={onUpdateSets}
         onUpdateIntensity={onUpdateIntensity}
         onUpdateNotes={onUpdateNotes}
-        totalETL={totalETL}
+        normalizedETL={normalizedETL}
       />
     </motion.div>
   );

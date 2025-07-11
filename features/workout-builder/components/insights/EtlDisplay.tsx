@@ -3,40 +3,40 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Info } from "lucide-react";
+import { Info, Weight } from "lucide-react";
 
 type Props = {
-  etl: number;
+  normalizedETL: number;
   label?: string;
   className?: string;
 };
 
-function getETLCategory(etl: number) {
-  if (etl < 500)
+function getETLCategory(normalizedETL: number) {
+  if (normalizedETL < 100)
     return {
       label: "Recovery",
       color: "text-green-500",
       desc: "Very low stress. Good for rest days or active recovery.",
     };
-  if (etl < 1200)
+  if (normalizedETL < 120)
     return {
       label: "Easy",
       color: "text-lime-500",
       desc: "Light training. Great for deloads or low-impact movement.",
     };
-  if (etl < 2000)
+  if (normalizedETL < 150)
     return {
       label: "Challenging",
       color: "text-yellow-500",
       desc: "Moderate effort. Solid training session without overdoing it.",
     };
-  if (etl < 3500)
+  if (normalizedETL < 180)
     return {
       label: "Hard",
       color: "text-orange-500",
       desc: "High effort. Pushes your limits but still manageable.",
     };
-  if (etl < 5000)
+  if (normalizedETL < 180)
     return {
       label: "Heavy",
       color: "text-red-500",
@@ -49,21 +49,27 @@ function getETLCategory(etl: number) {
   };
 }
 
-export const ETLDisplay = ({ etl, label = "ETL", className = "" }: Props) => {
-  const category = getETLCategory(etl);
+export const ETLDisplay = ({
+  normalizedETL,
+  label = "ETL",
+  className = "",
+}: Props) => {
+  const category = getETLCategory(normalizedETL);
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span
-          className={`flex items-center gap-1 cursor-help ${className} text-muted-foreground`}
-        >
-          {label}:{" "}
-          <span className={`font-bold ${category.color}`}>
-            {category.label}
+        <div className="flex items-center gap-1">
+          <Weight className="w-4 h-4 text-muted-foreground" />
+          <span
+            className={`flex items-center gap-1 cursor-help ${className} text-muted-foreground`}
+          >
+            {label}:{" "}
+            <span className={`font-bold ${category.color}`}>
+              {category.label}
+            </span>
           </span>
-          <Info className="w-4 h-4 text-slate-400" />
-        </span>
+        </div>
       </TooltipTrigger>
 
       <TooltipContent className="max-w-[280px] text-xs bg-background text-foreground border border-border">
@@ -78,7 +84,8 @@ export const ETLDisplay = ({ etl, label = "ETL", className = "" }: Props) => {
         </p>
         <p className="mt-1 text-xs text-muted-foreground">{category.desc}</p>
         <p className="mt-2 text-xs text-gray-400">
-          Raw ETL Score: <span className="font-mono">{etl.toFixed(1)}</span>
+          Raw ETL Score:{" "}
+          <span className="font-mono">{normalizedETL.toFixed(1)}</span>
         </p>
       </TooltipContent>
     </Tooltip>

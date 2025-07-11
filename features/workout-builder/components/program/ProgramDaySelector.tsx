@@ -77,7 +77,8 @@ function DayButton({
           ${isDragOverlay ? "shadow-lg" : ""}
         `}
       >
-        <span className="truncate">{day.name}</span>
+        <span className="truncate font-medium">{day.order + 1}.</span>
+        <span className="truncate font-medium">{day.name}</span>
         {day.type === "rest" && <Bed className="w-4 h-4 ml-2 flex-shrink-0" />}
         {day.type === "workout" && (
           <Dumbbell className="w-4 h-4 ml-2 flex-shrink-0" />

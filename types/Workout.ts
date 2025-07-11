@@ -41,9 +41,15 @@ export type WorkoutExercise = {
   intensity: IntensitySystem;
 };
 
+export type WorkoutExerciseGroupType =
+  | "standard"
+  | "superset"
+  | "giant_set"
+  | "circuit";
+
 export type WorkoutExerciseGroup = {
   id: string;
-  type: "standard" | "superset" | "giant_set" | "circuit"; // extensible
+  type: WorkoutExerciseGroupType; // extensible
   rest_after_group?: number; // rest in seconds
   order_num: number;
   notes?: string;

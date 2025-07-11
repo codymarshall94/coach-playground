@@ -4,12 +4,12 @@ import { TermTooltip } from "@/components/TermTooltip";
 import { Button } from "@/components/ui/button";
 import { ExerciseDetailModal } from "@/features/workout-builder/components/exercises/ExerciseDetailModal";
 import { Exercise } from "@/types/Exercise";
-import { Clock, Zap, Brain, Activity, AlertTriangle } from "lucide-react";
+import { Activity, AlertTriangle, Brain, Clock, Zap } from "lucide-react";
 import { useState } from "react";
 
 interface ExerciseCardProps {
   exercise: Exercise;
-  onAdd: () => void;
+  onAdd: (exercise: Exercise) => void;
 }
 
 const Tag = ({ children }: { children: React.ReactNode }) => (
@@ -165,7 +165,7 @@ export const ExerciseCard = ({ exercise, onAdd }: ExerciseCardProps) => {
         <div className="flex flex-col items-end gap-2 ml-4">
           <ExerciseDetailModal exercise={exercise} />
           <Button
-            onClick={onAdd}
+            onClick={() => onAdd(exercise)}
             variant="outline"
             size="sm"
             className="rounded-full text-xs px-3"

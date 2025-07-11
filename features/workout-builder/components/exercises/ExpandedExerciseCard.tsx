@@ -1,14 +1,10 @@
 "use client";
 
+import { NotesPopover } from "@/components/NotesPopover";
 import { SmartInput } from "@/components/SmartInput";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -18,8 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
 import { intensityConfig } from "@/config/intensityConfig";
 import type {
   IntensitySystem,
@@ -27,10 +21,11 @@ import type {
   SetType,
   WorkoutExercise,
 } from "@/types/Workout";
+import { getMaxAllowedPercent1RM } from "@/utils/etl";
 import { estimateExerciseDuration } from "@/utils/volume/estimateExerciseDuration";
 import {
   Activity,
-  ChevronDown,
+  AlertCircle,
   Clock,
   Copy,
   Plus,
@@ -70,7 +65,7 @@ export function ExpandedExerciseCard({
   onUpdateSets,
   onUpdateIntensity,
   onUpdateNotes,
-  totalETL,
+  normalizedETL,
 }: {
   order: number;
   exercise: WorkoutExercise;
@@ -79,7 +74,7 @@ export function ExpandedExerciseCard({
   onUpdateSets: (sets: WorkoutExercise["sets"]) => void;
   onUpdateIntensity: (intensity: IntensitySystem) => void;
   onUpdateNotes: (notes: string) => void;
-  totalETL: number;
+  normalizedETL: number;
 }) {
   const [tempNotes, setTempNotes] = useState(exercise.notes || "");
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -138,9 +133,18 @@ export function ExpandedExerciseCard({
               </span>
             </div>
             <div>
-              <h3 className="font-bold text-foreground text-xl mb-1">
-                {exercise.name}
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-foreground text-xl mb-1">
+                  {exercise.name}
+                </h3>
+                <NotesPopover
+                  title="Exercise Notes"
+                  onSave={onUpdateNotes}
+                  value={exercise.notes || ""}
+                  placeholder="Add notes about form, technique, or modifications..."
+                />
+              </div>
+
               <div className="flex items-center gap-3 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <RotateCcw className="w-4 h-4" />
@@ -150,7 +154,7 @@ export function ExpandedExerciseCard({
                   <Timer className="w-4 h-4" />
                   <span>{estimatedTime} min</span>
                 </div>
-                <ETLDisplay etl={totalETL} />
+                <ETLDisplay normalizedETL={normalizedETL} />
               </div>
             </div>
           </div>
@@ -249,6 +253,19 @@ export function ExpandedExerciseCard({
                           </Badge>
                         }
                       />
+                      {exercise.intensity === "one_rep_max_percent" &&
+                        set.reps != null &&
+                        set.one_rep_max_percent != null &&
+                        set.one_rep_max_percent >
+                          getMaxAllowedPercent1RM(set.reps) && (
+                          <div className="flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3 text-destructive" />
+                            <p className="text-xs text-destructive">
+                              {set.reps} reps at {set.one_rep_max_percent}% 1RM
+                              exceeds safe range. Try lowering the % or reps.
+                            </p>
+                          </div>
+                        )}
                     </div>
                     <div className="flex items-center gap-1 opacity-0 group-hover/set:opacity-100 transition-opacity">
                       <Button
@@ -330,40 +347,6 @@ export function ExpandedExerciseCard({
             ))}
           </div>
         </div>
-
-        <Separator />
-
-        {/* Advanced Options */}
-        <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
-          <CollapsibleTrigger asChild>
-            <Button
-              variant="ghost"
-              className="w-full justify-between h-8 text-sm"
-            >
-              <span className="flex items-center gap-2">
-                <Settings className="w-4 h-4" />
-                Advanced Options
-              </span>
-              <ChevronDown
-                className={`w-4 h-4 transition-transform ${
-                  showAdvanced ? "rotate-180" : ""
-                }`}
-              />
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-3 pt-3">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Exercise Notes</Label>
-              <Textarea
-                value={tempNotes}
-                onChange={(e) => setTempNotes(e.target.value)}
-                onBlur={() => onUpdateNotes(tempNotes)}
-                placeholder="Add notes about form, technique, or modifications..."
-                className="min-h-[80px] resize-none"
-              />
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
       </CardContent>
     </Card>
   );

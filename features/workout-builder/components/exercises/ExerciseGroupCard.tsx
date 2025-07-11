@@ -12,8 +12,10 @@ import { GROUP_CONFIG, GroupTypeSelector } from "./GroupTypeSelector";
 
 interface Props {
   exerciseGroups: WorkoutExerciseGroup[];
+  allExercises: Exercise[];
   group: WorkoutExerciseGroup;
   groupIndex: number;
+  exerciseMeta: Exercise;
   isDraggingAny: boolean;
   collapsedIndex: number | null;
   onExpand: () => void;
@@ -43,8 +45,10 @@ interface Props {
 
 export function ExerciseGroupCard({
   exerciseGroups,
+  allExercises,
   group,
   groupIndex,
+  exerciseMeta,
   isDraggingAny,
   collapsedIndex,
   onExpand,
@@ -53,6 +57,7 @@ export function ExerciseGroupCard({
   onUpdateIntensity,
   onUpdateNotes,
   onUpdateGroupType,
+  onAddExerciseToGroup,
   onMoveExerciseByIdToGroup,
 }: Props) {
   const isCollapsed = collapsedIndex !== null && collapsedIndex !== groupIndex;
@@ -112,9 +117,17 @@ export function ExerciseGroupCard({
                 onSelect={(exercise) =>
                   onMoveExerciseByIdToGroup(exercise.id, groupIndex)
                 }
+                onAddExerciseToGroup={onAddExerciseToGroup}
                 groupIndex={groupIndex}
-                existingExercises={exerciseGroups.flatMap((g) => g.exercises)}
-                allExercises={[]}
+                existingExercises={exerciseGroups
+                  .flatMap((g) => g.exercises)
+                  .filter(
+                    (ex) =>
+                      !group.exercises.some(
+                        (e) => e.exercise_id === ex.exercise_id
+                      )
+                  )}
+                allExercises={allExercises || []}
               />
             )}
           </div>
@@ -127,6 +140,7 @@ export function ExerciseGroupCard({
             key={exercise.id}
             order={groupOrder}
             exercise={exercise}
+            exerciseMeta={exerciseMeta}
             isDraggingAny={isDraggingAny}
             collapsed={isCollapsed}
             onExpand={onExpand}

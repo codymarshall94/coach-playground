@@ -67,11 +67,7 @@ export const WorkoutBuilder = ({
     updateBlockDetails,
     updateDayWorkout,
     updateGroupType,
-    updateGroupRest,
     addExerciseToGroup,
-    moveExerciseToGroup,
-    targetGroupIndex,
-    setTargetGroupIndex,
     moveExerciseByIdToGroup,
   } = useWorkoutBuilder(initialProgram);
 
@@ -249,7 +245,7 @@ export const WorkoutBuilder = ({
             }}
             onDragCancel={() => setDraggingId(null)}
           >
-            <div className="w-full max-w-4xl mx-auto relative">
+            <div className="w-full max-w-4xl p-4 mx-auto relative">
               <DayHeader
                 program={program}
                 activeBlockIndex={activeBlockIndex}
@@ -328,6 +324,12 @@ export const WorkoutBuilder = ({
                             exerciseGroups={exerciseGroups}
                             group={group}
                             groupIndex={groupIndex}
+                            exerciseMeta={
+                              exercises?.find(
+                                (e) => e.id === group.exercises[0].exercise_id
+                              )!
+                            }
+                            allExercises={exercises || []}
                             isDraggingAny={!!draggingId}
                             collapsedIndex={collapsedIndex}
                             onExpand={() => setCollapsedIndex(groupIndex)}
@@ -336,11 +338,7 @@ export const WorkoutBuilder = ({
                             onUpdateIntensity={updateExerciseIntensity}
                             onUpdateNotes={updateExerciseNotes}
                             onUpdateGroupType={updateGroupType}
-                            onUpdateGroupRest={updateGroupRest}
                             onAddExerciseToGroup={addExerciseToGroup}
-                            targetGroupIndex={targetGroupIndex}
-                            setTargetGroupIndex={setTargetGroupIndex}
-                            onMoveExerciseToGroup={moveExerciseToGroup}
                             onMoveExerciseByIdToGroup={moveExerciseByIdToGroup}
                           />
                         ))}
@@ -383,6 +381,7 @@ export const WorkoutBuilder = ({
                     exerciseGroups={exerciseGroups}
                     group={exerciseGroups.find((g) => g.id === draggingId)!}
                     groupIndex={0}
+                    exerciseMeta={exercises?.find((e) => e.id === draggingId)!}
                     isDraggingAny={true}
                     collapsedIndex={null}
                     onExpand={() => {}}
@@ -391,12 +390,9 @@ export const WorkoutBuilder = ({
                     onUpdateIntensity={() => {}}
                     onUpdateNotes={() => {}}
                     onUpdateGroupType={() => {}}
-                    onUpdateGroupRest={() => {}}
                     onAddExerciseToGroup={() => {}}
-                    targetGroupIndex={null}
-                    setTargetGroupIndex={() => {}}
-                    onMoveExerciseToGroup={() => {}}
                     onMoveExerciseByIdToGroup={() => {}}
+                    allExercises={exercises || []}
                   />
                 </motion.div>
               )}

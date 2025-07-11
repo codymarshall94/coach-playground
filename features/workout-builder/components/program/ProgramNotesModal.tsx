@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { FileText } from "lucide-react";
+import { motion } from "motion/react";
 import { ProgramDescriptionEditor } from "../ProgramDescriptionEditor";
 
 type Props = {
@@ -25,21 +26,25 @@ export function ProgramNotesModal({
   value,
   onChange,
 }: Props) {
-  const hasText = value.trim() !== "";
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button
           variant="ghost"
           size="sm"
-          className="group flex items-center gap-1 text-muted-foreground hover:text-primary-foreground"
+          className={cn(
+            "relative transition-all duration-200",
+            value && "text-primary "
+          )}
         >
-          <FileText
-            className={cn(
-              "w-4 h-4 group-hover:text-primary-foreground",
-              hasText && "text-primary"
-            )}
-          />
+          <FileText className="w-4 h-4" />
+          {value && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full"
+            />
+          )}
         </Button>
       </DialogTrigger>
       <DialogContent className="min-w-2xl max-h-[90vh] overflow-auto">

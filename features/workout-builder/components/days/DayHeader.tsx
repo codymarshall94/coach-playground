@@ -1,17 +1,25 @@
 "use client";
 
+import { NotesPopover } from "@/components/NotesPopover";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Textarea } from "@/components/ui/textarea";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import type { Program, ProgramDay } from "@/types/Workout";
 import { motion } from "framer-motion";
-import { ChevronDown, ChevronUp, FileText } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  FileText,
+  MoreHorizontal,
+  Trash2,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { ClearWorkoutDayModal } from "./ClearWorkoutDayModal";
 import { DayNameEditor } from "./DayNameEditor";
@@ -57,7 +65,7 @@ export const DayHeader = ({
 
   useEffect(() => {
     const onScroll = () => {
-      setScrolled(window.scrollY > 10);
+      setScrolled(window.scrollY > 20);
     };
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
@@ -71,138 +79,110 @@ export const DayHeader = ({
     updateDayDetails({ description: localDescription.trim() });
   };
 
+  const isCollapsed = collapsedIndex === -1;
+
   return (
-    <motion.div
-      key={`day-header-${activeBlockIndex}-${activeDayIndex}`}
-      initial={{ opacity: 0, y: -5 }}
-      animate={{
-        opacity: 1,
-        y: 0,
-        scale: scrolled ? 1.02 : 1,
-      }}
-      transition={{
-        duration: 0.2,
-        scale: { duration: 0.3, ease: "easeOut" },
-      }}
+    <motion.header
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
       className={cn(
-        "sticky top-0 z-20 flex py-6 flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-6 pb-3 mb-4 border-b w-full transition-all duration-300 ease-out",
-        // Base styles
-        "bg-background/70 backdrop-blur-sm border-border/50",
-        // Scrolled styles - much more prominent
-        scrolled && [
-          "bg-background/95 backdrop-blur-xl",
-          "shadow-2xl shadow-black/20",
-          "border-border",
-          "ring-1 ring-border/20",
-          // Optional: slight tint when scrolled
-          "bg-gradient-to-r from-background/95 to-background/90",
-        ]
+        "sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b transition-all duration-200",
+        scrolled && "bg-background/95 shadow-sm"
       )}
     >
-      <div
-        className={cn(
-          "absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary/0 via-primary/50 to-primary/0 transition-opacity duration-300",
-          scrolled ? "opacity-100" : "opacity-0"
-        )}
-      />
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <DayNameEditor
+              program={program}
+              activeBlockIndex={activeBlockIndex}
+              activeDayIndex={activeDayIndex}
+              editedName={editedName}
+              setEditedName={setEditedName}
+              updateDayDetails={updateDayDetails}
+              isEditingName={isEditingName}
+              setIsEditingName={setIsEditingName}
+            />
 
-      <div className="flex items-center gap-2">
-        <DayNameEditor
-          program={program}
-          activeBlockIndex={activeBlockIndex}
-          activeDayIndex={activeDayIndex}
-          editedName={editedName}
-          setEditedName={setEditedName}
-          updateDayDetails={updateDayDetails}
-          isEditingName={isEditingName}
-          setIsEditingName={setIsEditingName}
-        />
-        <Popover>
-          <PopoverTrigger asChild>
+            <Badge variant="secondary" className="shrink-0 text-xs font-medium">
+              {exerciseCount} {exerciseCount === 1 ? "exercise" : "exercises"}
+            </Badge>
+
+            {day?.description && (
+              <div className="w-2 h-2 rounded-full bg-primary shrink-0" />
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <NotesPopover
+              value={day?.description || ""}
+              title="Work Day Notes"
+              onSave={handleDescriptionSave}
+            />
+
             <Button
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground hover:text-foreground"
+              variant="outline"
+              size="sm"
+              onClick={() => setCollapsedIndex(isCollapsed ? null : -1)}
+              className="hidden sm:flex items-center gap-2"
             >
-              <FileText
-                className={cn(
-                  "w-4 h-4 text-muted-foreground hover:text-foreground",
-                  day?.description && "text-primary"
-                )}
-              />
+              {isCollapsed ? (
+                <>
+                  <ChevronDown className="w-4 h-4" />
+                  Expand
+                </>
+              ) : (
+                <>
+                  <ChevronUp className="w-4 h-4" />
+                  Collapse
+                </>
+              )}
             </Button>
-          </PopoverTrigger>
-          <PopoverContent
-            className="w-80 p-4 border border-border bg-background rounded-lg shadow-md"
-            align="start"
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
-              className="space-y-3"
-            >
-              <h4 className="font-medium text-sm text-muted-foreground">
-                Day Notes
-              </h4>
-              <Textarea
-                rows={3}
-                value={localDescription}
-                onChange={(e) => setLocalDescription(e.target.value)}
-                placeholder="E.g. Focus on glutes, light accessories..."
-                className="resize-none"
-              />
-              <div className="flex justify-end">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleDescriptionSave}
-                >
-                  Save
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="sm:hidden">
+                  <MoreHorizontal className="w-4 h-4" />
                 </Button>
-              </div>
-            </motion.div>
-          </PopoverContent>
-        </Popover>
-      </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem
+                  onClick={() => setCollapsedIndex(isCollapsed ? null : -1)}
+                >
+                  {isCollapsed ? (
+                    <>
+                      <ChevronDown className="w-4 h-4 mr-2" />
+                      Expand All
+                    </>
+                  ) : (
+                    <>
+                      <ChevronUp className="w-4 h-4 mr-2" />
+                      Collapse All
+                    </>
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <FileText className="w-4 h-4 mr-2" />
+                  {day?.description ? "Edit Notes" : "Add Notes"}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={clearWorkout}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Clear Day
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-      <div className="flex items-center gap-2 flex-wrap">
-        <Badge
-          variant="secondary"
-          className={cn(
-            "rounded-full px-3 py-1 text-xs transition-all duration-300",
-            scrolled && "bg-primary/10 text-primary border-primary/20"
-          )}
-        >
-          {exerciseCount} {exerciseCount === 1 ? "Exercise" : "Exercises"}
-        </Badge>
-
-        <div className="flex justify-end">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setCollapsedIndex(collapsedIndex === -1 ? null : -1)}
-            className={cn(
-              "transition-all duration-300",
-              scrolled && "bg-primary/5 border-primary/30 hover:bg-primary/10"
-            )}
-          >
-            {collapsedIndex === -1 ? (
-              <>
-                <ChevronDown className="w-4 h-4 mr-1" />
-                Expand All
-              </>
-            ) : (
-              <>
-                <ChevronUp className="w-4 h-4 mr-1" />
-                Collapse All
-              </>
-            )}
-          </Button>
+            <div className="hidden sm:block">
+              <ClearWorkoutDayModal onConfirm={clearWorkout} />
+            </div>
+          </div>
         </div>
-
-        <ClearWorkoutDayModal onConfirm={clearWorkout} />
       </div>
-    </motion.div>
+    </motion.header>
   );
 };

@@ -18,17 +18,23 @@ import { FilterPopover } from "@/features/workout-builder/components/exercises/F
 import { SortPopover } from "@/features/workout-builder/components/exercises/SortPopover";
 import { useExerciseFilter } from "@/hooks/useExerciseFilter";
 import type { Exercise } from "@/types/Exercise";
-import { Book, Dumbbell } from "lucide-react";
+import { Dumbbell, Library } from "lucide-react";
+
+type ExerciseLibraryProps = {
+  addExercise: (exercise: Exercise) => void;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  groupIndex?: number;
+  addToGroup?: (groupIndex: number, exercise: Exercise) => void;
+};
 
 export const ExerciseLibrary = ({
   addExercise,
   open,
   setOpen,
-}: {
-  addExercise: (exercise: Exercise) => void;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-}) => {
+  groupIndex,
+  addToGroup,
+}: ExerciseLibraryProps) => {
   const {
     filtered,
     search,
@@ -61,8 +67,13 @@ export const ExerciseLibrary = ({
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" className="gap-2 ">
-          <Book className="w-4 h-4" /> Exercise Library
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground hover:text-foreground"
+        >
+          <Library className="h-4 w-4 mr-2" />
+          Exercise Library
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-full max-w-lg min-w-1/3 p-4">
@@ -132,7 +143,13 @@ export const ExerciseLibrary = ({
                       <ExerciseCard
                         key={exercise.id}
                         exercise={exercise}
-                        onAdd={() => addExercise(exercise)}
+                        onAdd={(exercise) => {
+                          if (groupIndex !== undefined && addToGroup) {
+                            addToGroup(groupIndex, exercise);
+                          } else {
+                            addExercise(exercise);
+                          }
+                        }}
                       />
                     ))}
                   </div>

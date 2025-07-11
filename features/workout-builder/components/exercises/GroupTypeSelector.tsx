@@ -53,8 +53,8 @@ export const GROUP_CONFIG: Record<
     label: "Giant Set",
     color: "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
     borderColor: "border-yellow-500",
-    description: "3+ exercises for the same muscle group consecutively",
-    maxExercises: 5,
+    description: "3 exercises for the same muscle group consecutively",
+    maxExercises: 3,
     icon: UsersRound,
   },
   circuit: {
@@ -120,6 +120,7 @@ export function GroupTypeSelector({
               initial={{ opacity: 0, x: -5 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.15 }}
+              className="font-medium"
             >
               {currentConfig.label}
             </motion.span>

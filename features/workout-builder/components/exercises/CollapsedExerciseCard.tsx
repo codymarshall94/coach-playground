@@ -6,7 +6,7 @@ import { ETLDisplay } from "../insights/EtlDisplay";
 export function CollapsedExerciseCard({
   order,
   exercise,
-  totalETL,
+  normalizedETL,
   durationMin,
   onExpand,
   showAddToGroup,
@@ -14,7 +14,7 @@ export function CollapsedExerciseCard({
 }: {
   order: number;
   exercise: WorkoutExercise;
-  totalETL: number;
+  normalizedETL: number;
   durationMin: number;
   onExpand?: () => void;
   showAddToGroup?: boolean;
@@ -55,7 +55,7 @@ export function CollapsedExerciseCard({
       </div>
 
       <div className="flex items-center gap-4 text-xs text-muted-foreground">
-        <ETLDisplay etl={totalETL} />
+        <ETLDisplay normalizedETL={normalizedETL} />
         <div className="flex items-center gap-1">
           <ChevronDown className="w-3 h-3" />
           <span>Tap to expand</span>
