@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { templateConfigs } from "@/config/templateConfigs";
 import { motion } from "framer-motion";
-import { Bolt, Dumbbell, Flame, HeartPulse } from "lucide-react";
+import { ArrowLeft, Bolt, Dumbbell, Flame, HeartPulse } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 const goalSections = {
@@ -14,21 +14,25 @@ const goalSections = {
     label: "Hypertrophy Programs",
     icon: <Dumbbell className="text-pink-500 w-5 h-5" />,
     badgeStyle: "bg-pink-100 text-pink-700",
+    accent: "from-pink-400 to-pink-600",
   },
   strength: {
     label: "Strength Programs",
     icon: <Flame className="text-blue-500 w-5 h-5" />,
     badgeStyle: "bg-blue-100 text-blue-700",
+    accent: "from-blue-400 to-blue-600",
   },
   power: {
     label: "Athletic Power Programs",
     icon: <Bolt className="text-orange-500 w-5 h-5" />,
     badgeStyle: "bg-orange-100 text-orange-700",
+    accent: "from-orange-400 to-orange-600",
   },
   endurance: {
     label: "Conditioning & Endurance",
     icon: <HeartPulse className="text-green-500 w-5 h-5" />,
     badgeStyle: "bg-green-100 text-green-700",
+    accent: "from-green-400 to-green-600",
   },
 };
 
@@ -36,18 +40,25 @@ export default function TemplateChooserPage() {
   const router = useRouter();
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
-      <motion.h1
-        className="text-4xl font-bold mb-6 text-foreground"
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        Choose a Template
-      </motion.h1>
+    <div className="p-8 max-w-7xl mx-auto">
+      <Button variant="outline" className="mb-8" onClick={() => router.back()}>
+        <ArrowLeft className="w-4 h-4" />
+        Back
+      </Button>
+
+      <div className="flex justify-between items-center mb-8">
+        <motion.h1
+          className="text-4xl font-extrabold mb-4 tracking-tight"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          Choose a Template
+        </motion.h1>
+      </div>
 
       <motion.p
-        className="text-muted-foreground text-base mb-10 max-w-xl"
+        className="text-muted-foreground text-base mb-12 max-w-xl"
         initial={{ opacity: 0, y: -5 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.5 }}
@@ -63,17 +74,19 @@ export default function TemplateChooserPage() {
         return (
           <motion.section
             key={goalKey}
-            className="mb-12"
+            className="mb-16"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: sectionIndex * 0.2 }}
           >
-            <div className="flex items-center gap-2 mb-4">
-              {meta.icon}
-              <h2 className="text-xl font-semibold">{meta.label}</h2>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 rounded-full bg-muted">{meta.icon}</div>
+              <h2 className="text-2xl font-semibold text-foreground tracking-tight">
+                {meta.label}
+              </h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {templates.map((template, index) => (
                 <motion.div
                   key={template.id}
@@ -85,13 +98,18 @@ export default function TemplateChooserPage() {
                     onClick={() =>
                       router.push(`/programs/builder?template=${template.id}`)
                     }
-                    className="cursor-pointer group border-border transition-all hover:shadow-xl hover:-translate-y-1 bg-background/80 backdrop-blur rounded-xl"
+                    className="cursor-pointer group border border-border bg-background/70 backdrop-blur-lg rounded-2xl transition-all hover:shadow-xl hover:-translate-y-1 relative overflow-hidden"
                   >
-                    <CardHeader>
-                      <CardTitle className="text-lg font-semibold">
+                    {/* Accent bar */}
+                    <div
+                      className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r ${meta.accent}`}
+                    />
+
+                    <CardHeader className="relative z-10">
+                      <CardTitle className="text-lg font-bold group-hover:text-foreground">
                         {template.name}
                       </CardTitle>
-                      <div className="flex flex-wrap gap-1 mt-2">
+                      <div className="flex flex-wrap gap-2 mt-2">
                         <Badge className={meta.badgeStyle}>{meta.label}</Badge>
                         <Badge variant="secondary">
                           {template.mode === "blocks" ? "Blocks" : "Days"}
@@ -103,12 +121,15 @@ export default function TemplateChooserPage() {
                         </Badge>
                       </div>
                     </CardHeader>
-                    <CardContent className="text-sm text-muted-foreground min-h-[60px]">
-                      <RichTextRenderer
-                        html={template.description}
-                        truncate={true}
-                      />
+
+                    <CardContent className="text-sm text-muted-foreground z-10 relative px-6 pb-6 min-h-[72px]">
+                      <RichTextRenderer html={template.description} truncate />
                     </CardContent>
+
+                    {/* Optional icon watermark */}
+                    <div className="absolute bottom-2 right-2 opacity-10 group-hover:opacity-20 transition-opacity z-0">
+                      {meta.icon}
+                    </div>
                   </Card>
                 </motion.div>
               ))}
@@ -116,20 +137,6 @@ export default function TemplateChooserPage() {
           </motion.section>
         );
       })}
-
-      <motion.div
-        className="mt-12 text-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.6 }}
-      >
-        <span className="text-muted-foreground mr-4">
-          Prefer to start from scratch?
-        </span>
-        <Button onClick={() => router.push("/programs/builder")}>
-          Create Custom Plan
-        </Button>
-      </motion.div>
     </div>
   );
 }

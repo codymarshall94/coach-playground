@@ -3,6 +3,7 @@
 import { Droppable } from "@/components/Droppable";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
+import { WelcomeModal } from "@/components/WelcomeModal";
 import { ProgramDaySelector } from "@/features/workout-builder/components/program/ProgramDaySelector";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useUser } from "@/hooks/useUser";
@@ -142,7 +143,7 @@ export const WorkoutBuilder = ({
   const [collapsedIndex, setCollapsedIndex] = useState<number | null>(null);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [programPreviewOpen, setProgramPreviewOpen] = useState(false);
-
+  const [welcomeModalOpen, setWelcomeModalOpen] = useState(true);
   useEffect(() => {
     if (lastAddedIndex !== null) {
       const group = exerciseGroups[lastAddedIndex];
@@ -219,6 +220,10 @@ export const WorkoutBuilder = ({
         setProgramPreviewOpen={setProgramPreviewOpen}
       />
 
+      <WelcomeModal
+        open={welcomeModalOpen}
+        onClose={() => setWelcomeModalOpen(false)}
+      />
       {/* MAIN */}
       <div className="flex flex-1 overflow-hidden">
         {/* LEFT PANEL – Settings & Day Selector */}
