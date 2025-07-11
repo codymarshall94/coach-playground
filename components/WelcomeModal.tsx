@@ -90,7 +90,7 @@ export function WelcomeModal({
       scale: 0.8,
       rotateY: direction > 0 ? 45 : -45,
       transition: {
-        duration: 0.2,
+        duration: 0.1,
         ease: "easeOut",
       },
     }),
@@ -108,7 +108,7 @@ export function WelcomeModal({
       scale: 0.8,
       rotateY: direction < 0 ? 45 : -45,
       transition: {
-        duration: 0.2,
+        duration: 0.1,
         ease: "easeOut",
       },
     }),
@@ -121,7 +121,7 @@ export function WelcomeModal({
       scale: 1,
       y: 0,
       transition: {
-        duration: 0.3,
+        duration: 0.1,
         ease: "easeOut",
         staggerChildren: 0.1,
       },
@@ -130,7 +130,7 @@ export function WelcomeModal({
       opacity: 0,
       scale: 0.8,
       y: 50,
-      transition: { duration: 0.4 },
+      transition: { duration: 0.1 },
     },
   };
 
@@ -139,7 +139,7 @@ export function WelcomeModal({
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.5, ease: "easeOut" },
+      transition: { duration: 0.1, ease: "easeOut" },
     },
   };
 
@@ -165,7 +165,7 @@ export function WelcomeModal({
                 opacity: [0.1, 0.2, 0.1],
               }}
               transition={{
-                duration: 25,
+                duration: 10,
                 repeat: Number.POSITIVE_INFINITY,
                 ease: "linear",
               }}
@@ -178,7 +178,7 @@ export function WelcomeModal({
                 opacity: [0.15, 0.25, 0.15],
               }}
               transition={{
-                duration: 20,
+                duration: 10,
                 repeat: Number.POSITIVE_INFINITY,
                 ease: "linear",
               }}
@@ -229,9 +229,9 @@ export function WelcomeModal({
                   exit="exit"
                   transition={{
                     x: { type: "spring", stiffness: 300, damping: 30 },
-                    opacity: { duration: 0.4 },
-                    scale: { duration: 0.4 },
-                    rotateY: { duration: 0.4 },
+                    opacity: { duration: 0.1 },
+                    scale: { duration: 0.1 },
+                    rotateY: { duration: 0.1 },
                   }}
                   className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 sm:px-12 gap-6"
                 >
@@ -241,7 +241,7 @@ export function WelcomeModal({
                       whileHover={{
                         scale: 1.05,
                         rotate: [0, -5, 5, 0],
-                        transition: { duration: 0.6 },
+                        transition: { duration: 0.1 },
                       }}
                       animate={{
                         boxShadow: [
@@ -252,7 +252,7 @@ export function WelcomeModal({
                       }}
                       transition={{
                         boxShadow: {
-                          duration: 3,
+                          duration: 1,
                           repeat: Number.POSITIVE_INFINITY,
                           ease: "easeInOut",
                         },
@@ -264,7 +264,7 @@ export function WelcomeModal({
                           rotate: [0, 5, -5, 0],
                         }}
                         transition={{
-                          duration: 4,
+                          duration: 1,
                           repeat: Number.POSITIVE_INFINITY,
                           ease: "easeInOut",
                         }}
