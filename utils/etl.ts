@@ -55,7 +55,7 @@ function clampPercent1RMToRepCeiling(
   const maxAllowed = getMaxAllowedPercent1RM(reps);
   if (inputPercent > maxAllowed) {
     console.warn(
-      `⚠️ ${reps} reps at ${inputPercent}% 1RM exceeds safe ceiling (${maxAllowed}%). Clamped.`
+      `${reps} reps at ${inputPercent}% 1RM exceeds safe ceiling (${maxAllowed}%). Clamped.`
     );
   }
   return Math.min(inputPercent, maxAllowed);
@@ -88,7 +88,6 @@ export function getExerciseETL(
   goal: "strength" | "hypertrophy" = "hypertrophy"
 ): { totalETL: number; normalizedETL: number } {
   if (!exerciseMeta || typeof exerciseMeta.fatigue_index !== "number") {
-    console.warn("⚠️ Missing or malformed exerciseMeta", workoutExercise);
     return { totalETL: 0, normalizedETL: 0 };
   }
 

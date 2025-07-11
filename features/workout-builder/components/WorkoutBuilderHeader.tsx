@@ -12,6 +12,7 @@ import { Loader2, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
 import AvatarDropdown from "./AvatarDropdown";
 import { ExerciseLibrary } from "./exercises/ExerciseLibrary";
+import KeyboardShortcutsModal from "./KeyboardShortcutsModal";
 
 export const WorkoutBuilderHeader = ({
   program,
@@ -22,6 +23,10 @@ export const WorkoutBuilderHeader = ({
   exerciseLibraryOpen,
   setExerciseLibraryOpen,
   user,
+  showShortcutsModal,
+  setShowShortcutsModal,
+  programPreviewOpen,
+  setProgramPreviewOpen,
 }: {
   program: Program;
   isSaving: boolean;
@@ -31,6 +36,10 @@ export const WorkoutBuilderHeader = ({
   exerciseLibraryOpen: boolean;
   setExerciseLibraryOpen: (open: boolean) => void;
   user: User | null;
+  showShortcutsModal: boolean;
+  setShowShortcutsModal: (open: boolean) => void;
+  programPreviewOpen: boolean;
+  setProgramPreviewOpen: (open: boolean) => void;
 }) => {
   const router = useRouter();
 
@@ -60,7 +69,11 @@ export const WorkoutBuilderHeader = ({
           )}
         </Button>
 
-        <ProgramPreview program={program} />
+        <ProgramPreview
+          program={program}
+          open={programPreviewOpen}
+          onOpenChange={setProgramPreviewOpen}
+        />
 
         {isWorkoutDay && (
           <ExerciseLibrary
@@ -73,6 +86,11 @@ export const WorkoutBuilderHeader = ({
         <div className="h-6 w-px bg-border mx-1 sm:mx-2" />
 
         <ThemeToggle />
+
+        <KeyboardShortcutsModal
+          open={showShortcutsModal}
+          onOpenChange={setShowShortcutsModal}
+        />
 
         {user ? (
           <AvatarDropdown />

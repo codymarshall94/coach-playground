@@ -5,6 +5,7 @@ export function buildExercise(
   exercise_id: string,
   name: string,
   order_num: number,
+  notes: string,
   reps: number = 10,
   intensity: IntensitySystem = "rpe",
   rest: number = 60,
@@ -16,7 +17,7 @@ export function buildExercise(
     exercise_id,
     order_num,
     name,
-    notes: `${3} sets of ${reps} reps`,
+    notes,
     sets: Array(3)
       .fill(0)
       .map((_, index) => ({
@@ -78,8 +79,9 @@ export const templateConfigs: Program[] = [
       {
         id: uuidv4(),
         name: "Push",
-        description: "Chest, shoulders, triceps.",
-        order: 0,
+        description:
+          "On this day, we’re going to build pressing strength and upper-body mass by targeting your chest, shoulders, and triceps. The goal is to move heavy on compounds and finish with high-tension isolation work.",
+        order_num: 0,
         type: "workout",
         workout: [
           {
@@ -91,7 +93,12 @@ export const templateConfigs: Program[] = [
                 type: "standard",
                 order_num: 0,
                 exercises: [
-                  buildExercise("bench_press_bb", "Barbell Bench Press", 0),
+                  buildExercise(
+                    "bench_press_bb",
+                    "Barbell Bench Press",
+                    0,
+                    "Drive the bar explosively off the chest, but control the descent for 2–3 seconds. Feet planted, scapula retracted, elbows at ~45°."
+                  ),
                 ],
               },
               {
@@ -102,7 +109,8 @@ export const templateConfigs: Program[] = [
                   buildExercise(
                     "incline_press_db",
                     "Incline Dumbbell Press",
-                    1
+                    1,
+                    "Slow the eccentric (~3 sec), pause at the bottom, and drive up with control. Elbows should stay just under the wrist path to hit upper chest."
                   ),
                 ],
               },
@@ -114,7 +122,8 @@ export const templateConfigs: Program[] = [
                   buildExercise(
                     "shoulder_press_db",
                     "Dumbbell Shoulder Press",
-                    2
+                    2,
+                    "Seated with a neutral spine. Avoid locking out fully; aim for constant tension. Lower with control (2-3 sec) and don’t flare elbows too wide."
                   ),
                 ],
               },
@@ -126,7 +135,8 @@ export const templateConfigs: Program[] = [
                   buildExercise(
                     "lateral_raise_db",
                     "Dumbbell Lateral Raise",
-                    3
+                    3,
+                    "Use light to moderate weight. Raise with a slight lean forward, control the eccentric (3 sec), and avoid using momentum. Focus on the side delts."
                   ),
                 ],
               },
@@ -138,7 +148,8 @@ export const templateConfigs: Program[] = [
                   buildExercise(
                     "triceps_pushdown_cable",
                     "Triceps Pushdown (Cable)",
-                    4
+                    4,
+                    "Keep elbows tight to your sides. Use a 1–2 second pause at the bottom of each rep and focus on full lockout with wrist control."
                   ),
                 ],
               },
@@ -149,8 +160,9 @@ export const templateConfigs: Program[] = [
       {
         id: uuidv4(),
         name: "Pull",
-        description: "Back and biceps.",
-        order: 1,
+        description:
+          "Today is all about pulling. We’re going to build upper-back thickness, lat width, and arm strength with a mix of heavy rows, vertical pulls, and controlled isolation.",
+        order_num: 1,
         type: "workout",
         workout: [
           {
@@ -162,14 +174,30 @@ export const templateConfigs: Program[] = [
                 type: "standard",
                 order_num: 0,
                 exercises: [
-                  buildExercise("bent_over_row_bb", "Bent-Over Barbell Row", 0),
+                  buildExercise(
+                    "bent_over_row_bb",
+                    "Bent-Over Barbell Row",
+                    0,
+                    "Keep a flat back, core braced, and pull toward your belt line. Control the weight—don’t jerk. Use straps if grip limits intensity."
+                  ),
                   buildExercise(
                     "lat_pulldown_cable",
                     "Lat Pulldown (Cable)",
-                    1
+                    1,
+                    "Pull elbows down and in. Pause briefly at the bottom and stretch fully at the top. Slight lean back is OK, but no swinging."
                   ),
-                  buildExercise("trx_row", "TRX Row", 2),
-                  buildExercise("curl_alt_db", "Alternating DB Curl", 3),
+                  buildExercise(
+                    "trx_row",
+                    "TRX Row",
+                    2,
+                    "Bodyweight row to hit mid-back. Keep a neutral neck and row with scapular retraction. Slow the tempo to increase time under tension."
+                  ),
+                  buildExercise(
+                    "curl_alt_db",
+                    "Alternating DB Curl",
+                    3,
+                    "Control each rep and fully supinate (turn palm up) as you curl. Don’t sway—keep your elbow tucked and strict. Pause at the top for contraction."
+                  ),
                 ],
               },
             ],
@@ -179,8 +207,9 @@ export const templateConfigs: Program[] = [
       {
         id: uuidv4(),
         name: "Legs",
-        description: "Quads, glutes, hamstrings.",
-        order: 2,
+        description:
+          "Leg day — our focus is on building strength and size through squats, unilateral work, hip extension, and calf training. Brace hard and move with intent.",
+        order_num: 2,
         type: "workout",
         workout: [
           {
@@ -192,7 +221,12 @@ export const templateConfigs: Program[] = [
                 type: "standard",
                 order_num: 0,
                 exercises: [
-                  buildExercise("back_squat_bb", "Barbell Back Squat", 0),
+                  buildExercise(
+                    "back_squat_bb",
+                    "Barbell Back Squat",
+                    0,
+                    "Use a shoulder-width stance. Brace hard, descend under control (~3 sec), and drive up without bouncing. Depth should be just below parallel."
+                  ),
                 ],
               },
               {
@@ -203,7 +237,8 @@ export const templateConfigs: Program[] = [
                   buildExercise(
                     "bulgarian_split_squat_db",
                     "Bulgarian Split Squat (DB)",
-                    1
+                    1,
+                    "Elevate rear foot and drop straight down (not forward). Slight forward lean helps hit glutes. Use slow controlled reps (2–3 sec down)."
                   ),
                 ],
               },
@@ -212,7 +247,12 @@ export const templateConfigs: Program[] = [
                 type: "standard",
                 order_num: 2,
                 exercises: [
-                  buildExercise("hip_thrust_bb", "Barbell Hip Thrust", 2),
+                  buildExercise(
+                    "hip_thrust_bb",
+                    "Barbell Hip Thrust",
+                    2,
+                    "Brace core and avoid hyperextending. Thrust up and pause for 1–2 sec at top for glute contraction. Control tempo—avoid bouncing."
+                  ),
                 ],
               },
               {
@@ -223,7 +263,8 @@ export const templateConfigs: Program[] = [
                   buildExercise(
                     "seated_calf_raise_machine",
                     "Seated Calf Raise (Machine)",
-                    3
+                    3,
+                    "Pause at the top for 1 sec and stretch fully at the bottom. Use slow controlled tempo (2–1–2) for best growth."
                   ),
                 ],
               },
@@ -234,9 +275,10 @@ export const templateConfigs: Program[] = [
       {
         id: uuidv4(),
         name: "Rest",
-        description: "Rest day",
+        description:
+          "Full recovery day. Light walking, stretching, or mobility is optional — don’t skip rest. It’s when we actually grow.",
         workout: [],
-        order: 3,
+        order_num: 3,
         type: "rest",
       },
     ],

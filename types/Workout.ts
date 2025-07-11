@@ -67,7 +67,7 @@ export type DayType = "workout" | "rest" | "active_rest" | "other";
 export type ProgramBlock = {
   id: string;
   name: string;
-  order: number;
+  order_num: number;
   description?: string;
   weeks?: number; // Optional: useful for labeling (e.g., "Weeks 1-4")
   days: ProgramDay[];
@@ -79,7 +79,7 @@ export type ProgramDay = {
   block_id?: string;
   description: string;
   workout: Workout[];
-  order: number;
+  order_num: number;
   type: DayType;
 };
 

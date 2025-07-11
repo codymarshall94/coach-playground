@@ -4,6 +4,7 @@ import { Droppable } from "@/components/Droppable";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { ProgramDaySelector } from "@/features/workout-builder/components/program/ProgramDaySelector";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useUser } from "@/hooks/useUser";
 import { useWorkoutBuilder } from "@/hooks/useWorkoutBuilder";
 import { saveOrUpdateProgramService } from "@/services/programService";
@@ -23,7 +24,7 @@ import {
 import { Bed, Dumbbell, Plus } from "lucide-react";
 import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
-import { createRef, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { DayHeader } from "./components/days/DayHeader";
 import { ExerciseGroupCard } from "./components/exercises/ExerciseGroupCard";
@@ -69,17 +70,15 @@ export const WorkoutBuilder = ({
     updateGroupType,
     addExerciseToGroup,
     moveExerciseByIdToGroup,
+    lastAddedIndex,
+    setLastAddedIndex,
   } = useWorkoutBuilder(initialProgram);
 
   const [isSaving, setIsSaving] = useState(false);
-  const [lastAddedIndex, setLastAddedIndex] = useState<number | null>(null);
 
   const router = useRouter();
 
-  const groupRefs = useMemo(
-    () => exerciseGroups.map(() => createRef<HTMLDivElement>()),
-    [exerciseGroups.length]
-  );
+  const groupRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const handleSave = async () => {
     if (!user) {
@@ -104,6 +103,36 @@ export const WorkoutBuilder = ({
     }
   };
 
+  useKeyboardShortcuts({
+    onNextDay: () => {
+      if (activeDayIndex < currentDays.length - 1) {
+        setActiveDayIndex(activeDayIndex + 1);
+      }
+    },
+    onPreviousDay: () => {
+      if (activeDayIndex > 0) {
+        setActiveDayIndex(activeDayIndex - 1);
+      }
+    },
+    onOpenLibrary: () => setExerciseLibraryOpen(true),
+    onClearAll: () => {
+      const prev = [...exerciseGroups];
+      clearWorkout();
+      toast("Workout cleared", {
+        action: {
+          label: "Undo",
+          onClick: () => updateDayWorkout(prev),
+        },
+      });
+    },
+    onToggleCollapseAll: () =>
+      setCollapsedIndex((prev) => (prev === null ? -1 : null)),
+    onToggleInsights: () => setAnalyticsOpen((prev) => !prev),
+    onSaveDraft: () => handleSave(),
+    onPreview: () => setProgramPreviewOpen(true),
+    onOpenHelpModal: () => setShowShortcutsModal(true),
+  });
+
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
@@ -111,16 +140,19 @@ export const WorkoutBuilder = ({
   const [savePromptOpen, setSavePromptOpen] = useState(false);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [collapsedIndex, setCollapsedIndex] = useState<number | null>(null);
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+  const [programPreviewOpen, setProgramPreviewOpen] = useState(false);
 
   useEffect(() => {
-    if (lastAddedIndex !== null && groupRefs[lastAddedIndex]?.current) {
-      groupRefs[lastAddedIndex]?.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+    if (lastAddedIndex !== null) {
+      const group = exerciseGroups[lastAddedIndex];
+      const ref = groupRefs.current[group.id];
+      if (ref) {
+        ref.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
       setLastAddedIndex(null);
     }
-  }, [lastAddedIndex, groupRefs]);
+  }, [lastAddedIndex, exerciseGroups]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setDraggingId(event.active.id as string);
@@ -174,10 +206,17 @@ export const WorkoutBuilder = ({
         isSaving={isSaving}
         handleSave={handleSave}
         isWorkoutDay={isWorkoutDay}
-        addExercise={addExercise}
+        addExercise={(exercise) => {
+          addExercise(exercise);
+          setLastAddedIndex(exerciseGroups.length); // will match index of new group
+        }}
         exerciseLibraryOpen={exerciseLibraryOpen}
         setExerciseLibraryOpen={setExerciseLibraryOpen}
         user={user}
+        showShortcutsModal={showShortcutsModal}
+        setShowShortcutsModal={setShowShortcutsModal}
+        programPreviewOpen={programPreviewOpen}
+        setProgramPreviewOpen={setProgramPreviewOpen}
       />
 
       {/* MAIN */}
@@ -319,28 +358,37 @@ export const WorkoutBuilder = ({
                         strategy={verticalListSortingStrategy}
                       >
                         {exerciseGroups.map((group, groupIndex) => (
-                          <ExerciseGroupCard
+                          <div
                             key={group.id}
-                            exerciseGroups={exerciseGroups}
-                            group={group}
-                            groupIndex={groupIndex}
-                            exerciseMeta={
-                              exercises?.find(
-                                (e) => e.id === group.exercises[0].exercise_id
-                              )!
-                            }
-                            allExercises={exercises || []}
-                            isDraggingAny={!!draggingId}
-                            collapsedIndex={collapsedIndex}
-                            onExpand={() => setCollapsedIndex(groupIndex)}
-                            onRemoveExercise={removeExercise}
-                            onUpdateSets={updateExerciseSets}
-                            onUpdateIntensity={updateExerciseIntensity}
-                            onUpdateNotes={updateExerciseNotes}
-                            onUpdateGroupType={updateGroupType}
-                            onAddExerciseToGroup={addExerciseToGroup}
-                            onMoveExerciseByIdToGroup={moveExerciseByIdToGroup}
-                          />
+                            id={`exercise-group-${group.id}`}
+                            ref={(el) => {
+                              groupRefs.current[group.id] = el;
+                            }}
+                          >
+                            <ExerciseGroupCard
+                              exerciseGroups={exerciseGroups}
+                              group={group}
+                              groupIndex={groupIndex}
+                              exerciseMeta={
+                                exercises?.find(
+                                  (e) => e.id === group.exercises[0].exercise_id
+                                )!
+                              }
+                              allExercises={exercises || []}
+                              isDraggingAny={!!draggingId}
+                              collapsedIndex={collapsedIndex}
+                              onExpand={() => setCollapsedIndex(groupIndex)}
+                              onRemoveExercise={removeExercise}
+                              onUpdateSets={updateExerciseSets}
+                              onUpdateIntensity={updateExerciseIntensity}
+                              onUpdateNotes={updateExerciseNotes}
+                              onUpdateGroupType={updateGroupType}
+                              onAddExerciseToGroup={addExerciseToGroup}
+                              onMoveExerciseByIdToGroup={
+                                moveExerciseByIdToGroup
+                              }
+                            />
+                          </div>
                         ))}
                       </SortableContext>
                     </div>

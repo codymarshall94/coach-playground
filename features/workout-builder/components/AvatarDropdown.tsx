@@ -14,7 +14,8 @@ import { useUser } from "@/hooks/useUser";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { ChevronDown, ListOrdered, LogOut } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import KeyboardShortcutsModal from "./KeyboardShortcutsModal";
 
 export default function AvatarDropdown() {
   const { user } = useUser();

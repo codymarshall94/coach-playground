@@ -156,8 +156,7 @@ export const ProgramDescriptionEditor = ({
       )}
 
       <p className="text-xs text-muted-foreground text-right">
-        Tip: <kbd>Ctrl+B</kbd> for bold, <kbd>Ctrl+Z</kbd> to undo,{" "}
-        <kbd>Cmd+K</kbd> for links (if enabled).
+        Tip: <kbd>Ctrl+B</kbd> for bold, <kbd>Ctrl+Z</kbd> to undo, .
       </p>
     </motion.div>
   );

@@ -3,7 +3,6 @@
 import { RichTextRenderer } from "@/components/RichTextEditor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -32,6 +31,8 @@ import {
 
 interface ProgramPreviewProps {
   program: Program;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 const goalIcons = {
@@ -118,91 +119,126 @@ function ExerciseCard({ exercise }: { exercise: WorkoutExercise }) {
   );
 }
 
-export function WorkoutDay({ day }: { day: ProgramDay }) {
-  const DayIcon = dayTypeIcons[day.type];
+function WorkoutDayTable({ day }: { day: ProgramDay }) {
+  if (day.type !== "workout") return null;
 
-  if (day.type === "rest") {
-    return (
-      <div className="rounded-xl border border-muted p-4 bg-background/50 space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-gray-100 rounded-lg">
-              <Coffee className="w-5 h-5 text-gray-600" />
-            </div>
-            <div>
-              <h2 className="text-xl">{day.name}</h2>
-              <p className="text-muted-foreground">{day.description}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const formatIntensity = (set: SetInfo, system: IntensitySystem): string => {
+    switch (system) {
+      case "rpe":
+        return set.rpe ? `RPE ${set.rpe}` : "";
+      case "rir":
+        return set.rir !== null && set.rir !== undefined
+          ? `RIR ${set.rir}`
+          : "";
+      case "one_rep_max_percent":
+        return set.one_rep_max_percent ? `${set.one_rep_max_percent}% 1RM` : "";
+      default:
+        return "";
+    }
+  };
 
-  if (day.type === "active_rest") {
-    return (
-      <div className="mb-6">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <Activity className="w-5 h-5 text-green-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-muted-foreground mb-1">
-                Day {day.order + 1}
-              </h3>
-              <p className="text-sm text-muted-foreground">{day.description}</p>
-            </div>
-          </div>
-        </div>
-        <div className="text-center py-8 text-muted-foreground">
-          <div className="text-center py-8 text-muted-foreground">
-            <Activity className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p className="text-lg font-medium">Active Recovery</p>
-            <p className="text-sm">
-              Light cardio, stretching, or mobility work
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const formatAdvancedSetInfo = (set: SetInfo): string | null => {
+    const type = set.set_type;
+
+    switch (type) {
+      case "drop":
+        return set.drop_percent && set.drop_sets
+          ? `Drop Set (${set.drop_percent}% x ${set.drop_sets} sets)`
+          : "Drop Set";
+      case "cluster":
+        return set.cluster_reps && set.intra_rest
+          ? `Cluster (${set.cluster_reps} reps, ${set.intra_rest}s rest)`
+          : "Cluster Set";
+      case "myo_reps":
+        return set.activation_set_reps && set.mini_sets
+          ? `Myo Reps (Start: ${set.activation_set_reps}, Mini: ${set.mini_sets})`
+          : "Myo Reps";
+      case "rest_pause":
+        return set.initial_reps && set.pause_duration
+          ? `Rest Pause (${set.initial_reps} reps, ${set.pause_duration}s pause)`
+          : "Rest Pause";
+      default:
+        return null;
+    }
+  };
 
   return (
-    <div className="rounded-xl border border-muted p-4 bg-background/50 space-y-4">
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <DayIcon className="w-5 h-5 text-blue-600" />
-          </div>
-          <div>
-            <CardTitle className="text-xl">{day.name}</CardTitle>
-            <p className="text-muted-foreground">{day.description}</p>
-          </div>
-        </div>
-      </div>
-      <div className="space-y-2">
-        {day.workout.map((workout, workoutIndex) => (
-          <div key={workoutIndex}>
-            {workout.exercise_groups.map((group) => (
-              <div key={group.id}>
-                {group.exercises.map((exercise) => (
-                  <ExerciseCard key={exercise.id} exercise={exercise} />
-                ))}
-              </div>
-            ))}
-          </div>
-        ))}
+    <div className="mb-10">
+      <h2 className="text-xl font-bold mb-2">
+        Day {day.order_num + 1}: {day.name}
+      </h2>
+      <p className="text-sm text-muted-foreground mb-4">{day.description}</p>
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm border border-muted rounded-md">
+          <thead className="bg-muted text-muted-foreground uppercase font-semibold text-xs">
+            <tr>
+              <th className="px-4 py-2">Exercise</th>
+              <th className="px-4 py-2">Sets</th>
+              <th className="px-4 py-2">Reps</th>
+              <th className="px-4 py-2">Intensity</th>
+              <th className="px-4 py-2 w-1/2">Set Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {day.workout.map((workout) =>
+              workout.exercise_groups.map((group) =>
+                group.exercises.map((exercise) => {
+                  const setCount = exercise.sets.length;
+                  const repRanges = [
+                    ...new Set(exercise.sets.map((s) => s.reps)),
+                  ].join(" / ");
+
+                  const intensities = [
+                    ...new Set(
+                      exercise.sets
+                        .map((s) => formatIntensity(s, exercise.intensity))
+                        .filter(Boolean)
+                    ),
+                  ].join(", ");
+
+                  const setTypes = [
+                    ...new Set(
+                      exercise.sets
+                        .map((s) =>
+                          s.set_type !== "standard"
+                            ? formatAdvancedSetInfo(s)
+                            : null
+                        )
+                        .filter(Boolean)
+                    ),
+                  ].join(" / ");
+
+                  return (
+                    <tr
+                      key={exercise.id}
+                      className="even:bg-muted/10 border-t border-muted"
+                    >
+                      <td className="px-4 py-2">{exercise.name}</td>
+                      <td className="px-4 py-2">{setCount}</td>
+                      <td className="px-4 py-2">{repRanges}</td>
+                      <td className="px-4 py-2">{intensities || "—"}</td>
+                      <td className="px-4 py-2">{exercise.notes || "—"}</td>
+                    </tr>
+                  );
+                })
+              )
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
 }
 
-export default function ProgramPreview({ program }: ProgramPreviewProps) {
+export default function ProgramPreview({
+  open,
+  onOpenChange,
+  program,
+}: ProgramPreviewProps) {
   const GoalIcon = goalIcons[program.goal];
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline">
           <Eye className="w-4 h-4" />
@@ -215,30 +251,39 @@ export default function ProgramPreview({ program }: ProgramPreviewProps) {
             Program Preview
           </DialogTitle>
 
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <h1 className="text-3xl font-bold leading-tight">
-                  {program.name}
-                </h1>
-                <Badge
-                  className={`${
-                    goalColors[program.goal]
-                  } flex items-center gap-2 px-3 py-1.5 text-sm font-medium border`}
-                >
-                  <GoalIcon className="w-4 h-4" />
-                  <span className="capitalize">{program.goal}</span>
-                </Badge>
-              </div>
-              <RichTextRenderer html={program.description} />
+          <div className="mb-6 border-b pb-4">
+            <h1 className="text-4xl font-extrabold tracking-tight leading-tight">
+              {program.name}
+            </h1>
+            <div className="flex items-center gap-3 mt-2">
+              <Badge
+                className={`${
+                  goalColors[program.goal]
+                } flex items-center gap-2 px-3 py-1.5 text-sm font-medium border`}
+              >
+                <GoalIcon className="w-4 h-4" />
+                <span className="capitalize">{program.goal}</span>
+              </Badge>
+              <p className="text-muted-foreground text-sm">
+                {program.mode === "blocks"
+                  ? "Block-based program"
+                  : "Day-based program"}
+              </p>
             </div>
+            <Separator className="my-4" />
+            {program.description && (
+              <RichTextRenderer
+                html={program.description}
+                className="w-full mt-8 text-sm leading-relaxed space-y-2 [&_p]:my-1 [&_ul]:ml-4 [&_li]:mt-0.5"
+              />
+            )}
           </div>
 
           {/* Program Structure */}
           {program.mode === "blocks" && program.blocks ? (
             <div className="space-y-8">
               {program.blocks
-                .sort((a, b) => a.order - b.order)
+                .sort((a, b) => a.order_num - b.order_num)
                 .map((block) => (
                   <div key={block.id}>
                     <div className="mb-6">
@@ -270,9 +315,9 @@ export default function ProgramPreview({ program }: ProgramPreviewProps) {
                     <Separator className="mb-4" />
                     <div className="space-y-4">
                       {block.days
-                        .sort((a, b) => a.order - b.order)
+                        .sort((a, b) => a.order_num - b.order_num)
                         .map((day) => (
-                          <WorkoutDay key={day.id} day={day} />
+                          <WorkoutDayTable key={day.id} day={day} />
                         ))}
                     </div>
                   </div>
@@ -282,10 +327,10 @@ export default function ProgramPreview({ program }: ProgramPreviewProps) {
             program.days && (
               <div className="space-y-4">
                 {program.days
-                  .sort((a, b) => a.order - b.order)
+                  .sort((a, b) => a.order_num - b.order_num)
                   .map((day) => (
                     <div key={day.id}>
-                      <WorkoutDay key={day.id} day={day} />
+                      <WorkoutDayTable key={day.id} day={day} />
                       <Separator className="mb-4" />
                     </div>
                   ))}

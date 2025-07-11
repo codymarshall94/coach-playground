@@ -304,7 +304,9 @@ export async function insertExerciseSets(
     rir: set.rir ?? null,
     one_rep_max_percent: set.one_rep_max_percent ?? null,
     set_index: index,
+    set_type: set.set_type ?? "standard",
   }));
+
   const { data, error } = await supabase
     .from("exercise_sets")
     .insert(payload)

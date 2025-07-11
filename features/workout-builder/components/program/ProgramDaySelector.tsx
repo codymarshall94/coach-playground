@@ -77,7 +77,7 @@ function DayButton({
           ${isDragOverlay ? "shadow-lg" : ""}
         `}
       >
-        <span className="truncate font-medium">{day.order + 1}.</span>
+        <span className="truncate font-medium">{day.order_num + 1}.</span>
         <span className="truncate font-medium">{day.name}</span>
         {day.type === "rest" && <Bed className="w-4 h-4 ml-2 flex-shrink-0" />}
         {day.type === "workout" && (
@@ -157,7 +157,7 @@ export function ProgramDaySelector({
 
     const reordered = arrayMove(days, oldIndex, newIndex).map((d, i) => ({
       ...d,
-      order: i,
+      order_num: i,
     }));
 
     onReorder(reordered);

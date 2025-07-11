@@ -8,7 +8,7 @@ export const createEmptyProgram = (
   const defaultWorkoutDay: ProgramDay = {
     id: crypto.randomUUID(),
     name: "Day 1",
-    order: 0,
+    order_num: 0,
     type: "workout",
     description: "",
     workout: [
@@ -34,7 +34,7 @@ export const createEmptyProgram = (
             {
               id: crypto.randomUUID(),
               name: "Block 1",
-              order: 0,
+              order_num: 0,
               days: [defaultWorkoutDay],
               weeks: 4,
             },

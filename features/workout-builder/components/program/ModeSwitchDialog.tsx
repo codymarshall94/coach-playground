@@ -27,7 +27,7 @@ export function ModeSwitchDialog({ currentProgram, onSwitchMode }: Props) {
     if (targetMode === "days" && prev.blocks) {
       const mergedDays: ProgramDay[] = prev.blocks
         .flatMap((block) => block.days)
-        .map((day, i) => ({ ...day, order: i }));
+        .map((day, i) => ({ ...day, order_num: i }));
 
       onSwitchMode({
         ...prev,
@@ -41,8 +41,8 @@ export function ModeSwitchDialog({ currentProgram, onSwitchMode }: Props) {
       const block: ProgramBlock = {
         id: crypto.randomUUID(),
         name: "Block 1",
-        order: 0,
-        days: prev.days.map((day, i) => ({ ...day, order: i })),
+        order_num: 0,
+        days: prev.days.map((day, i) => ({ ...day, order_num: i })),
       };
 
       onSwitchMode({

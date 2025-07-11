@@ -38,7 +38,6 @@ import {
   X,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useState } from "react";
 import { ETLDisplay } from "../insights/EtlDisplay";
 import { AdvancedSetFields } from "./AdvancedSetFields";
 import { SET_TYPE_CONFIG, SetTypeSelector } from "./SetTypeSelector";
@@ -76,9 +75,6 @@ export function ExpandedExerciseCard({
   onUpdateNotes: (notes: string) => void;
   normalizedETL: number;
 }) {
-  const [tempNotes, setTempNotes] = useState(exercise.notes || "");
-  const [showAdvanced, setShowAdvanced] = useState(false);
-
   const addSet = () => {
     const lastSet = exercise.sets[exercise.sets.length - 1];
     const newSet = {
@@ -119,8 +115,8 @@ export function ExpandedExerciseCard({
   const IntensityIcon = intensityIcons[exercise.intensity];
 
   const currentIntensity = exercise.intensity;
-  const { label, options } =
-    intensityConfig[currentIntensity as keyof typeof intensityConfig];
+  const { options } =
+    intensityConfig[currentIntensity as keyof typeof intensityConfig] || {};
 
   return (
     <Card className="group relative bg-background border border-border hover:border-primary/20 hover:shadow-lg transition-all duration-300">

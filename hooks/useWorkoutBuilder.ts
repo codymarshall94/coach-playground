@@ -24,7 +24,7 @@ export function useWorkoutBuilder(initialProgram?: Program) {
   const [activeBlockIndex, setActiveBlockIndex] = useState(0);
   const [activeDayIndex, setActiveDayIndex] = useState<number>(0);
   const [targetGroupIndex, setTargetGroupIndex] = useState<number | null>(null);
-
+  const [lastAddedIndex, setLastAddedIndex] = useState<number | null>(null);
   const { data: exercises } = useQuery({
     queryKey: ["exercises"],
     queryFn: () => getAllExercises() as Promise<Exercise[]>,
@@ -234,7 +234,12 @@ export function useWorkoutBuilder(initialProgram?: Program) {
       exercises: [newExercise],
     };
 
-    updateDayWorkout([...exerciseGroups, newGroup]);
+    const newGroups = [...exerciseGroups, newGroup];
+
+    updateDayWorkout(newGroups);
+
+    // ✅ 👇 Add this
+    setLastAddedIndex(newGroups.length - 1);
   };
 
   const removeExercise = (groupIndex: number, exerciseIndex: number) => {
@@ -389,7 +394,7 @@ export function useWorkoutBuilder(initialProgram?: Program) {
         ...sourceDay,
         id: crypto.randomUUID(),
         name: `${sourceDay.name} (Copy)`,
-        order: sourceDay.order + 1,
+        order_num: sourceDay.order_num + 1,
         workout: sourceDay.workout.map((w) => ({
           ...w,
           exercise_groups: w.exercise_groups.map((group) => ({
@@ -436,7 +441,7 @@ export function useWorkoutBuilder(initialProgram?: Program) {
       const newBlock = {
         id: crypto.randomUUID(),
         name: `Block ${prev.blocks?.length ? prev.blocks.length + 1 : 1}`,
-        order: prev.blocks?.length ? prev.blocks.length : 0,
+        order_num: prev.blocks?.length ? prev.blocks.length : 0,
         weeks: 4,
         days: [newDay],
       };
@@ -560,8 +565,8 @@ export function useWorkoutBuilder(initialProgram?: Program) {
         const defaultBlock: ProgramBlock = {
           id: crypto.randomUUID(),
           name: `Block ${prev.blocks?.length ?? 0 + 1}`,
-          order: 0,
-          days: prev.days.map((day, i) => ({ ...day, order: i })),
+          order_num: 0,
+          days: prev.days.map((day, i) => ({ ...day, order_num: i })),
           weeks: 4,
         };
 
@@ -615,5 +620,7 @@ export function useWorkoutBuilder(initialProgram?: Program) {
     targetGroupIndex,
     setTargetGroupIndex,
     moveExerciseByIdToGroup,
+    lastAddedIndex,
+    setLastAddedIndex,
   };
 }
