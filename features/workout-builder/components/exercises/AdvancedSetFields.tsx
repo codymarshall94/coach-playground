@@ -1,10 +1,10 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import type { SetInfo } from "@/types/Workout";
-import { TrendingDown, Layers, Zap, Pause } from "lucide-react";
+import { Layers, Pause, TrendingDown, Zap } from "lucide-react";
 
 interface Props {
   set: SetInfo;

@@ -37,15 +37,7 @@ interface Props {
     groupIndex: number,
     type: WorkoutExerciseGroup["type"]
   ) => void;
-  onUpdateGroupRest: (groupIndex: number, rest: number) => void;
   onAddExerciseToGroup: (groupIndex: number, exercise: Exercise) => void;
-  targetGroupIndex: number | null;
-  setTargetGroupIndex: (groupIndex: number) => void;
-  onMoveExerciseToGroup: (
-    fromGroupIndex: number,
-    exerciseIndex: number,
-    toGroupIndex: number
-  ) => void;
   onMoveExerciseByIdToGroup: (exerciseId: string, toGroupIndex: number) => void;
 }
 
@@ -61,10 +53,6 @@ export function ExerciseGroupCard({
   onUpdateIntensity,
   onUpdateNotes,
   onUpdateGroupType,
-  onUpdateGroupRest,
-  targetGroupIndex,
-  setTargetGroupIndex,
-  onMoveExerciseToGroup,
   onMoveExerciseByIdToGroup,
 }: Props) {
   const isCollapsed = collapsedIndex !== null && collapsedIndex !== groupIndex;
@@ -108,22 +96,29 @@ export function ExerciseGroupCard({
             onGroupTypeChange={handleTypeChange}
           />
         </div>
-        {group.type !== "standard" &&
-          group.exercises.length < currentConfig.maxExercises && (
-            <AddToGroupPopover
-              trigger={
-                <Button variant="outline" size="sm">
-                  + Add Exercise to Group
-                </Button>
-              }
-              onSelect={(exercise) =>
-                onMoveExerciseByIdToGroup(exercise.id, groupIndex)
-              }
-              groupIndex={groupIndex}
-              existingExercises={exerciseGroups.flatMap((g) => g.exercises)}
-              allExercises={[]}
-            />
-          )}
+        {group.type !== "standard" && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">
+              {group.exercises.length} of {currentConfig.maxExercises} used
+            </span>
+
+            {group.exercises.length < currentConfig.maxExercises && (
+              <AddToGroupPopover
+                trigger={
+                  <Button variant="outline" size="sm">
+                    + Add Exercise
+                  </Button>
+                }
+                onSelect={(exercise) =>
+                  onMoveExerciseByIdToGroup(exercise.id, groupIndex)
+                }
+                groupIndex={groupIndex}
+                existingExercises={exerciseGroups.flatMap((g) => g.exercises)}
+                allExercises={[]}
+              />
+            )}
+          </div>
+        )}
       </div>
 
       <div className="space-y-3">
@@ -144,16 +139,6 @@ export function ExerciseGroupCard({
             }
             onUpdateNotes={(notes) =>
               onUpdateNotes(groupIndex, exerciseIndex, notes)
-            }
-            showAddToGroup={
-              targetGroupIndex !== null && targetGroupIndex !== groupIndex
-            }
-            onAddToGroupClick={() =>
-              onMoveExerciseToGroup(
-                groupIndex,
-                exerciseIndex,
-                targetGroupIndex!
-              )
             }
           />
         ))}

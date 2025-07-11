@@ -5,8 +5,6 @@ import { Exercise } from "@/types/Exercise";
 import { IntensitySystem, WorkoutExercise } from "@/types/Workout";
 import { getExerciseETL } from "@/utils/etl";
 import { estimateExerciseDuration } from "@/utils/volume/estimateExerciseDuration";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { AnimatePresence, MotionProps, motion } from "motion/react";
 import { CollapsedExerciseCard } from "./CollapsedExerciseCard";
 import { ExpandedExerciseCard } from "./ExpandedExerciseCard";
@@ -29,8 +27,6 @@ export const ExerciseBuilderCard = ({
   collapsed = false,
   onExpand,
   dragging = false,
-  showAddToGroup = false,
-  onAddToGroupClick,
 }: {
   order: number;
   exercise: WorkoutExercise;
@@ -42,8 +38,6 @@ export const ExerciseBuilderCard = ({
   collapsed?: boolean;
   onExpand?: () => void;
   dragging?: boolean;
-  showAddToGroup?: boolean;
-  onAddToGroupClick?: () => void;
 }) => {
   const exerciseMeta = exercise as unknown as Exercise;
   const { totalETL } = getExerciseETL(exercise, exerciseMeta);

@@ -1,5 +1,6 @@
 "use client";
 
+import { SmartInput } from "@/components/SmartInput";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -19,8 +20,10 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { intensityConfig } from "@/config/intensityConfig";
 import type {
   IntensitySystem,
+  SetInfo,
   SetType,
   WorkoutExercise,
 } from "@/types/Workout";
@@ -119,6 +122,10 @@ export function ExpandedExerciseCard({
   const totalReps = exercise.sets.reduce((sum, set) => sum + set.reps, 0);
   const estimatedTime = Math.ceil(estimateExerciseDuration(exercise) / 60);
   const IntensityIcon = intensityIcons[exercise.intensity];
+
+  const currentIntensity = exercise.intensity;
+  const { label, options } =
+    intensityConfig[currentIntensity as keyof typeof intensityConfig];
 
   return (
     <Card className="group relative bg-background border border-border hover:border-primary/20 hover:shadow-lg transition-all duration-300">
@@ -288,26 +295,15 @@ export function ExpandedExerciseCard({
                         <IntensityIcon className="w-3 h-3" />
                         {intensityLabel[exercise.intensity]}
                       </Label>
-                      <Input
-                        type="number"
+                      <SmartInput
                         value={
                           set.rpe ?? set.rir ?? set.one_rep_max_percent ?? ""
                         }
-                        onChange={(e) => {
-                          const val = Number(e.target.value);
-                          const field =
-                            exercise.intensity === "rpe"
-                              ? "rpe"
-                              : exercise.intensity === "rir"
-                              ? "rir"
-                              : "one_rep_max_percent";
-                          updateSet(i, field, val);
+                        options={options}
+                        onChange={(val) => {
+                          updateSet(i, currentIntensity as keyof SetInfo, val);
                         }}
-                        className="h-9 text-center font-medium"
-                        placeholder={
-                          exercise.intensity === "none" ? "N/A" : "0"
-                        }
-                        disabled={exercise.intensity === "none"}
+                        disabled={currentIntensity === "none"}
                       />
                     </div>
 
@@ -316,15 +312,10 @@ export function ExpandedExerciseCard({
                         <Clock className="w-3 h-3" />
                         Rest (sec)
                       </Label>
-                      <Input
-                        type="number"
+                      <SmartInput
                         value={set.rest}
-                        onChange={(e) =>
-                          updateSet(i, "rest", Number(e.target.value))
-                        }
-                        className="h-9 text-center font-medium"
-                        min="0"
-                        step="15"
+                        options={[15, 30, 45, 60, 75, 90, 105, 120]}
+                        onChange={(val) => updateSet(i, "rest", val)}
                       />
                     </div>
                   </div>
