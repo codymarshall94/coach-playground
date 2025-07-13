@@ -46,54 +46,20 @@
   --color-load-high: var(--load-high);
   --color-load-max: var(--load-max);
   --color-bar-bg: var(--bar-bg);
+
+  --color-set-type-warmup: var(--primary);
+  --color-set-type-standard: var(--primary);
+  --color-set-type-amrap: var(--positive);
+  --color-set-type-top_set: var(--critical);
+  --color-set-type-backoff: var(--primary);
+  --color-set-type-drop: var(--warning);
+  --color-set-type-cluster: var(--info);
+  --color-set-type-myo_reps: var(--neutral);
+  --color-set-type-rest_pause: var(--neutral);
+
 }
 
-:root {
-  --radius: 0.875rem;
 
-  /* Primary Theme Colors */
-  --background: oklch(0.98 0.01 140);         /* off-white sage */
-  --foreground: oklch(0.18 0.01 140);         /* slate charcoal */
-
-  --primary: oklch(0.7 0.14 140);             /* calm mint green */
-  --primary-foreground: oklch(0.98 0.01 140);
-
-  --secondary: oklch(0.92 0.02 140);          /* soft sage */
-  --secondary-foreground: oklch(0.26 0.01 140);
-
-  --accent: oklch(0.76 0.16 160);             /* vibrant mint */
-  --accent-foreground: var(--foreground);
-
-  /* Surfaces */
-  --card: oklch(1 0 0 / 0.9);                 /* semi-glass white */
-  --card-foreground: var(--foreground);
-
-  --popover: oklch(0.97 0.01 140);
-  --popover-foreground: var(--foreground);
-
-  --muted: oklch(0.94 0.01 140);
-  --muted-foreground: oklch(0.45 0.01 140);
-
-  /* UI Control */
-  --border: oklch(0.88 0.01 140);
-  --input: oklch(0.91 0.01 140);
-  --ring: oklch(0.72 0.14 140);
-  --destructive: oklch(0.62 0.22 27);
-
-  /* Emotional Tokens */
-  --positive: oklch(0.75 0.18 150);           /* mint success */
-  --warning: oklch(0.82 0.18 80);             /* active fatigue */
-  --critical: oklch(0.72 0.22 27);            /* high CNS load */
-  --info: oklch(0.82 0.18 220);               /* calming insight blue */
-  --neutral: oklch(0.86 0.02 140);            /* gray-sage neutral */
-
-  /* Charting / Load Indicators */
-  --load-low: oklch(0.78 0.18 200);
-  --load-medium: oklch(0.72 0.18 120);
-  --load-high: oklch(0.68 0.2 70);
-  --load-max: oklch(0.62 0.22 27);
-  --bar-bg: oklch(0.92 0.01 140);
-}
 :root {
   --radius: 0.875rem;
 
@@ -104,7 +70,7 @@
   /* UI Surface */
   --card: oklch(1 0 0 / 0.9);
   --card-foreground: var(--foreground);
-  --popover: oklch(0.97 0.01 140);
+  --popover: oklch(0.97 0.01 140);  
   --popover-foreground: var(--foreground);
 
   /* Greens – performance base */
@@ -139,6 +105,18 @@
   --load-high: oklch(0.7 0.24 70);
   --load-max: oklch(0.6 0.26 30);
   --bar-bg: oklch(0.9 0.01 140);
+
+    --color-set-type-warmup:     oklch(0.72 0.15 140); /* sage green */
+  --color-set-type-standard:   oklch(0.62 0.17 115); /* mossy olive */
+  --color-set-type-top_set:    oklch(0.58 0.26 25);  /* bold red-orange */
+  --color-set-type-backoff:    oklch(0.6 0.12 60);   /* tan / khaki */
+  --color-set-type-amrap:      oklch(0.65 0.21 195); /* strong cyan-blue */
+  --color-set-type-drop:       oklch(0.7 0.22 90);   /* goldenrod yellow */
+  --color-set-type-cluster:    oklch(0.6 0.2 280);   /* deep violet */
+  --color-set-type-myo_reps:   oklch(0.58 0.07 45);  /* rust / brown */
+  --color-set-type-rest_pause: oklch(0.52 0.06 300); /* dusty purple-gray */
+
+
 }
 
 .dark {
@@ -153,6 +131,9 @@
 
   --secondary: oklch(0.28 0.02 140);
   --secondary-foreground: var(--foreground);
+
+  --popover: oklch(0.22 0.015 140 );
+  --popover-foreground: var(--foreground);
 
   --accent: oklch(0.82 0.22 160);
   --accent-foreground: var(--background);
@@ -175,6 +156,19 @@
   --load-high: oklch(0.82 0.22 70);
   --load-max: oklch(0.78 0.22 27);
   --bar-bg: oklch(0.28 0.01 140);
+
+  --color-set-type-warmup:     oklch(0.75 0.22 140); /* minty sage, clean and light */
+  --color-set-type-standard:   oklch(0.78 0.2 150);  /* fresh forest (same as primary) */
+  --color-set-type-top_set:    oklch(0.78 0.26 27);  /* intense red-orange */
+  --color-set-type-backoff:    oklch(0.55 0.08 120); /* olive-dark */
+  --color-set-type-amrap:      oklch(0.78 0.22 170); /* bold teal (distinct from green) */
+  --color-set-type-drop:       oklch(0.82 0.23 95);  /* hot yellow */
+  --color-set-type-cluster:    oklch(0.72 0.2 260);  /* violet-blue pop */
+  --color-set-type-myo_reps:   oklch(0.46 0.04 40);  /* earthen dark red */
+  --color-set-type-rest_pause: oklch(0.4 0.03 280);  /* deep muted lavender-gray */
+
+
+  
 } 
 
 

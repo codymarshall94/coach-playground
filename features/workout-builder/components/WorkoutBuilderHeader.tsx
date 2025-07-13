@@ -1,7 +1,6 @@
 "use client";
 
 import { Logo } from "@/components/Logo";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import ProgramPreview from "@/features/workout-builder/components/program/ProgramPreview";
 import { cn } from "@/lib/utils";
@@ -84,8 +83,6 @@ export const WorkoutBuilderHeader = ({
         )}
 
         <div className="h-6 w-px bg-border mx-1 sm:mx-2" />
-
-        <ThemeToggle />
 
         <KeyboardShortcutsModal
           open={showShortcutsModal}

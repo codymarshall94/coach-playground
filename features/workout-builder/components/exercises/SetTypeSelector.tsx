@@ -2,34 +2,25 @@
 
 import type React from "react";
 
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+import { SetType } from "@/types/Workout";
 import {
   Check,
-  Search,
-  Zap,
-  Target,
-  TrendingDown,
+  Clock,
   Layers,
   Repeat,
-  Clock,
+  Target,
+  TrendingDown,
+  Zap,
 } from "lucide-react";
-import { useState, useMemo } from "react";
-
-export type SetType =
-  | "standard"
-  | "amrap"
-  | "drop"
-  | "cluster"
-  | "myo_reps"
-  | "rest_pause";
+import { useMemo, useState } from "react";
 
 export const SET_TYPE_CONFIG: Record<
   SetType,
@@ -38,41 +29,49 @@ export const SET_TYPE_CONFIG: Record<
     description: string;
     icon: React.ComponentType<{ className?: string }>;
     category: "Basic" | "Advanced" | "Intensity";
-    difficulty: 1 | 2 | 3;
-    tags: string[];
+    colorClass: string;
+    short: string;
   }
 > = {
+  warmup: {
+    label: "Warmup",
+    description: "Light set to prepare for the main set",
+    icon: Target,
+    category: "Basic",
+    colorClass: "bg-set-type-warmup/10 text-set-type-warmup",
+    short: "W",
+  },
   standard: {
     label: "Standard",
     description: "Traditional straight set with consistent reps and rest",
     icon: Target,
     category: "Basic",
-    difficulty: 1,
-    tags: ["beginner", "traditional", "simple"],
+    colorClass: "bg-set-type-standard/10 text-set-type-standard",
+    short: "S",
   },
   amrap: {
     label: "AMRAP",
     description: "As many reps as possible to assess progress and fatigue",
     icon: Zap,
     category: "Intensity",
-    difficulty: 2,
-    tags: ["intensity", "failure", "assessment"],
+    colorClass: "bg-set-type-amrap/10 text-set-type-amrap",
+    short: "AM",
   },
   drop: {
     label: "Drop Set",
     description: "Sequential sets with reduced weight and minimal rest",
     icon: TrendingDown,
     category: "Advanced",
-    difficulty: 3,
-    tags: ["advanced", "fatigue", "volume"],
+    colorClass: "bg-set-type-drop/10 text-set-type-drop",
+    short: "D",
   },
   cluster: {
     label: "Cluster",
     description: "Subdivided sets with short intra-rest for power and form",
     icon: Layers,
     category: "Advanced",
-    difficulty: 3,
-    tags: ["power", "technique", "advanced"],
+    colorClass: "bg-set-type-cluster/10 text-set-type-cluster",
+    short: "C",
   },
   myo_reps: {
     label: "Myo-Reps",
@@ -80,23 +79,33 @@ export const SET_TYPE_CONFIG: Record<
       "Activation set followed by short-rest mini-sets for hypertrophy",
     icon: Repeat,
     category: "Advanced",
-    difficulty: 2,
-    tags: ["hypertrophy", "efficiency", "volume"],
+    colorClass: "bg-set-type-myo_reps/10 text-set-type-myo_reps",
+    short: "M",
   },
   rest_pause: {
     label: "Rest-Pause",
     description: "Heavy set broken by short pauses to maintain intensity",
     icon: Clock,
     category: "Intensity",
-    difficulty: 3,
-    tags: ["intensity", "heavy", "compact"],
+    colorClass: "bg-set-type-rest_pause/10 text-set-type-rest_pause",
+    short: "RP",
   },
-};
-
-const DIFFICULTY_COLORS = {
-  1: "bg-green-100 text-green-700 border-green-200",
-  2: "bg-yellow-100 text-yellow-700 border-yellow-200",
-  3: "bg-red-100 text-red-700 border-red-200",
+  top_set: {
+    label: "Top Set",
+    description: "The heaviest working set in a session",
+    icon: Target,
+    category: "Intensity",
+    colorClass: "bg-set-type-top_set/10 text-set-type-top_set",
+    short: "TS",
+  },
+  backoff: {
+    label: "Backoff",
+    description: "Light set to recover from the main set",
+    icon: Target,
+    category: "Basic",
+    colorClass: "bg-set-type-backoff/10 text-set-type-backoff",
+    short: "B",
+  },
 };
 
 const DIFFICULTY_LABELS = {
@@ -106,6 +115,7 @@ const DIFFICULTY_LABELS = {
 };
 
 interface SetTypeSelectorProps {
+  setIndex: number;
   setType: SetType;
   onSetTypeChange: (setType: SetType) => void;
   trigger?: React.ReactNode;
@@ -113,6 +123,7 @@ interface SetTypeSelectorProps {
 }
 
 export function SetTypeSelector({
+  setIndex,
   setType,
   onSetTypeChange,
   trigger,
@@ -142,21 +153,20 @@ export function SetTypeSelector({
   };
 
   const currentConfig = SET_TYPE_CONFIG[setType];
-  const CurrentIcon = currentConfig?.icon || Target;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        {trigger ?? (
-          <Button
-            variant="outline"
-            className="w-fit min-w-24 text-xs gap-2 h-8 bg-transparent"
-            disabled={disabled}
-          >
-            <CurrentIcon className="w-3 h-3" />
-            {currentConfig?.label || "Standard"}
-          </Button>
-        )}
+        <Badge
+          variant="outline"
+          className={cn(
+            "w-8 h-8 text-xs font-bold flex items-center justify-center cursor-pointer",
+            SET_TYPE_CONFIG[setType].colorClass
+          )}
+        >
+          <span className="text-xs">{setIndex + 1}.</span>
+          {SET_TYPE_CONFIG[setType].short}
+        </Badge>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="start">
         <div className="max-h-96 overflow-y-auto">
@@ -245,8 +255,7 @@ export function SetTypeSelector({
         <div className="p-3 border-t bg-muted/20">
           <div className="text-xs text-muted-foreground">
             <strong>Current:</strong> {currentConfig?.label} •{" "}
-            {currentConfig?.category} •{" "}
-            {DIFFICULTY_LABELS[currentConfig?.difficulty]}
+            {currentConfig?.category}
           </div>
         </div>
       </PopoverContent>

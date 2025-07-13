@@ -2,11 +2,9 @@
 
 import { NotesPopover } from "@/components/NotesPopover";
 import { SmartInput } from "@/components/SmartInput";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -40,7 +38,7 @@ import {
 import { motion } from "motion/react";
 import { ETLDisplay } from "../insights/EtlDisplay";
 import { AdvancedSetFields } from "./AdvancedSetFields";
-import { SET_TYPE_CONFIG, SetTypeSelector } from "./SetTypeSelector";
+import { SetTypeSelector } from "./SetTypeSelector";
 
 const intensityLabel: Record<IntensitySystem, string> = {
   rpe: "RPE",
@@ -222,6 +220,21 @@ export function ExpandedExerciseCard({
             </Button>
           </div>
 
+          <div className="grid grid-cols-[60px_1fr_1fr_1fr_60px] gap-4 px-2 text-xs font-semibold text-muted-foreground uppercase mb-1">
+            <div className="flex items-center gap-1">Set</div>
+            <div className="flex items-center gap-1">
+              <RotateCcw className="w-3 h-3" /> Reps
+            </div>
+            <div className="flex items-center gap-1">
+              <IntensityIcon className="w-3 h-3" />
+              {intensityLabel[exercise.intensity]}
+            </div>
+            <div className="flex items-center gap-1">
+              <Clock className="w-3 h-3" /> Rest
+            </div>
+            <div className="flex items-center gap-1" />
+          </div>
+
           <div className="space-y-2">
             {exercise.sets.map((set, i) => (
               <motion.div
@@ -235,20 +248,6 @@ export function ExpandedExerciseCard({
                 <div className="bg-muted/30 hover:bg-muted/50 rounded-lg p-4 transition-colors">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <SetTypeSelector
-                        setType={set.set_type}
-                        onSetTypeChange={(type) =>
-                          updateSet(i, "set_type", type)
-                        }
-                        trigger={
-                          <Badge
-                            variant="secondary"
-                            className="text-xs px-3 py-1 cursor-pointer"
-                          >
-                            Set {i + 1} · {SET_TYPE_CONFIG[set.set_type].label}
-                          </Badge>
-                        }
-                      />
                       {exercise.intensity === "one_rep_max_percent" &&
                         set.reps != null &&
                         set.one_rep_max_percent != null &&
@@ -262,6 +261,56 @@ export function ExpandedExerciseCard({
                             </p>
                           </div>
                         )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-[60px_1fr_1fr_1fr_60px] gap-4">
+                    <div className="space-y-2 col-span-1">
+                      <SetTypeSelector
+                        setType={set.set_type}
+                        onSetTypeChange={(type) =>
+                          updateSet(i, "set_type", type)
+                        }
+                        setIndex={i}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Input
+                        type="number"
+                        value={set.reps}
+                        onChange={(e) =>
+                          updateSet(i, "reps", Number(e.target.value))
+                        }
+                        className="h-9 text-center font-medium"
+                        min="1"
+                      />
+                    </div>
+                    {currentIntensity !== "none" ? (
+                      <div className="space-y-2">
+                        <SmartInput
+                          value={
+                            set.rpe ?? set.rir ?? set.one_rep_max_percent ?? ""
+                          }
+                          options={options}
+                          onChange={(val) => {
+                            updateSet(
+                              i,
+                              currentIntensity as keyof SetInfo,
+                              val
+                            );
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="space-y-2"></div>
+                    )}
+
+                    <div className="space-y-2">
+                      <SmartInput
+                        value={set.rest}
+                        options={[15, 30, 45, 60, 75, 90, 105, 120]}
+                        onChange={(val) => updateSet(i, "rest", val)}
+                      />
                     </div>
                     <div className="flex items-center gap-1 opacity-0 group-hover/set:opacity-100 transition-opacity">
                       <Button
@@ -283,53 +332,6 @@ export function ExpandedExerciseCard({
                       >
                         <X className="w-3 h-3" />
                       </Button>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                        <RotateCcw className="w-3 h-3" />
-                        Reps
-                      </Label>
-                      <Input
-                        type="number"
-                        value={set.reps}
-                        onChange={(e) =>
-                          updateSet(i, "reps", Number(e.target.value))
-                        }
-                        className="h-9 text-center font-medium"
-                        min="1"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                        <IntensityIcon className="w-3 h-3" />
-                        {intensityLabel[exercise.intensity]}
-                      </Label>
-                      <SmartInput
-                        value={
-                          set.rpe ?? set.rir ?? set.one_rep_max_percent ?? ""
-                        }
-                        options={options}
-                        onChange={(val) => {
-                          updateSet(i, currentIntensity as keyof SetInfo, val);
-                        }}
-                        disabled={currentIntensity === "none"}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        Rest (sec)
-                      </Label>
-                      <SmartInput
-                        value={set.rest}
-                        options={[15, 30, 45, 60, 75, 90, 105, 120]}
-                        onChange={(val) => updateSet(i, "rest", val)}
-                      />
                     </div>
                   </div>
 

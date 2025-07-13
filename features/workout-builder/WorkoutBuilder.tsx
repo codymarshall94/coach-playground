@@ -18,6 +18,10 @@ import {
   DragStartEvent,
 } from "@dnd-kit/core";
 import {
+  restrictToVerticalAxis,
+  restrictToWindowEdges,
+} from "@dnd-kit/modifiers";
+import {
   arrayMove,
   SortableContext,
   verticalListSortingStrategy,
@@ -30,7 +34,6 @@ import { toast } from "sonner";
 import { DayHeader } from "./components/days/DayHeader";
 import { ExerciseGroupCard } from "./components/exercises/ExerciseGroupCard";
 import { ExerciseSuggestions } from "./components/exercises/ExerciseSuggestions";
-import { WorkoutAnalyticsPanel } from "./components/insights/WorkoutAnalyticsPanel";
 import { BlockSelector } from "./components/program/BlockSelector";
 import { ProgramMetaEditor } from "./components/program/ProgramMetaEditor";
 import { SavePromptModal } from "./components/SavePromptModal";
@@ -134,8 +137,6 @@ export const WorkoutBuilder = ({
     onOpenHelpModal: () => setShowShortcutsModal(true),
   });
 
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [editedName, setEditedName] = useState("");
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [exerciseLibraryOpen, setExerciseLibraryOpen] = useState(false);
   const [savePromptOpen, setSavePromptOpen] = useState(false);
@@ -201,7 +202,6 @@ export const WorkoutBuilder = ({
         }}
         onSave={doSave}
       />
-      {/* HEADER */}
       <WorkoutBuilderHeader
         program={program}
         isSaving={isSaving}
@@ -209,7 +209,7 @@ export const WorkoutBuilder = ({
         isWorkoutDay={isWorkoutDay}
         addExercise={(exercise) => {
           addExercise(exercise);
-          setLastAddedIndex(exerciseGroups.length); // will match index of new group
+          setLastAddedIndex(exerciseGroups.length);
         }}
         exerciseLibraryOpen={exerciseLibraryOpen}
         setExerciseLibraryOpen={setExerciseLibraryOpen}
@@ -224,11 +224,8 @@ export const WorkoutBuilder = ({
         open={welcomeModalOpen}
         onClose={() => setWelcomeModalOpen(false)}
       />
-      {/* MAIN */}
       <div className="flex flex-1 overflow-hidden">
-        {/* LEFT PANEL – Settings & Day Selector */}
         <aside className=" border-r border-border bg-muted/20 p-4 space-y-6 overflow-y-auto">
-          {/* Program Settings */}
           <div className="space-y-4">
             <ProgramMetaEditor
               program={program}
@@ -239,7 +236,6 @@ export const WorkoutBuilder = ({
             />
           </div>
 
-          {/* Day/Block Selector */}
           <div className="pt-4 border-t border-border">
             {usingBlocks ? (
               <BlockSelector
@@ -288,34 +284,24 @@ export const WorkoutBuilder = ({
               handleDragEndExerciseGroup(event);
             }}
             onDragCancel={() => setDraggingId(null)}
+            modifiers={[restrictToVerticalAxis, restrictToWindowEdges]}
           >
             <div className="w-full max-w-4xl p-4 mx-auto relative">
               <DayHeader
                 program={program}
                 activeBlockIndex={activeBlockIndex}
                 activeDayIndex={activeDayIndex}
-                editedName={editedName}
-                setEditedName={setEditedName}
-                isEditingName={isEditingName}
-                setIsEditingName={setIsEditingName}
                 updateDayDetails={updateDayDetails}
                 exerciseCount={exerciseGroups.length}
                 setCollapsedIndex={setCollapsedIndex}
                 collapsedIndex={collapsedIndex}
                 clearWorkout={clearWorkout}
+                isWorkoutDay={isWorkoutDay}
+                exerciseGroups={exerciseGroups}
+                insights={insights!}
+                analyticsOpen={analyticsOpen}
+                setAnalyticsOpen={setAnalyticsOpen}
               />
-              {isWorkoutDay && exerciseGroups.length > 0 && (
-                <div className="flex justify-between items-center mt-2 mb-2 px-1">
-                  <div className="flex gap-2">
-                    <WorkoutAnalyticsPanel
-                      workout={exerciseGroups}
-                      summary={insights!}
-                      open={analyticsOpen}
-                      setOpen={setAnalyticsOpen}
-                    />
-                  </div>
-                </div>
-              )}
 
               {noWorkoutDays ? (
                 <div className="mt-6">
@@ -339,8 +325,8 @@ export const WorkoutBuilder = ({
                       transition={{ duration: 0.2 }}
                     >
                       <EmptyState
-                        title="No Workouts Added"
-                        description="Start building your program by adding exercises or rest days."
+                        title="No Exercises Added"
+                        description="Start building your program by adding exercises to this day."
                         icon={
                           <Dumbbell className="w-10 h-10 text-muted-foreground" />
                         }
@@ -421,32 +407,76 @@ export const WorkoutBuilder = ({
               )}
             </div>
 
-            <DragOverlay dropAnimation={{ duration: 200, easing: "ease-out" }}>
+            <DragOverlay
+              dropAnimation={{
+                duration: 300,
+                easing: "cubic-bezier(0.18, 0.67, 0.6, 1.22)",
+              }}
+              style={{
+                transformOrigin: "0 0",
+              }}
+            >
               {draggingId && (
                 <motion.div
-                  initial={{ scale: 0.95, opacity: 0.7 }}
-                  animate={{ scale: 1.02, opacity: 1 }}
-                  exit={{ scale: 0.9, opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                  className="z-[999] pointer-events-none"
+                  initial={{
+                    scale: 1,
+                    rotate: 0,
+                    opacity: 1,
+                  }}
+                  animate={{
+                    scale: 1.05,
+                    opacity: 0.95,
+                  }}
+                  exit={{
+                    scale: 0.95,
+                    rotate: 0,
+                    opacity: 0.8,
+                  }}
+                  transition={{
+                    duration: 0.2,
+                    ease: "easeOut",
+                  }}
+                  className="z-[999] pointer-events-none shadow-2xl"
+                  style={{
+                    filter: "drop-shadow(0 25px 25px rgb(0 0 0 / 0.15))",
+                  }}
                 >
-                  <ExerciseGroupCard
-                    exerciseGroups={exerciseGroups}
-                    group={exerciseGroups.find((g) => g.id === draggingId)!}
-                    groupIndex={0}
-                    exerciseMeta={exercises?.find((e) => e.id === draggingId)!}
-                    isDraggingAny={true}
-                    collapsedIndex={null}
-                    onExpand={() => {}}
-                    onRemoveExercise={() => {}}
-                    onUpdateSets={() => {}}
-                    onUpdateIntensity={() => {}}
-                    onUpdateNotes={() => {}}
-                    onUpdateGroupType={() => {}}
-                    onAddExerciseToGroup={() => {}}
-                    onMoveExerciseByIdToGroup={() => {}}
-                    allExercises={exercises || []}
-                  />
+                  <div className="relative">
+                    {/* Glow effect */}
+                    <div className="absolute inset-0 bg-primary/20 rounded-lg blur-sm" />
+
+                    {/* Main card */}
+                    <div className="relative bg-background border-2 border-primary/50 rounded-lg">
+                      <ExerciseGroupCard
+                        exerciseGroups={exerciseGroups}
+                        group={exerciseGroups.find((g) => g.id === draggingId)!}
+                        groupIndex={0}
+                        exerciseMeta={
+                          exercises?.find(
+                            (e) =>
+                              exerciseGroups.find((g) => g.id === draggingId)
+                                ?.exercises[0]?.exercise_id === e.id
+                          )!
+                        }
+                        isDraggingAny={true}
+                        collapsedIndex={null}
+                        onExpand={() => {}}
+                        onRemoveExercise={() => {}}
+                        onUpdateSets={() => {}}
+                        onUpdateIntensity={() => {}}
+                        onUpdateNotes={() => {}}
+                        onUpdateGroupType={() => {}}
+                        onAddExerciseToGroup={() => {}}
+                        onMoveExerciseByIdToGroup={() => {}}
+                        allExercises={exercises || []}
+                      />
+                    </div>
+
+                    {/* Drag indicator */}
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                      <div className="w-2 h-2 bg-white rounded-full" />
+                    </div>
+                  </div>
                 </motion.div>
               )}
             </DragOverlay>

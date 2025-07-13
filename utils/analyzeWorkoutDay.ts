@@ -12,7 +12,7 @@ const REGION_DOMINANCE_THRESHOLD = 1.3;
 // ───────────────────────────────────────────────
 // Types
 
-interface WorkoutAnalytics extends WorkoutSummaryStats {
+export interface WorkoutAnalyticsSummary extends WorkoutSummaryStats {
   total_sets: number;
   total_fatigue: number;
   top_muscles: [string, number][];
@@ -39,7 +39,7 @@ const increment = (obj: Record<string, number>, key: string, by = 1) => {
 
 function determineInjuryRisk(
   avgJoint: number
-): WorkoutAnalytics["injury_risk"] {
+): WorkoutAnalyticsSummary["injury_risk"] {
   if (avgJoint > JOINT_STRESS_HIGH) return "High";
   if (avgJoint > JOINT_STRESS_MODERATE) return "Moderate";
   return "Low";
@@ -81,7 +81,7 @@ function determineWorkoutType(
 export function analyzeWorkoutDay(
   exerciseGroups: WorkoutExerciseGroup[],
   exercises: Exercise[]
-): WorkoutAnalytics {
+): WorkoutAnalyticsSummary {
   const muscleVolumes: Record<string, number> = {};
   const muscleSetCounts: Record<string, number> = {};
   const categoryCounts: Record<string, number> = {};

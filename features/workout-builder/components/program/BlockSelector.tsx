@@ -23,13 +23,19 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import {
+  restrictToVerticalAxis,
+  restrictToWindowEdges,
+} from "@dnd-kit/modifiers";
+import {
   SortableContext,
   arrayMove,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { Edit, GripVertical, Plus, Trash } from "lucide-react";
+import { motion } from "motion/react";
 import { useState } from "react";
 import { ProgramDaySelector } from "./ProgramDaySelector";
+import { cn } from "@/lib/utils";
 
 type Props = {
   blocks: ProgramBlock[];
@@ -68,9 +74,11 @@ export function BlockSelector({
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   );
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
+    setIsDragging(true);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -88,6 +96,7 @@ export function BlockSelector({
     }));
 
     onReorder(reordered);
+    setIsDragging(false);
   };
 
   const activeBlock = blocks.find((b) => b.id === activeId);
@@ -98,6 +107,7 @@ export function BlockSelector({
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
+      modifiers={[restrictToVerticalAxis, restrictToWindowEdges]}
     >
       <SortableContext
         items={blocks.map((b) => b.id)}
@@ -105,7 +115,11 @@ export function BlockSelector({
       >
         <div className="flex flex-col gap-3">
           {blocks.map((block, i) => (
-            <SortableItem key={block.id} id={block.id}>
+            <SortableItem
+              key={block.id}
+              id={block.id}
+              className={cn(isDragging && "opacity-50")}
+            >
               <div
                 className="border rounded-lg p-4 space-y-4 shadow-sm bg-card"
                 onClick={() => onSelect(i)}
@@ -235,14 +249,54 @@ export function BlockSelector({
         </div>
       </SortableContext>
 
-      <DragOverlay>
+      <DragOverlay
+        dropAnimation={{
+          duration: 300,
+          easing: "cubic-bezier(0.18, 0.67, 0.6, 1.22)",
+        }}
+        style={{
+          transformOrigin: "0 0",
+        }}
+      >
         {activeBlock && (
-          <div className="bg-white border rounded-lg shadow-xl ring-2 ring-blue-300 p-3 opacity-95">
-            <div className="flex items-center gap-3">
-              <GripVertical className="w-4 h-4 text-blue-500" />
-              <span>{activeBlock.name || "Training Block"}</span>
+          <motion.div
+            initial={{
+              scale: 1,
+              rotate: 0,
+              opacity: 1,
+            }}
+            animate={{
+              scale: 1.03,
+              opacity: 0.95,
+            }}
+            exit={{
+              scale: 0.98,
+              rotate: 0,
+              opacity: 0.8,
+            }}
+            transition={{
+              duration: 0.2,
+              ease: "easeOut",
+            }}
+            className="z-[999] pointer-events-none"
+            style={{
+              filter: "drop-shadow(0 20px 25px rgb(0 0 0 / 0.15))",
+            }}
+          >
+            <div className="relative">
+              <div className="absolute inset-0 bg-primary/20 rounded-lg blur-sm" />
+
+              <div className="relative bg-background border-2 border-primary/50 rounded-lg p-3 shadow-2xl">
+                <div className="flex items-center gap-3">
+                  <GripVertical className="w-4 h-4 text-primary" />
+                  <span>{activeBlock.name || "Training Block"}</span>
+                </div>
+              </div>
+              <motion.div className="absolute -top-2 -right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center shadow-lg">
+                <div className="w-2 h-2 bg-white rounded-full" />
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
         )}
       </DragOverlay>
     </DndContext>

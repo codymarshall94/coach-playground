@@ -1,5 +1,9 @@
 "use client";
 
+import { motion } from "framer-motion";
+import { ChevronDown, ChevronUp, MoreHorizontal, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+
 import { NotesPopover } from "@/components/NotesPopover";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,72 +15,53 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import type { Program, ProgramDay } from "@/types/Workout";
-import { motion } from "framer-motion";
-import {
-  ChevronDown,
-  ChevronUp,
-  FileText,
-  MoreHorizontal,
-  Trash2,
-} from "lucide-react";
-import { useEffect, useState } from "react";
-import { ClearWorkoutDayModal } from "./ClearWorkoutDayModal";
+import { Program, ProgramDay, WorkoutExerciseGroup } from "@/types/Workout";
+import { WorkoutAnalyticsSummary } from "@/utils/analyzeWorkoutDay";
+import { WorkoutAnalyticsPanel } from "../insights/WorkoutAnalyticsPanel";
 import { DayNameEditor } from "./DayNameEditor";
 
 interface DayHeaderProps {
+  day?: ProgramDay;
   program: Program;
   activeBlockIndex: number;
   activeDayIndex: number;
-  editedName: string;
-  setEditedName: (name: string) => void;
-  isEditingName: boolean;
-  setIsEditingName: (value: boolean) => void;
-  updateDayDetails: (updates: Partial<ProgramDay>) => void;
   exerciseCount: number;
-  setCollapsedIndex: (index: number | null) => void;
-  collapsedIndex: number | null;
   clearWorkout: () => void;
+  updateDayDetails: (dayDetails: Partial<ProgramDay>) => void;
+  collapsedIndex: number | null;
+  setCollapsedIndex: (index: number | null) => void;
+  isWorkoutDay: boolean;
+  exerciseGroups: WorkoutExerciseGroup[];
+  insights: WorkoutAnalyticsSummary;
+  analyticsOpen: boolean;
+  setAnalyticsOpen: (open: boolean) => void;
 }
 
-export const DayHeader = ({
+export function DayHeader({
+  day,
   program,
   activeBlockIndex,
   activeDayIndex,
-  editedName,
-  setEditedName,
-  isEditingName,
-  setIsEditingName,
-  updateDayDetails,
   exerciseCount,
-  setCollapsedIndex,
-  collapsedIndex,
   clearWorkout,
-}: DayHeaderProps) => {
-  const day =
-    program.mode === "blocks"
-      ? program.blocks?.[activeBlockIndex]?.days?.[activeDayIndex] ?? null
-      : program.days?.[activeDayIndex] ?? null;
-
-  const [localDescription, setLocalDescription] = useState(
-    day?.description || ""
-  );
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  updateDayDetails,
+  collapsedIndex,
+  setCollapsedIndex,
+  isWorkoutDay,
+  exerciseGroups,
+  insights,
+  analyticsOpen,
+  setAnalyticsOpen,
+}: DayHeaderProps) {
+  const [editedName, setEditedName] = useState(day?.name || "");
+  const [isEditingName, setIsEditingName] = useState(false);
 
   useEffect(() => {
-    setLocalDescription(day?.description || "");
-  }, [activeDayIndex, activeBlockIndex, program.mode]);
+    setEditedName(day?.name || "");
+  }, [day?.name]);
 
-  const handleDescriptionSave = () => {
-    updateDayDetails({ description: localDescription.trim() });
+  const handleDescriptionSave = (description: string) => {
+    updateDayDetails({ description });
   };
 
   const isCollapsed = collapsedIndex === -1;
@@ -87,12 +72,12 @@ export const DayHeader = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className={cn(
-        "sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b transition-all duration-200",
-        scrolled && "bg-background/95 shadow-sm"
+        "sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b transition-all duration-200 mb-4"
       )}
     >
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between gap-4">
+      <div className="container mx-auto px-4 py-3">
+        {/* Main header row */}
+        <div className="flex items-center justify-between gap-4 mb-2">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <DayNameEditor
               program={program}
@@ -105,84 +90,75 @@ export const DayHeader = ({
               setIsEditingName={setIsEditingName}
             />
 
-            <Badge variant="secondary" className="shrink-0 text-xs font-medium">
-              {exerciseCount} {exerciseCount === 1 ? "exercise" : "exercises"}
-            </Badge>
-
-            {day?.description && (
-              <div className="w-2 h-2 rounded-full bg-primary shrink-0" />
-            )}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <NotesPopover
-              value={day?.description || ""}
-              title="Work Day Notes"
-              onSave={handleDescriptionSave}
-            />
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCollapsedIndex(isCollapsed ? null : -1)}
-              className="hidden sm:flex items-center gap-2"
-            >
-              {isCollapsed ? (
-                <>
-                  <ChevronDown className="w-4 h-4" />
-                  Expand
-                </>
-              ) : (
-                <>
-                  <ChevronUp className="w-4 h-4" />
-                  Collapse
-                </>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="text-xs font-medium">
+                {exerciseCount}
+              </Badge>
+              {day?.description && (
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
               )}
-            </Button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="sm:hidden">
-                  <MoreHorizontal className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem
-                  onClick={() => setCollapsedIndex(isCollapsed ? null : -1)}
-                >
-                  {isCollapsed ? (
-                    <>
-                      <ChevronDown className="w-4 h-4 mr-2" />
-                      Expand All
-                    </>
-                  ) : (
-                    <>
-                      <ChevronUp className="w-4 h-4 mr-2" />
-                      Collapse All
-                    </>
-                  )}
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <FileText className="w-4 h-4 mr-2" />
-                  {day?.description ? "Edit Notes" : "Add Notes"}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onClick={clearWorkout}
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Clear Day
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <div className="hidden sm:block">
-              <ClearWorkoutDayModal onConfirm={clearWorkout} />
             </div>
           </div>
+
+          {isWorkoutDay && exerciseGroups.length > 0 && (
+            <div className="flex justify-between items-center mt-2 mb-2 px-1">
+              <div className="flex gap-2">
+                <WorkoutAnalyticsPanel
+                  workout={exerciseGroups}
+                  summary={insights!}
+                  open={analyticsOpen}
+                  setOpen={setAnalyticsOpen}
+                />
+              </div>
+            </div>
+          )}
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCollapsedIndex(isCollapsed ? null : -1)}
+            className="flex items-center gap-2 min-w-fit"
+          >
+            {isCollapsed ? (
+              <>
+                <ChevronDown className="w-4 h-4" />
+                <span className="hidden sm:inline">Show</span>
+              </>
+            ) : (
+              <>
+                <ChevronUp className="w-4 h-4" />
+                <span className="hidden sm:inline">Hide</span>
+              </>
+            )}
+          </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="w-8 h-8 p-0">
+                <MoreHorizontal className="w-4 h-4" />
+                <span className="sr-only">More options</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem asChild>
+                <NotesPopover
+                  value={day?.description || ""}
+                  title="Day Notes"
+                  onSave={handleDescriptionSave}
+                />
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={clearWorkout}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Clear Day
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </motion.header>
   );
-};
+}

@@ -2,11 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Separator } from "@/components/ui/separator";
 import AvatarDropdown from "@/features/workout-builder/components/AvatarDropdown";
 import { createClient } from "@/utils/supabase/client";
 import type { User } from "@supabase/supabase-js";
-import { Menu, Plus, Dumbbell, Home, UserIcon, LogOut } from "lucide-react";
+import { Dumbbell, Home, LogOut, Menu, Plus, UserIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Logo } from "./Logo";
@@ -33,8 +32,7 @@ export function Navbar({ user }: { user: User | null }) {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        {/* Logo */}
+      <div className="c px-4 h-16 flex items-center justify-between">
         <Link
           href="/"
           className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
@@ -42,23 +40,6 @@ export function Navbar({ user }: { user: User | null }) {
           <Logo size="xs" showIcon />
         </Link>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-1">
-          {navigationItems.map((item) => (
-            <Link key={item.href} href={item.href}>
-              <Button
-                variant={pathname === item.href ? "secondary" : "ghost"}
-                size="sm"
-                className="text-sm font-medium"
-              >
-                <item.icon className="w-4 h-4 mr-2" />
-                {item.label}
-              </Button>
-            </Link>
-          ))}
-        </nav>
-
-        {/* Desktop Actions */}
         <div className="hidden md:flex items-center space-x-3">
           <Button size="sm" className="font-medium">
             <Plus className="w-4 h-4 mr-2" />
@@ -74,14 +55,10 @@ export function Navbar({ user }: { user: User | null }) {
                   Sign In
                 </Button>
               </Link>
-              <Link href="/signup">
-                <Button size="sm">Get Started</Button>
-              </Link>
             </div>
           )}
         </div>
 
-        {/* Mobile Menu */}
         <Sheet>
           <SheetTrigger asChild className="md:hidden">
             <Button variant="ghost" size="sm" className="px-2">
@@ -91,34 +68,17 @@ export function Navbar({ user }: { user: User | null }) {
           </SheetTrigger>
           <SheetContent side="right" className="w-80">
             <div className="flex flex-col h-full">
-              {/* Mobile Header */}
               <div className="flex items-center space-x-2 pb-6">
                 <Logo size="xs" showIcon />
               </div>
 
-              {/* Navigation */}
               <nav className="flex flex-col space-y-1 flex-1">
-                {navigationItems.map((item) => (
-                  <Link key={item.href} href={item.href}>
-                    <Button
-                      variant={pathname === item.href ? "secondary" : "ghost"}
-                      className="w-full justify-start text-base font-medium h-12"
-                    >
-                      <item.icon className="w-5 h-5 mr-3" />
-                      {item.label}
-                    </Button>
-                  </Link>
-                ))}
-
-                <Separator className="my-4" />
-
                 <Button className="w-full justify-start text-base font-medium h-12">
                   <Plus className="w-5 h-5 mr-3" />
                   New Program
                 </Button>
               </nav>
 
-              {/* Mobile User Section */}
               <div className="pt-6 border-t">
                 {user ? (
                   <div className="space-y-2">

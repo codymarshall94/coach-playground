@@ -176,9 +176,7 @@ export function GroupTypeSelector({
                       className={cn(
                         "w-full text-left p-3 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/20",
                         isSelected
-                          ? `${config.borderColor} bg-opacity-20 ${
-                              config.color.split(" ")[0]
-                            }`
+                          ? `${config.borderColor} bg-opacity-20`
                           : "border-transparent hover:border-gray-200 hover:bg-muted/30"
                       )}
                       whileHover={{ scale: 1.01 }}
@@ -187,15 +185,12 @@ export function GroupTypeSelector({
                       aria-selected={isSelected}
                     >
                       <div className="space-y-3">
-                        {/* Header */}
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <div
                               className={cn(
                                 "p-1.5 rounded-md",
-                                isSelected
-                                  ? config.color.split(" ")[0]
-                                  : "bg-muted"
+                                isSelected ? config.color : "bg-muted"
                               )}
                             >
                               <Icon className="w-4 h-4" />

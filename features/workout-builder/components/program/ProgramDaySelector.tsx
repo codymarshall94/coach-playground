@@ -21,6 +21,10 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import {
+  restrictToVerticalAxis,
+  restrictToWindowEdges,
+} from "@dnd-kit/modifiers";
+import {
   SortableContext,
   arrayMove,
   verticalListSortingStrategy,
@@ -33,6 +37,7 @@ import {
   Plus,
   Trash,
 } from "lucide-react";
+import { motion } from "motion/react";
 import { useState } from "react";
 
 type Props = {
@@ -174,6 +179,7 @@ export function ProgramDaySelector({
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
+      modifiers={[restrictToVerticalAxis, restrictToWindowEdges]}
     >
       <SortableContext
         items={days.map((d) => d.id)}
@@ -220,22 +226,64 @@ export function ProgramDaySelector({
         </div>
       </SortableContext>
 
-      <DragOverlay>
+      <DragOverlay
+        dropAnimation={{
+          duration: 300,
+          easing: "cubic-bezier(0.18, 0.67, 0.6, 1.22)",
+        }}
+        style={{
+          transformOrigin: "0 0",
+        }}
+      >
         {activeDay && (
-          <div className="bg-background border rounded-lg shadow-xl ring-2 ring-blue-300 p-3 opacity-95">
-            <div className="flex items-center gap-3">
-              <GripVertical className="w-4 h-4 text-blue-500" />
-              <DayButton
-                day={activeDay}
-                index={activeDayIndex}
-                isActive={activeDayIndex === activeIndex}
-                onClick={() => {}}
-                onRemove={() => {}}
-                onDuplicate={() => {}}
-                isDragOverlay={true}
-              />
+          <motion.div
+            initial={{
+              scale: 1,
+              rotate: 0,
+              opacity: 1,
+            }}
+            animate={{
+              scale: 1.03,
+              opacity: 0.95,
+            }}
+            exit={{
+              scale: 0.98,
+              rotate: 0,
+              opacity: 0.8,
+            }}
+            transition={{
+              duration: 0.2,
+              ease: "easeOut",
+            }}
+            className="z-[999] pointer-events-none"
+            style={{
+              filter: "drop-shadow(0 20px 25px rgb(0 0 0 / 0.15))",
+            }}
+          >
+            <div className="relative">
+              <div className="absolute inset-0 bg-primary/20 rounded-lg blur-sm" />
+
+              <div className="relative bg-background border-2 border-primary/50 rounded-lg p-3 shadow-2xl">
+                <div className="flex items-center gap-3">
+                  <GripVertical className="w-4 h-4 text-primary" />
+
+                  <DayButton
+                    day={activeDay}
+                    index={activeDayIndex}
+                    isActive={activeDayIndex === activeIndex}
+                    onClick={() => {}}
+                    onRemove={() => {}}
+                    onDuplicate={() => {}}
+                    isDragOverlay={true}
+                  />
+                </div>
+              </div>
+
+              <motion.div className="absolute -top-2 -right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center shadow-lg">
+                <div className="w-2 h-2 bg-white rounded-full" />
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
         )}
       </DragOverlay>
     </DndContext>

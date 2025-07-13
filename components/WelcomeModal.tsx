@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { AnimatePresence, motion, Variants } from "framer-motion";
 import {
   ArrowLeft,
@@ -11,7 +12,7 @@ import {
   Dumbbell,
   Sparkles,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const builderSlides = [
   {
@@ -82,6 +83,14 @@ export function WelcomeModal({
     setDirection(index > step ? 1 : -1);
     setStep(index);
   };
+
+  const [hasVisited, setHasVisited] = useLocalStorage("hasVisited", true);
+
+  useEffect(() => {
+    if (hasVisited) {
+      onClose();
+    }
+  }, [hasVisited, onClose]);
 
   const slideVariants: Variants = {
     enter: (direction: number) => ({
@@ -338,11 +347,23 @@ export function WelcomeModal({
                   )}
 
                   {!isLast ? (
-                    <Button onClick={nextStep}>
+                    <Button
+                      onClick={() => {
+                        setHasVisited(true);
+                        nextStep();
+                      }}
+                    >
                       Next <ArrowRight className=" w-4 h-4" />
                     </Button>
                   ) : (
-                    <Button onClick={onClose}>Start Building</Button>
+                    <Button
+                      onClick={() => {
+                        setHasVisited(true);
+                        onClose();
+                      }}
+                    >
+                      Start Building
+                    </Button>
                   )}
                 </div>
               </div>

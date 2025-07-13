@@ -1,10 +1,13 @@
 export type SetType =
+  | "warmup"
   | "standard"
   | "amrap"
   | "drop"
   | "cluster"
   | "myo_reps"
-  | "rest_pause";
+  | "rest_pause"
+  | "top_set"
+  | "backoff";
 
 export type SetInfo = {
   reps: number;
