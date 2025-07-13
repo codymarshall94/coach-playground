@@ -108,26 +108,14 @@ export const SET_TYPE_CONFIG: Record<
   },
 };
 
-const DIFFICULTY_LABELS = {
-  1: "Beginner",
-  2: "Intermediate",
-  3: "Advanced",
-};
-
 interface SetTypeSelectorProps {
-  setIndex: number;
   setType: SetType;
   onSetTypeChange: (setType: SetType) => void;
-  trigger?: React.ReactNode;
-  disabled?: boolean;
 }
 
 export function SetTypeSelector({
-  setIndex,
   setType,
   onSetTypeChange,
-  trigger,
-  disabled = false,
 }: SetTypeSelectorProps) {
   const [open, setOpen] = useState(false);
 
@@ -164,7 +152,6 @@ export function SetTypeSelector({
             SET_TYPE_CONFIG[setType].colorClass
           )}
         >
-          <span className="text-xs">{setIndex + 1}.</span>
           {SET_TYPE_CONFIG[setType].short}
         </Badge>
       </PopoverTrigger>

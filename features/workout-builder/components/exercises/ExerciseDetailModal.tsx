@@ -1,7 +1,6 @@
 "use client";
 
 import { InfoTooltip } from "@/components/InfoTooltip";
-import { ProgressIndicator } from "@/components/ProgressIndicator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MUSCLE_DISPLAY_MAP } from "@/constants/muscles";
-import { Exercise } from "@/types/Exercise";
+import type { Exercise } from "@/types/Exercise";
 import { getPrimaryAndSecondaryMuscles } from "@/utils/muscles/getPrimaryAndSecondaryMuscles";
 import {
   Activity,
@@ -34,6 +33,7 @@ import {
   Heart,
   Target,
   Zap,
+  BarChart3,
 } from "lucide-react";
 import { MuscleActivationChart } from "../insights/MuscleActivationChart";
 
@@ -41,24 +41,24 @@ export function ExerciseDetailModal({ exercise }: { exercise: Exercise }) {
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
       case "beginner":
-        return "border-green-300 text-green-700 bg-green-50";
+        return "bg-green-50 text-green-700 border-green-200";
       case "intermediate":
-        return "border-yellow-300 text-yellow-700 bg-yellow-50";
+        return "bg-gray-100 text-gray-700 border-gray-300";
       case "advanced":
-        return "border-red-300 text-red-700 bg-red-50";
+        return "bg-gray-800 text-white border-gray-700";
       default:
-        return "border-gray-300 text-gray-700 bg-gray-50";
+        return "bg-gray-50 text-gray-600 border-gray-200";
     }
   };
 
   const getEnergySystemIcon = (system: string) => {
     switch (system.toLowerCase()) {
       case "aerobic":
-        return <Heart className="w-4 h-4" />;
+        return <Heart className="w-4 h-4 text-gray-600" />;
       case "anaerobic":
-        return <Zap className="w-4 h-4" />;
+        return <Zap className="w-4 h-4 text-gray-600" />;
       default:
-        return <Activity className="w-4 h-4" />;
+        return <Activity className="w-4 h-4 text-gray-600" />;
     }
   };
 
@@ -69,97 +69,164 @@ export function ExerciseDetailModal({ exercise }: { exercise: Exercise }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon">
+        <Button
+          variant="outline"
+          size="icon"
+          className="hover:bg-green-50 hover:border-green-200 bg-transparent"
+        >
           <Eye className="w-4 h-4" />
         </Button>
       </DialogTrigger>
-
       <DialogContent className="min-w-[90vw] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-neutral-900 flex items-center gap-2">
-            <Target className="w-5 h-5 text-primary" />
-            {exercise.name}
+        <DialogHeader className="pb-6">
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <Target className="w-5 h-5 text-green-600" />
+              </div>
+              {exercise.name}
+            </DialogTitle>
             <Badge
-              className={
-                getDifficultyColor(exercise.load_profile) +
-                " border text-xs ml-auto"
-              }
+              className={`${getDifficultyColor(
+                exercise.load_profile
+              )} px-3 py-1 text-sm font-medium`}
             >
               {exercise.load_profile}
             </Badge>
-          </DialogTitle>
+          </div>
         </DialogHeader>
 
-        <Tabs defaultValue="overview" className="w-full mt-4">
-          <TabsList className="w-full grid grid-cols-3 bg-muted mb-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="anatomy">Anatomy</TabsTrigger>
-            <TabsTrigger value="technique">Technique</TabsTrigger>
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="w-full grid grid-cols-3 bg-gray-100 p-1 rounded-lg mb-6">
+            <TabsTrigger
+              value="overview"
+              className="data-[state=active]:bg-white data-[state=active]:text-green-600 data-[state=active]:shadow-sm"
+            >
+              Overview
+            </TabsTrigger>
+            <TabsTrigger
+              value="anatomy"
+              className="data-[state=active]:bg-white data-[state=active]:text-green-600 data-[state=active]:shadow-sm"
+            >
+              Anatomy
+            </TabsTrigger>
+            <TabsTrigger
+              value="technique"
+              className="data-[state=active]:bg-white data-[state=active]:text-green-600 data-[state=active]:shadow-sm"
+            >
+              Technique
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Zap className="w-5 h-5 text-primary" /> Fatigue Demands
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Fatigue Demands Card */}
+              <Card className="border border-gray-200">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
+                    <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <Zap className="w-4 h-4 text-gray-600" />
+                    </div>
+                    Fatigue Demands
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <ProgressIndicator
-                    value={exercise.cns_demand * 10}
-                    label="CNS Demand"
-                    max={10}
-                    field="cnsDemand"
-                  />
-                  <ProgressIndicator
-                    value={exercise.metabolic_demand * 10}
-                    label="Metabolic Demand"
-                    max={10}
-                    field="metabolicDemand"
-                  />
-                  <ProgressIndicator
-                    value={exercise.joint_stress * 10}
-                    label="Joint Stress"
-                    max={10}
-                    field="jointStress"
-                  />
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                        CNS Demand <InfoTooltip field="cnsDemand" />
+                      </span>
+                      <span className="text-sm font-semibold text-gray-900">
+                        {(exercise.cns_demand * 10).toFixed(1)}/10
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${exercise.cns_demand * 10}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                        Metabolic Demand <InfoTooltip field="metabolicDemand" />
+                      </span>
+                      <span className="text-sm font-semibold text-gray-900">
+                        {(exercise.metabolic_demand * 10).toFixed(1)}/10
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${exercise.metabolic_demand * 10}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                        Joint Stress <InfoTooltip field="jointStress" />
+                      </span>
+                      <span className="text-sm font-semibold text-gray-900">
+                        {(exercise.joint_stress * 10).toFixed(1)}/10
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${exercise.joint_stress * 10}%` }}
+                      />
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity className="w-5 h-5 text-primary" /> Metrics
+              {/* Metrics Card */}
+              <Card className="border border-gray-200">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
+                    <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <BarChart3 className="w-4 h-4 text-gray-600" />
+                    </div>
+                    Exercise Metrics
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex justify-between">
-                    <span className="text-sm font-medium flex items-center gap-1">
-                      <Clock className="w-4 h-4" /> Recovery Time{" "}
-                      <InfoTooltip field="recoveryDays" />
-                    </span>
-                    <span className="text-sm text-muted-foreground">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                        Recovery Time <InfoTooltip field="recoveryDays" />
+                      </span>
+                    </div>
+                    <span className="text-sm font-semibold text-gray-900">
                       {exercise.recovery_days} days
                     </span>
                   </div>
 
-                  <div className="flex justify-between">
-                    <span className="text-sm font-medium flex items-center gap-1">
-                      <Flame className="w-4 h-4" /> Calorie Burn{" "}
-                      <InfoTooltip field="baseCalorieCost" />
-                    </span>
-                    <span className="text-sm text-muted-foreground">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Flame className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                        Calorie Burn <InfoTooltip field="baseCalorieCost" />
+                      </span>
+                    </div>
+                    <span className="text-sm font-semibold text-gray-900">
                       {exercise.base_calorie_cost} kcal
                     </span>
                   </div>
 
-                  <div className="flex justify-between">
-                    <span className="text-sm font-medium flex items-center gap-1">
-                      {getEnergySystemIcon(exercise.energy_system)} Energy
-                      System <InfoTooltip field="energySystem" />
-                    </span>
-                    <span className="text-sm text-muted-foreground">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      {getEnergySystemIcon(exercise.energy_system)}
+                      <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                        Energy System <InfoTooltip field="energySystem" />
+                      </span>
+                    </div>
+                    <span className="text-sm font-semibold text-gray-900">
                       {exercise.energy_system}
                     </span>
                   </div>
@@ -168,16 +235,19 @@ export function ExerciseDetailModal({ exercise }: { exercise: Exercise }) {
             </div>
           </TabsContent>
 
-          <TabsContent value="anatomy">
+          <TabsContent value="anatomy" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
+              <Card className="border border-gray-200">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BoneIcon className="w-5 h-5 text-primary" /> Activation Map
+                  <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
+                    <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <BoneIcon className="w-4 h-4 text-gray-600" />
+                    </div>
+                    Muscle Activation
                   </CardTitle>
-                  <CardDescription>
-                    The activation map shows the percentage of the exercise that
-                    is used to activate each muscle.
+                  <CardDescription className="text-gray-600">
+                    Percentage breakdown of muscle activation during this
+                    exercise
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -188,68 +258,84 @@ export function ExerciseDetailModal({ exercise }: { exercise: Exercise }) {
               </Card>
 
               <div className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm font-medium">
+                <Card className="border border-gray-200">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-semibold text-gray-900">
                       Primary Muscles
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="flex flex-wrap gap-2">
-                    {primary.map((m, i) => (
-                      <Badge key={i} variant="secondary">
-                        {
-                          MUSCLE_DISPLAY_MAP[
-                            m as keyof typeof MUSCLE_DISPLAY_MAP
-                          ]
-                        }
-                      </Badge>
-                    ))}
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {primary.map((m, i) => (
+                        <Badge
+                          key={i}
+                          className="bg-green-100 text-green-800 border-green-200"
+                        >
+                          {
+                            MUSCLE_DISPLAY_MAP[
+                              m as keyof typeof MUSCLE_DISPLAY_MAP
+                            ]
+                          }
+                        </Badge>
+                      ))}
+                    </div>
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm font-medium">
+                <Card className="border border-gray-200">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-semibold text-gray-900">
                       Secondary Muscles
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="flex flex-wrap gap-2">
-                    {secondary.map((m, i) => (
-                      <Badge key={i} variant="outline">
-                        {
-                          MUSCLE_DISPLAY_MAP[
-                            m as keyof typeof MUSCLE_DISPLAY_MAP
-                          ]
-                        }
-                      </Badge>
-                    ))}
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {secondary.map((m, i) => (
+                        <Badge
+                          key={i}
+                          className="bg-gray-100 text-gray-700 border-gray-200"
+                        >
+                          {
+                            MUSCLE_DISPLAY_MAP[
+                              m as keyof typeof MUSCLE_DISPLAY_MAP
+                            ]
+                          }
+                        </Badge>
+                      ))}
+                    </div>
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm font-medium">
+                <Card className="border border-gray-200">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-semibold text-gray-900">
                       Movement Profile
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium flex items-center gap-1">
+                  <CardContent className="space-y-3">
+                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                      <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
                         Load Profile <InfoTooltip field="loadProfile" />
                       </span>
-                      <Badge variant="outline">{exercise.load_profile}</Badge>
+                      <Badge className="bg-gray-100 text-gray-700 border-gray-200">
+                        {exercise.load_profile}
+                      </Badge>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium flex items-center gap-1">
+                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                      <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
                         Force Curve <InfoTooltip field="forceCurve" />
                       </span>
-                      <Badge variant="outline">{exercise.force_curve}</Badge>
+                      <Badge className="bg-gray-100 text-gray-700 border-gray-200">
+                        {exercise.force_curve}
+                      </Badge>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium flex items-center gap-1">
+                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                      <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
                         ROM Rating <InfoTooltip field="romRating" />
                       </span>
-                      <Badge variant="outline">{exercise.rom_rating}</Badge>
+                      <Badge className="bg-gray-100 text-gray-700 border-gray-200">
+                        {exercise.rom_rating}
+                      </Badge>
                     </div>
                   </CardContent>
                 </Card>
@@ -257,72 +343,88 @@ export function ExerciseDetailModal({ exercise }: { exercise: Exercise }) {
             </div>
           </TabsContent>
 
-          <TabsContent value="technique">
+          <TabsContent value="technique" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
+              <Card className="border border-gray-200">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BookOpen className="w-5 h-5 text-primary" /> Technique Cues
+                  <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
+                    <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <BookOpen className="w-4 h-4 text-gray-600" />
+                    </div>
+                    Technique Cues
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="space-y-3">
                   {exercise.cues.map((cue, i) => (
                     <div
                       key={i}
-                      className="text-sm text-muted-foreground pl-2 border-l-2 border-muted"
+                      className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
                     >
-                      {cue}
+                      <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-xs font-semibold text-green-600">
+                          {i + 1}
+                        </span>
+                      </div>
+                      <span className="text-sm text-gray-700 leading-relaxed">
+                        {cue}
+                      </span>
                     </div>
                   ))}
                 </CardContent>
               </Card>
 
               <div className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm font-medium">
-                      Variations
+                <Card className="border border-gray-200">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-semibold text-gray-900">
+                      Exercise Variations
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="flex flex-wrap gap-2">
-                    {exercise.variations.map((v, i) => (
-                      <Badge key={i} variant="secondary" className="text-xs">
-                        {v}
-                      </Badge>
-                    ))}
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {exercise.variations.map((v, i) => (
+                        <Badge
+                          key={i}
+                          className="bg-gray-100 text-gray-700 border-gray-200 text-xs"
+                        >
+                          {v}
+                        </Badge>
+                      ))}
+                    </div>
                   </CardContent>
                 </Card>
 
                 {exercise.contra_indications.length > 0 && (
-                  <Card className="border border-orange-200 bg-orange-50">
-                    <CardHeader>
-                      <CardTitle className="text-sm text-orange-800 flex gap-2 items-center">
-                        <AlertTriangle className="w-4 h-4" /> Contraindications
+                  <Card className="border border-red-200 bg-red-50">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base text-red-800 flex gap-2 items-center">
+                        <AlertTriangle className="w-4 h-4" />
+                        Contraindications
                       </CardTitle>
-                      <CardDescription>
-                        Exercises may not be suitable under certain conditions
-                        or injuries. If any of the following apply, consult a
-                        coach or medical professional before performing.
+                      <CardDescription className="text-red-700">
+                        Consult a professional if any of these conditions apply
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="flex flex-wrap gap-2">
-                      {exercise.contra_indications.map((c, i) => (
-                        <Badge
-                          key={i}
-                          className="bg-orange-200 text-orange-800 text-xs"
-                        >
-                          {c}
-                        </Badge>
-                      ))}
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2">
+                        {exercise.contra_indications.map((c, i) => (
+                          <Badge
+                            key={i}
+                            className="bg-red-100 text-red-800 border-red-200 text-xs"
+                          >
+                            {c}
+                          </Badge>
+                        ))}
+                      </div>
                     </CardContent>
                   </Card>
                 )}
 
                 {exercise.external_links.length > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-sm flex items-center gap-2">
-                        <ExternalLink className="w-4 h-4 text-muted-foreground" />{" "}
+                  <Card className="border border-gray-200">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base flex items-center gap-2 text-gray-900">
+                        <ExternalLink className="w-4 h-4 text-gray-600" />
                         External Resources
                       </CardTitle>
                     </CardHeader>
@@ -333,8 +435,9 @@ export function ExerciseDetailModal({ exercise }: { exercise: Exercise }) {
                           href={link.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm text-primary underline hover:opacity-80"
+                          className="flex items-center gap-2 p-2 text-sm text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors"
                         >
+                          <ExternalLink className="w-3 h-3" />
                           {link.label}
                         </a>
                       ))}

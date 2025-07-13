@@ -1,13 +1,14 @@
 "use client";
 
 import { Logo } from "@/components/Logo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import ProgramPreview from "@/features/workout-builder/components/program/ProgramPreview";
 import { cn } from "@/lib/utils";
 import { Exercise } from "@/types/Exercise";
 import { Program } from "@/types/Workout";
 import { User } from "@supabase/supabase-js";
-import { Loader2, Save } from "lucide-react";
+import { HelpCircle, Loader2, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
 import AvatarDropdown from "./AvatarDropdown";
 import { ExerciseLibrary } from "./exercises/ExerciseLibrary";
@@ -83,6 +84,19 @@ export const WorkoutBuilderHeader = ({
         )}
 
         <div className="h-6 w-px bg-border mx-1 sm:mx-2" />
+
+        {!user && (
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => window.open("/help", "_blank")}
+            >
+              <HelpCircle className="w-4 h-4" />
+            </Button>
+            <ThemeToggle />
+          </>
+        )}
 
         <KeyboardShortcutsModal
           open={showShortcutsModal}

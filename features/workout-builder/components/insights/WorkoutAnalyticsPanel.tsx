@@ -15,12 +15,12 @@ import { WorkoutExerciseGroup } from "@/types/Workout";
 import { WorkoutSummaryStats } from "@/types/WorkoutSummary";
 import { BarChart2, Dumbbell } from "lucide-react";
 
+import MuscleHeatmap from "@/components/MuscleHeatmap";
 import { getAllExercises } from "@/services/exerciseService";
 import { Exercise } from "@/types/Exercise";
 import { useQuery } from "@tanstack/react-query";
 import { EnergySystemChart } from "./EnergySystemChart";
 import { FatigueBreakdown } from "./FatigueBreakdown";
-import { MuscleVolumeRow } from "./MuscleVolumeRow";
 import { RatioIndicator } from "./RatioIndicator";
 
 interface Props {
@@ -80,7 +80,7 @@ export const WorkoutAnalyticsPanel = ({
         </Button>
       </SheetTrigger>
 
-      <SheetContent className="space-y-6 overflow-y-auto w-full max-w-3xl min-w-1/2 md:min-w-1/3 p-6">
+      <SheetContent className="space-y-6 overflow-y-auto w-full max-w-3xl min-w-1/2 lg:min-w-1/4 p-6">
         <SheetHeader>
           <SheetTitle className="text-xl font-bold text-foreground">
             Day Summary
@@ -94,6 +94,15 @@ export const WorkoutAnalyticsPanel = ({
         <EnergySystemChart
           systemBreakdown={systemBreakdown}
           totalExercises={workout.length}
+        />
+
+        <MuscleHeatmap
+          workoutExercises={workout.flatMap((g) => g.exercises)}
+          exercises={exercises ?? []}
+          muscle_volumes={muscle_volumes}
+          muscle_set_counts={muscle_set_counts}
+          maxVolume={maxVolume}
+          workout={workout}
         />
 
         {/* Ratios */}
@@ -181,23 +190,6 @@ export const WorkoutAnalyticsPanel = ({
         </Card>
 
         {/* Muscle Volumes */}
-        <div className="space-y-2">
-          <h4 className="text-sm font-semibold text-muted-foreground">
-            Muscle Group Volumes
-          </h4>
-          {Object.entries(muscle_volumes).map(([muscle, volume], index) => (
-            <MuscleVolumeRow
-              key={muscle}
-              index={index}
-              muscleId={muscle}
-              setCount={muscle_set_counts[muscle]}
-              weightedVolume={volume}
-              maxVolume={maxVolume}
-              workout={workout.flatMap((g) => g.exercises)}
-              exercises={exercises ?? []}
-            />
-          ))}
-        </div>
 
         {/* Summary */}
         <Card className="bg-background rounded-xl">

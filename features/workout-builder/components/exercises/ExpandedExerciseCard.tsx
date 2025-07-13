@@ -121,8 +121,8 @@ export function ExpandedExerciseCard({
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-primary/10 border-2 border-primary/20 rounded-xl flex items-center justify-center">
-              <span className="text-sm font-bold text-primary">
+            <div className="w-10 h-10  bg-secondary rounded-xl flex items-center justify-center">
+              <span className="text-sm font-bold text-secondary-foreground">
                 {order + 1}
               </span>
             </div>
@@ -265,13 +265,15 @@ export function ExpandedExerciseCard({
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-[60px_1fr_1fr_1fr_60px] gap-4">
-                    <div className="space-y-2 col-span-1">
+                    <div className="col-span-1 flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground font-bold">
+                        {i + 1}
+                      </span>
                       <SetTypeSelector
                         setType={set.set_type}
                         onSetTypeChange={(type) =>
                           updateSet(i, "set_type", type)
                         }
-                        setIndex={i}
                       />
                     </div>
                     <div className="space-y-2">

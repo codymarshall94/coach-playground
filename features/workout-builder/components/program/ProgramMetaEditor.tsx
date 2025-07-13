@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Program, ProgramGoal } from "@/types/Workout";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Edit3, Settings2 } from "lucide-react";
+import { Check, Edit3 } from "lucide-react";
 import { useState } from "react";
 import { ProgramNotesModal } from "./ProgramNotesModal";
 import { ProgramSettingsModal } from "./ProgramSettingsModal";

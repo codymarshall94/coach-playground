@@ -180,18 +180,39 @@ export const templateConfigs: Program[] = [
                     0,
                     "Keep a flat back, core braced, and pull toward your belt line. Control the weight—don’t jerk. Use straps if grip limits intensity."
                   ),
+                ],
+              },
+              {
+                id: uuidv4(),
+                type: "standard",
+                order_num: 1,
+                exercises: [
                   buildExercise(
                     "lat_pulldown_cable",
                     "Lat Pulldown (Cable)",
                     1,
                     "Pull elbows down and in. Pause briefly at the bottom and stretch fully at the top. Slight lean back is OK, but no swinging."
                   ),
+                ],
+              },
+              {
+                id: uuidv4(),
+                type: "standard",
+                order_num: 2,
+                exercises: [
                   buildExercise(
                     "trx_row",
                     "TRX Row",
                     2,
                     "Bodyweight row to hit mid-back. Keep a neutral neck and row with scapular retraction. Slow the tempo to increase time under tension."
                   ),
+                ],
+              },
+              {
+                id: uuidv4(),
+                type: "standard",
+                order_num: 3,
+                exercises: [
                   buildExercise(
                     "curl_alt_db",
                     "Alternating DB Curl",
