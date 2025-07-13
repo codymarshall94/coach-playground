@@ -8,7 +8,7 @@ export default function WhatIsPrgrmPage() {
         manage your strength programs with intention.
       </p>
       <p>
-        Whether you're a beginner, athlete, or coach, PRGRM helps you move
+        Whether you&apos;re a beginner, athlete, or coach, PRGRM helps you move
         beyond messy spreadsheets and into a focused training experience.
       </p>
       <ul>

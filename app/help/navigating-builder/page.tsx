@@ -6,20 +6,22 @@ export default function NavigatingBuilder() {
       <h1>Navigating the PRGRM Builder</h1>
       <p>
         The PRGRM builder is designed to give you full control over your
-        training split. Here’s a quick tour of how the interface is organized.
+        training split. Here&apos;s a quick tour of how the interface is
+        organized.
       </p>
 
       <h2>1. Layout Overview</h2>
       <p>
-        When you enter the builder, you’ll see the layout split into three main
-        areas:
+        When you enter the builder, you&apos;ll see the layout split into three
+        main areas:
       </p>
       <ul>
         <li>
           <strong>Sidebar (Left):</strong> List of days in your program
         </li>
         <li>
-          <strong>Main Canvas (Center):</strong> The active day you're editing
+          <strong>Main Canvas (Center):</strong> The active day you&apos;re
+          editing
         </li>
         <li>
           <strong>Top Bar (Top Right):</strong> Global actions like saving and
@@ -49,7 +51,7 @@ export default function NavigatingBuilder() {
       />
 
       <h2>3. Main Canvas</h2>
-      <p>This area updates depending on the selected day. You’ll see:</p>
+      <p>This area updates depending on the selected day. You&apos;ll see:</p>
       <ul>
         <li>“Add First Exercise” if the day is empty</li>
         <li>Exercises and sets if already added</li>
@@ -64,7 +66,7 @@ export default function NavigatingBuilder() {
       />
 
       <h2>4. Top Bar Actions</h2>
-      <p>In the top-right corner, you’ll find buttons to:</p>
+      <p>In the top-right corner, you&apos;ll find buttons to:</p>
       <ul>
         <li>
           <strong>Save Draft:</strong> Save progress at any time
@@ -99,11 +101,11 @@ export default function NavigatingBuilder() {
       </ul>
 
       <p>
-        That’s it! You’re ready to start building. Head back to{" "}
+        That&apos;s it! You&apos;re ready to start building. Head back to{" "}
         <a href="/help/creating-your-first-workout">
           Creating Your First Workout
         </a>{" "}
-        if you’re just getting started.
+        if you&apos;re just getting started.
       </p>
     </div>
   );

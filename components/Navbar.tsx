@@ -5,15 +5,10 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import AvatarDropdown from "@/features/workout-builder/components/AvatarDropdown";
 import { createClient } from "@/utils/supabase/client";
 import type { User } from "@supabase/supabase-js";
-import { Dumbbell, Home, LogOut, Menu, Plus, UserIcon } from "lucide-react";
+import { LogOut, Menu, Plus, UserIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Logo } from "./Logo";
-
-const navigationItems = [
-  { href: "/", label: "Home", icon: Home },
-  { href: "/programs", label: "Programs", icon: Dumbbell },
-];
 
 export function Navbar({ user }: { user: User | null }) {
   const pathname = usePathname();
