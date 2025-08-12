@@ -37,15 +37,15 @@ export function FatigueBreakdown({
   ];
 
   const getLabelColor = (value: number) => {
-    if (value < 4) return "text-green-600";
-    if (value < 7) return "text-yellow-600";
-    return "text-destructive";
+    if (value < 4) return "text-load-low";
+    if (value < 7) return "text-load-medium";
+    return "text-load-high";
   };
 
   const getBarColor = (value: number) => {
-    if (value < 4) return "bg-green-500";
-    if (value < 7) return "bg-yellow-500";
-    return "bg-destructive";
+    if (value < 4) return "bg-load-low";
+    if (value < 7) return "bg-load-medium";
+    return "bg-load-high";
   };
 
   return (

@@ -1,45 +1,13 @@
-import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 export function Logo({
-  className,
-  size = "md",
-  showIcon = true,
+  width = 100,
+  height = 100,
 }: {
-  className?: string;
-  size?: "xxs" | "xs" | "sm" | "md" | "lg";
-  showIcon?: boolean;
+  width?: number;
+  height?: number;
 }) {
-  const sizeVariants = {
-    xxs: "text-sm md:text-base",
-    xs: "text-base md:text-lg",
-    sm: "text-2xl md:text-3xl",
-    md: "text-5xl md:text-6xl",
-    lg: "text-6xl md:text-7xl",
-  };
-
   return (
-    <div className={cn("flex items-center gap-2 group", className)}>
-      {showIcon && (
-        <svg
-          viewBox="0 0 100 100"
-          className="w-5 h-5 md:w-6 md:h-6 text-primary transition-colors group-hover:text-accent"
-          fill="currentColor"
-        >
-          <rect x="0" y="40" width="10" height="20" rx="1" />
-          <rect x="20" y="30" width="10" height="40" rx="1" />
-          <rect x="40" y="10" width="10" height="80" rx="1" />
-          <rect x="60" y="30" width="10" height="40" rx="1" />
-          <rect x="80" y="40" width="10" height="20" rx="1" />
-        </svg>
-      )}
-      <h1
-        className={`font-geist font-bold tracking-tight ${sizeVariants[size]}`}
-      >
-        <span className="text-foreground">PR</span>
-        <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent group-hover:from-accent group-hover:to-primary transition-colors duration-500">
-          GRM
-        </span>
-      </h1>
-    </div>
+    <Image src="/logo/logo.png" alt="Logo" width={width} height={height} />
   );
 }

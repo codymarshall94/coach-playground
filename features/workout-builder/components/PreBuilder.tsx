@@ -9,7 +9,7 @@ export default function PreBuilder() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen px-6 py-24 bg-background flex flex-col items-center justify-center">
+    <div className="min-h-screen px-6 py-24 bg flex flex-col items-center justify-center">
       <motion.h1
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}

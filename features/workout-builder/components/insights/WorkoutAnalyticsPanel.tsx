@@ -2,7 +2,7 @@
 
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Sheet,
   SheetContent,
@@ -13,7 +13,15 @@ import {
 import { CATEGORY_DISPLAY_MAP } from "@/constants/movement-category";
 import { WorkoutExerciseGroup } from "@/types/Workout";
 import { WorkoutSummaryStats } from "@/types/WorkoutSummary";
-import { BarChart2, Dumbbell } from "lucide-react";
+import {
+  ArrowDown,
+  BarChart2,
+  Clock,
+  Dumbbell,
+  Flame,
+  LayoutGrid,
+  ShieldAlert,
+} from "lucide-react";
 
 import MuscleHeatmap from "@/components/MuscleHeatmap";
 import { getAllExercises } from "@/services/exerciseService";
@@ -22,6 +30,15 @@ import { useQuery } from "@tanstack/react-query";
 import { EnergySystemChart } from "./EnergySystemChart";
 import { FatigueBreakdown } from "./FatigueBreakdown";
 import { RatioIndicator } from "./RatioIndicator";
+
+import { ArrowLeftRight, ArrowUpDown } from "lucide-react";
+
+export const MOVEMENT_ICONS = {
+  push_vertical: <ArrowUpDown className="w-4 h-4" />,
+  push_horizontal: <ArrowLeftRight className="w-4 h-4" />,
+  pull_horizontal: <ArrowLeftRight className="w-4 h-4 rotate-180" />,
+  squat: <ArrowDown className="w-4 h-4" />,
+};
 
 interface Props {
   workout: WorkoutExerciseGroup[];
@@ -80,12 +97,63 @@ export const WorkoutAnalyticsPanel = ({
         </Button>
       </SheetTrigger>
 
-      <SheetContent className="space-y-6 overflow-y-auto w-full max-w-3xl min-w-1/2 lg:min-w-1/4 p-6">
+      <SheetContent className="space-y-6 overflow-y-auto w-full  sm:min-w-1/3 md:min-w-1/2 lg:min-w-1/2 xl:min-w-1/3 p-6">
         <SheetHeader>
           <SheetTitle className="text-xl font-bold text-foreground">
             Day Summary
           </SheetTitle>
         </SheetHeader>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <LayoutGrid className="w-5 h-5 text-primary" />
+              Session Overview
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-y-4 text-sm text-muted-foreground">
+            <div>
+              <div className="font-medium flex items-center gap-2">
+                <Dumbbell className="w-4 h-4" />
+                Workout Type
+              </div>
+              <div className="text-foreground capitalize">{workout_type}</div>
+            </div>
+            <div>
+              <div className="font-medium flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4" />
+                Injury Risk
+              </div>
+              <div
+                className={`inline-block px-2 py-1 rounded-md text-white text-xs ${
+                  injury_risk === "High"
+                    ? "bg-load-high"
+                    : injury_risk === "Moderate"
+                    ? "bg-load-medium"
+                    : "bg-load-low"
+                }`}
+              >
+                {injury_risk}
+              </div>
+            </div>
+            <div>
+              <div className="font-medium flex items-center gap-2">
+                <Flame className="w-4 h-4" />
+                Fatigue Score
+              </div>
+              <div className="text-foreground">{total_fatigue.toFixed(1)}</div>
+            </div>
+            <div>
+              <div className="font-medium flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                Avg Recovery Time
+              </div>
+              <div className="text-foreground">
+                {avgRecovery.toFixed(2)} days
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Fatigue */}
         <FatigueBreakdown avgCNS={avgCNS} avgMet={avgMet} avgJoint={avgJoint} />
@@ -134,84 +202,36 @@ export const WorkoutAnalyticsPanel = ({
           </CardContent>
         </Card>
 
-        {/* Risk + Meta */}
         <Card>
-          <CardContent className="p-4 grid grid-cols-2 gap-4 text-sm text-muted-foreground">
-            <div>
-              <div className="font-medium">Workout Type</div>
-              <div>{workout_type}</div>
-            </div>
-            <div>
-              <div className="font-medium">Injury Risk</div>
-              <div
-                className={`inline-block px-2 py-1 rounded-md text-white text-xs ${
-                  injury_risk === "High"
-                    ? "bg-destructive"
-                    : injury_risk === "Moderate"
-                    ? "bg-yellow-500"
-                    : "bg-green-500"
-                }`}
-              >
-                {injury_risk}
-              </div>
-            </div>
-            <div>
-              <div className="font-medium">Avg Recovery Time</div>
-              <div>{avgRecovery.toFixed(2)} days</div>
-            </div>
-            <div>
-              <div className="font-medium">Fatigue Score</div>
-              <div>{total_fatigue.toFixed(1)}</div>
-            </div>
-          </CardContent>
-        </Card>
+          <CardHeader>
+            <CardTitle>Movement Pattern</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-3">
+              {Object.entries(movementFocus).map(([cat, count]) => {
+                const label =
+                  CATEGORY_DISPLAY_MAP[
+                    cat as keyof typeof CATEGORY_DISPLAY_MAP
+                  ];
+                const icon = MOVEMENT_ICONS[cat as keyof typeof MOVEMENT_ICONS]; // define this map
 
-        {/* Movement Patterns */}
-        <Card>
-          <CardContent className="p-4">
-            <h4 className="text-sm font-semibold text-muted-foreground mb-2">
-              Movement Patterns
-            </h4>
-            <ul className="text-sm space-y-1 text-muted-foreground">
-              {Object.entries(movementFocus).map(([cat, count]) => (
-                <li key={cat} className="flex justify-between">
-                  <span className="capitalize">
-                    {
-                      CATEGORY_DISPLAY_MAP[
-                        cat as keyof typeof CATEGORY_DISPLAY_MAP
-                      ]
-                    }
-                  </span>
-                  <span className="font-medium">{count}x</span>
-                </li>
-              ))}
+                return (
+                  <li key={cat} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+                        {icon}
+                      </div>
+                      <span className="capitalize text-sm font-medium text-foreground">
+                        {label}
+                      </span>
+                    </div>
+                    <span className="text-sm font-semibold text-muted-foreground">
+                      {count}x
+                    </span>
+                  </li>
+                );
+              })}
             </ul>
-          </CardContent>
-        </Card>
-
-        {/* Muscle Volumes */}
-
-        {/* Summary */}
-        <Card className="bg-background rounded-xl">
-          <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4 p-5 text-center text-sm text-muted-foreground">
-            <div>
-              <div className="text-lg font-bold text-foreground">
-                {workout.flatMap((g) => g.exercises).length}
-              </div>
-              <div>Total Exercises</div>
-            </div>
-            <div>
-              <div className="text-lg font-bold text-foreground">
-                {top_muscles.length}
-              </div>
-              <div>Muscles Targeted</div>
-            </div>
-            <div>
-              <div className="text-lg font-bold text-foreground">
-                {Object.keys(systemBreakdown).length}
-              </div>
-              <div>Energy Systems</div>
-            </div>
           </CardContent>
         </Card>
       </SheetContent>

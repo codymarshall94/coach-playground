@@ -1,10 +1,11 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { EnergySystem } from "@/types/Exercise";
 import { Flame, Heart, Zap } from "lucide-react";
 
 interface EnergySystemChartProps {
-  systemBreakdown: Record<string, number>;
+  systemBreakdown: Record<EnergySystem, number>;
   totalExercises: number;
 }
 
@@ -12,62 +13,73 @@ export function EnergySystemChart({
   systemBreakdown,
   totalExercises,
 }: EnergySystemChartProps) {
-  const getSystemIcon = (system: string) => {
+  const getSystemIcon = (system: EnergySystem) => {
     switch (system.toLowerCase()) {
-      case "aerobic":
-        return <Heart className="w-4 h-4 text-blue-500" />;
-      case "anaerobic":
-        return <Zap className="w-4 h-4 text-destructive" />;
+      case "atp-cp":
+        return <Heart className="w-4 h-4 text-load-low" />;
+      case "glycolytic":
+        return <Zap className="w-4 h-4 text-load-medium" />;
+      case "oxidative":
+        return <Flame className="w-4 h-4 text-load-high" />;
       default:
-        return <Flame className="w-4 h-4 text-muted-foreground" />;
+        return <Flame className="w-4 h-4 text-load-high" />;
     }
   };
 
-  const getSystemBar = (system: string) => {
+  const getSystemBar = (system: EnergySystem) => {
     switch (system.toLowerCase()) {
-      case "aerobic":
-        return "bg-blue-500";
-      case "anaerobic":
-        return "bg-destructive";
+      case "atp-cp":
+        return "bg-load-low";
+      case "glycolytic":
+        return "bg-load-medium";
+      case "oxidative":
+        return "bg-load-high";
       default:
         return "bg-muted-foreground";
     }
   };
 
   return (
-    <Card>
+    <Card className="space-y-2">
       <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Flame className="w-5 h-5 text-orange-600" />
-          Energy System Focus
-        </CardTitle>
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <Flame className="w-5 h-5 text-orange-600" />
+            <span className="text-lg font-semibold">Energy System Focus</span>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {Object.entries(systemBreakdown).map(([system, count]) => {
-          const percent = (count / totalExercises) * 100;
+      <CardContent>
+        <div className="relative h-3 rounded-full overflow-hidden flex bg-muted">
+          {Object.entries(systemBreakdown).map(([system, count]) => {
+            const percent = (count / totalExercises) * 100;
+            return (
+              <div
+                key={system}
+                className={`${getSystemBar(system as EnergySystem)} h-full`}
+                style={{ width: `${percent}%` }}
+              />
+            );
+          })}
+        </div>
 
-          return (
-            <div key={system} className="space-y-1">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  {getSystemIcon(system)}
-                  <span className="capitalize font-medium">{system}</span>
-                </div>
-                <span className="text-sm font-semibold text-muted-foreground">
-                  {count}x ({percent.toFixed(0)}%)
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm pt-1">
+          {Object.entries(systemBreakdown).map(([system, count]) => {
+            const percent = (count / totalExercises) * 100;
+            return (
+              <div
+                key={system}
+                className="flex items-center gap-2 text-muted-foreground"
+              >
+                {getSystemIcon(system as EnergySystem)}
+                <span className="capitalize font-medium">{system}</span>
+                <span className="text-xs">
+                  ({count}x, {percent.toFixed(0)}%)
                 </span>
               </div>
-              <div className="relative h-2 bg-muted rounded-full overflow-hidden">
-                <div
-                  className={`h-full transition-all duration-500 ${getSystemBar(
-                    system
-                  )}`}
-                  style={{ width: `${percent}%` }}
-                />
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </CardContent>
     </Card>
   );

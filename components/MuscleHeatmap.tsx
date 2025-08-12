@@ -110,7 +110,7 @@ export default function MuscleHeatmap({
 
   return (
     <Card className="w-full  mx-auto">
-      <CardHeader className="text-center flex flex-row justify-between">
+      <CardHeader className="text-center flex flex-col gap-2">
         <CardTitle className="text-lg flex items-center gap-2">
           <UserCheck className="h-5 w-5 text-blue-500" />
           Muscle Activation
@@ -125,7 +125,7 @@ export default function MuscleHeatmap({
               className="flex items-center gap-2"
             >
               <User className="h-4 w-4" />
-              Front View ({getFrontMuscleCount(workoutExercises)})
+              Front ({getFrontMuscleCount(workoutExercises)})
             </Button>
             <Button
               variant={viewType === "posterior" ? "default" : "ghost"}
@@ -134,16 +134,13 @@ export default function MuscleHeatmap({
               className="flex items-center gap-2"
             >
               <RotateCcw className="h-4 w-4" />
-              Back View ({getBackMuscleCount(workoutExercises)})
+              Back ({getBackMuscleCount(workoutExercises)})
             </Button>
           </div>
         </div>
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {/* View Toggle */}
-
-        {/* Model Display */}
         <div className="flex justify-center">
           <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-xl p-8 shadow-inner">
             <Model
@@ -155,7 +152,6 @@ export default function MuscleHeatmap({
           </div>
         </div>
 
-        {/* Intensity Legend */}
         <div className="space-y-3">
           <h3 className="font-semibold text-center">Intensity Scale</h3>
           <div className="flex justify-center items-center gap-2">

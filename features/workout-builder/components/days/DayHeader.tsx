@@ -72,7 +72,7 @@ export function DayHeader({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className={cn(
-        "sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b transition-all duration-200 mb-4"
+        "sticky top-0 z-20  backdrop-blur-md border-b transition-all duration-200 mb-4"
       )}
     >
       <div className="container mx-auto px-4 py-3">

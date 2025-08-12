@@ -288,6 +288,7 @@ export const WorkoutBuilder = ({
           >
             <div className="w-full max-w-4xl p-4 mx-auto relative">
               <DayHeader
+                day={currentDays[activeDayIndex]}
                 program={program}
                 activeBlockIndex={activeBlockIndex}
                 activeDayIndex={activeDayIndex}

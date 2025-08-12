@@ -45,7 +45,7 @@ export const WorkoutBuilderHeader = ({
 
   return (
     <header className="sticky top-0 z-30 bg-background border-b border-border px-6 py-3 flex justify-between items-center shadow-sm">
-      <Logo size="xs" showIcon />
+      <Logo width={100} height={100} />
 
       <div className="flex items-center gap-1 sm:gap-2">
         <Button

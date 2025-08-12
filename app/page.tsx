@@ -1,280 +1,151 @@
 "use client";
 
+import HighlightedText from "@/components/HighlightedText";
 import { Logo } from "@/components/Logo";
-import { Button } from "@/components/ui/button";
-import { motion, useScroll, useTransform, Variants } from "framer-motion";
+import { Separator } from "@/components/ui/separator";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
-export default function Home() {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const { scrollY } = useScroll();
-  const y1 = useTransform(scrollY, [0, 300], [0, -50]);
-  const y2 = useTransform(scrollY, [0, 300], [0, -100]);
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({
-        x: (e.clientX / window.innerWidth) * 100,
-        y: (e.clientY / window.innerHeight) * 100,
-      });
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
-
-  const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  };
-
-  const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6, ease: "easeOut" },
-    },
-  };
-
-  const floatingVariants: Variants = {
-    animate: {
-      y: [-10, 10, -10],
-      rotate: [0, 5, -5, 0],
-      transition: {
-        duration: 6,
-        repeat: Number.POSITIVE_INFINITY,
-        ease: "easeInOut",
-      },
-    },
-  };
-
+export default function Page() {
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1.5 }}
-        className="absolute inset-0 pointer-events-none"
-      >
-        <div
-          className="absolute inset-0 opacity-30"
-          style={{
-            background: `radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(139, 92, 246, 0.15) 0%, transparent 50%)`,
-          }}
-        />
-
-        <motion.div
-          style={{ y: y1 }}
-          className="absolute top-20 left-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl"
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.6, 0.3],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "easeInOut",
-          }}
-        />
-        <motion.div
-          style={{ y: y2 }}
-          className="absolute top-1/2 right-20 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl"
-          animate={{
-            scale: [1, 0.8, 1.1, 1],
-            x: [0, 20, -10, 0],
-          }}
-          transition={{
-            duration: 10,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "easeInOut",
-          }}
-        />
-        <motion.div
-          className="absolute bottom-32 left-1/3 w-52 h-52 bg-emerald-500/10 rounded-full blur-2xl"
-          animate={{
-            scale: [1, 1.3, 0.9, 1],
-            opacity: [0.2, 0.5, 0.2],
-          }}
-          transition={{
-            duration: 12,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "easeInOut",
-          }}
-        />
-
-        <motion.div
-          variants={floatingVariants}
-          animate="animate"
-          className="absolute top-1/4 left-1/4 w-4 h-4 bg-primary/20 rotate-45"
-        />
-        <motion.div
-          variants={floatingVariants}
-          animate="animate"
-          style={{ animationDelay: "2s" }}
-          className="absolute top-3/4 right-1/3 w-3 h-3 bg-purple-500/20 rounded-full"
-        />
-        <motion.div
-          variants={floatingVariants}
-          animate="animate"
-          style={{ animationDelay: "4s" }}
-          className="absolute top-1/2 left-3/4 w-2 h-8 bg-emerald-500/20"
-        />
-      </motion.div>
-
-      <section className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6 text-center">
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="max-w-4xl mx-auto flex flex-col items-center justify-center"
-        >
-          <Logo size="lg" className="mb-6" />
-
-          <motion.h1
-            variants={itemVariants}
-            className="text-5xl md:text-7xl font-extrabold tracking-tight text-foreground mb-6 leading-tight"
+    <main className="min-h-screen bg-white text-black space-y-10 py-10">
+      {/* NAV */}
+      <nav className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
+        <div className="flex items-center gap-3">
+          <Logo width={100} height={100} />
+        </div>
+        <div className="flex items-center gap-3 text-sm">
+          <Link
+            href="/login"
+            className="rounded-full bg-black px-4 py-2 text-white font-semibold"
           >
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-            >
-              Build Smarter.
-            </motion.span>
-            <br />
-            <motion.span
-              className="bg-gradient-to-r from-primary via-purple-500 to-emerald-500 bg-clip-text text-transparent bg-300% animate-gradient"
-              initial={{ opacity: 0, backgroundPosition: "0% 50%" }}
-              animate={{
-                opacity: 1,
-                backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-              }}
-              transition={{
-                opacity: { duration: 0.8, delay: 0.7 },
-                backgroundPosition: {
-                  duration: 5,
-                  repeat: Number.POSITIVE_INFINITY,
-                  ease: "linear",
-                },
-              }}
-            >
-              Train Intelligently.
-            </motion.span>
-          </motion.h1>
+            Sign In
+          </Link>
+        </div>
+      </nav>
 
-          <motion.p
-            variants={itemVariants}
-            className="text-muted-foreground text-lg md:text-xl max-w-3xl mx-auto mb-12 leading-relaxed"
-          >
-            Build and deliver high-quality training programs your clients will
-            love — with
-            <motion.span
-              className="text-primary font-semibold"
-              whileHover={{ scale: 1.05 }}
-              transition={{ type: "spring", stiffness: 300 }}
+      {/* HERO */}
+      <section className="mx-auto mt-6 flex w-full max-w-6xl flex-col items-start gap-6 px-6 h-screen pt-10 md:pt-16">
+        <div className="flex flex-col gap-6">
+          <h1 className="relative text-4xl font-extrabold leading-[1.05] tracking-[-0.02em] md:text-7xl">
+            <span className="block">
+              Build{" "}
+              <HighlightedText color="emerald" skew={1}>
+                Smarter.
+              </HighlightedText>
+            </span>
+            <span className="relative mt-2 block ">
+              Train{" "}
+              <HighlightedText color="emerald" skew={1}>
+                Intelligently
+              </HighlightedText>
+            </span>
+          </h1>
+          <p className="max-w-3xl text-lg text-neutral-700 md:text-xl">
+            Design and structure advanced training programs with clarity, speed,
+            and precision plus built‑in metrics and export tools.
+          </p>
+          <div className="flex flex-wrap items-center gap-4">
+            <Link
+              href="/programs/new"
+              className="group inline-flex items-center rounded-full bg-black px-5 py-3 text-white"
             >
-              {" "}
-              clarity
-            </motion.span>
-            ,
-            <motion.span
-              className="text-purple-500 font-semibold"
-              whileHover={{ scale: 1.05 }}
-              transition={{ type: "spring", stiffness: 300 }}
-            >
-              {" "}
-              speed
-            </motion.span>
-            , and
-            <motion.span
-              className="text-emerald-500 font-semibold"
-              whileHover={{ scale: 1.05 }}
-              transition={{ type: "spring", stiffness: 300 }}
-            >
-              {" "}
-              precision
-            </motion.span>
-            — all in one modern, flexible builder.
-          </motion.p>
-
-          <motion.div
-            variants={itemVariants}
-            className="flex flex-col sm:flex-row gap-6 items-center justify-center"
-          >
-            <Link href="/programs/new">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <Button
-                  size="lg"
-                  className="text-base px-8 py-4 bg-gradient-to-r from-primary to-purple-500 hover:from-primary/80 hover:to-purple-500/80 shadow-lg hover:shadow-xl transition-all relative overflow-hidden group"
-                >
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent"
-                    initial={{ x: "-100%" }}
-                    whileHover={{ x: "100%" }}
-                    transition={{ duration: 0.6 }}
-                  />
-                  <span className="relative z-10 flex items-center">
-                    Create a Program
-                    <motion.div
-                      animate={{ x: [0, 5, 0] }}
-                      transition={{
-                        duration: 1.5,
-                        repeat: Number.POSITIVE_INFINITY,
-                      }}
-                    >
-                      <ArrowRight className="ml-2 w-4 h-4" />
-                    </motion.div>
-                  </span>
-                </Button>
-              </motion.div>
+              Start Building
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
-
-            <motion.div
-              className="flex items-center gap-2 text-sm text-muted-foreground"
-              whileHover={{ scale: 1.02 }}
-            >
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-                className="w-2 h-2 bg-emerald-500 rounded-full"
-              />
-              No login required — just start building.
-            </motion.div>
-          </motion.div>
-        </motion.div>
+            <span className="text-sm text-neutral-500">
+              No login required — just start creating.
+            </span>
+          </div>
+        </div>
       </section>
 
-      <style jsx>{`
-        @keyframes gradient {
-          0%,
-          100% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-        }
-        .animate-gradient {
-          background-size: 300% 300%;
-          animation: gradient 5s ease infinite;
-        }
-        .bg-300\\% {
-          background-size: 300% 300%;
-        }
-      `}</style>
-    </div>
+      {/* FEATURES OVERVIEW */}
+      <section id="features" className="mx-auto w-full max-w-6xl px-6 py-24">
+        <h2 className="mb-8 text-4xl font-extrabold tracking-[-0.02em] md:text-5xl">
+          Go Beyond Spreadsheets
+        </h2>
+        <ul className="grid gap-4 text-neutral-700 md:grid-cols-2">
+          <li>
+            📊 Total Estimated Workout Volume — auto‑calculated and visualized
+          </li>
+          <li>🔥 Muscles Targeted per Day — heatmaps and tag lists</li>
+          <li>⚖ Weekly Muscle Balance Overview — avoid training imbalances</li>
+          <li>
+            ⏱ Workout Duration Estimates — per day, block, and total program
+          </li>
+          <li>
+            📈 Volume Over Time & Intensity Distribution — trends and histograms
+          </li>
+          <li>🗂 Program Duration & Structure — blocks, weeks, days/week</li>
+          <li>📝 Custom Notes & Cues — per day or per exercise</li>
+          <li>🔁 Superset / Cluster Set support</li>
+          <li>🚨 Recovery Gaps or Overlap Warnings</li>
+          <li>🧭 Exercise Category Coverage — e.g., “No vertical pulls yet”</li>
+          <li>📄 Export to PDF / Notion / CSV for easy sharing</li>
+        </ul>
+      </section>
+
+      <Separator className="my-10" />
+
+      {/* INSIGHTS SECTION */}
+      <section id="insights" className="mx-auto w-full max-w-6xl px-6 py-24">
+        <h2 className="mb-8 text-4xl font-extrabold tracking-[-0.02em] md:text-5xl">
+          Deep Insights, Zero Guesswork
+        </h2>
+
+        <p className="mb-6 max-w-3xl text-neutral-700">
+          PRGRM doesn’t just store your workouts — it analyzes them. Get clear
+          visuals on total volume, intensity balance, weekly muscle frequency,
+          recovery timelines, and more.
+        </p>
+        <div className="grid gap-6 md:grid-cols-3">
+          <div className="rounded-2xl border p-6">
+            <h3 className="mb-2 text-xl font-semibold">Muscle Heatmaps</h3>
+            <p className="text-sm text-neutral-600">
+              See which muscles are hit and how often each week.
+            </p>
+          </div>
+          <div className="rounded-2xl border p-6">
+            <h3 className="mb-2 text-xl font-semibold">Recovery Timeline</h3>
+            <p className="text-sm text-neutral-600">
+              e.g., “Quads hit 3× this week. Recovery suggested.”
+            </p>
+          </div>
+          <div className="rounded-2xl border p-6">
+            <h3 className="mb-2 text-xl font-semibold">
+              Compare Weeks / Blocks
+            </h3>
+            <p className="text-sm text-neutral-600">
+              See changes in volume, intensity, and structure across phases.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section id="cta" className="mx-auto w-full max-w-6xl px-6 ">
+        <div className="rounded-3xl bg-neutral-100 p-10 text-center py-24 ">
+          <h2 className="mb-4 text-4xl font-extrabold tracking-[-0.02em] md:text-5xl mb-10">
+            Build Better Programs, Faster
+          </h2>
+          <div className="mb-10 flex flex-wrap items-center justify-center gap-6 text-sm text-neutral-600">
+            <span>✓ Create Advanced Programs</span>
+            <span>✓ Save & Reuse Templates</span>
+            <span>✓ Export to PDF / CSV</span>
+          </div>
+          <Link
+            href="/programs/new"
+            className="inline-flex items-center rounded-full bg-black px-6 py-3 text-white"
+          >
+            Create Your First Program
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
+          <p className="mt-3 text-xs text-neutral-500">
+            It’s free, quick and simple
+          </p>
+        </div>
+      </section>
+    </main>
   );
 }

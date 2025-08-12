@@ -32,7 +32,7 @@ export function Navbar({ user }: { user: User | null }) {
           href="/"
           className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
         >
-          <Logo size="xs" showIcon />
+          <Logo />
         </Link>
 
         <div className="hidden md:flex items-center space-x-3">
@@ -64,7 +64,7 @@ export function Navbar({ user }: { user: User | null }) {
           <SheetContent side="right" className="w-80">
             <div className="flex flex-col h-full">
               <div className="flex items-center space-x-2 pb-6">
-                <Logo size="xs" showIcon />
+                <Logo />
               </div>
 
               <nav className="flex flex-col space-y-1 flex-1">

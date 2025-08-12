@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { HelpCircle, Keyboard } from "lucide-react";
+import { Keyboard } from "lucide-react";
 import { useEffect } from "react";
 
 interface ShortcutItem {
@@ -32,6 +32,11 @@ const shortcuts: ShortcutItem[] = [
   {
     keys: ["L"],
     description: "Open Exercise Library",
+    category: "Actions",
+  },
+  {
+    keys: ["E"],
+    description: "Toggle exercise group collapse",
     category: "Actions",
   },
   {

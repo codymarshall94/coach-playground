@@ -37,7 +37,7 @@ const countExercisesForMuscle = (
   return uniqueExerciseIds.size;
 };
 
-export const MuscleVolumeRow: React.FC<MuscleVolumeRowProps> = ({
+export const MuscleVolumeRow = ({
   index,
   muscleId,
   setCount,
@@ -45,7 +45,7 @@ export const MuscleVolumeRow: React.FC<MuscleVolumeRowProps> = ({
   maxVolume,
   workout,
   exercises,
-}) => {
+}: MuscleVolumeRowProps) => {
   const displayName =
     MUSCLE_DISPLAY_MAP[muscleId as keyof typeof MUSCLE_DISPLAY_MAP];
   const percent = (weightedVolume / maxVolume) * 100;
@@ -56,11 +56,7 @@ export const MuscleVolumeRow: React.FC<MuscleVolumeRowProps> = ({
     <div className="space-y-1">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Badge
-            className={`text-white ${
-              index + 1 > 3 ? "bg-muted" : "bg-muted-foreground"
-            }`}
-          >
+          <Badge className={` bg-secondary text-secondary-foreground  `}>
             {index + 1}
           </Badge>
           <span className="capitalize text-muted-foreground">
@@ -77,7 +73,7 @@ export const MuscleVolumeRow: React.FC<MuscleVolumeRowProps> = ({
               </span>
             </TooltipTrigger>
             <TooltipContent className="max-w-[240px] text-xs">
-              Weighted based on the muscle’s involvement in each set. Lower
+              Weighted based on the muscle's involvement in each set. Lower
               values mean the muscle plays more of a support role.
               <br />
               <br />
@@ -90,7 +86,7 @@ export const MuscleVolumeRow: React.FC<MuscleVolumeRowProps> = ({
 
       <div className="w-full bg-muted rounded h-1 overflow-hidden">
         <div
-          className="bg-muted-foreground h-full transition-all"
+          className="bg-primary h-full transition-all"
           style={{ width: `${percent}%` }}
         />
       </div>

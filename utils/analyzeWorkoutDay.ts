@@ -1,6 +1,11 @@
 import { MUSCLES } from "@/constants/muscles";
-import { Exercise } from "@/types/Exercise";
-import { WorkoutExerciseGroup } from "@/types/Workout";
+import {
+  EnergySystem,
+  Exercise,
+  ExerciseCategory,
+  Muscle,
+} from "@/types/Exercise";
+import { WorkoutExerciseGroup, WorkoutTypes } from "@/types/Workout";
 import { WorkoutSummaryStats } from "@/types/WorkoutSummary";
 
 // ───────────────────────────────────────────────
@@ -16,11 +21,11 @@ export interface WorkoutAnalyticsSummary extends WorkoutSummaryStats {
   total_sets: number;
   total_fatigue: number;
   top_muscles: [string, number][];
-  muscle_volumes: Record<string, number>;
-  muscle_set_counts: Record<string, number>;
-  category_counts: Record<string, number>;
-  energy_system_counts: Record<string, number>;
-  workout_type: string;
+  muscle_volumes: Record<Muscle, number>;
+  muscle_set_counts: Record<Muscle, number>;
+  category_counts: Record<ExerciseCategory, number>;
+  energy_system_counts: Record<EnergySystem, number>;
+  workout_type: WorkoutTypes;
   injury_risk: "Low" | "Moderate" | "High";
   push_pull_ratio?: number;
   lower_upper_ratio?: number;
@@ -55,8 +60,8 @@ function calculateLowerUpperRatio(upper: number, lower: number): number {
 
 function determineWorkoutType(
   regionCount: Record<"upper" | "lower" | "core", number>,
-  categoryCounts: Record<string, number>
-): string {
+  categoryCounts: Record<ExerciseCategory, number>
+): WorkoutTypes {
   const regionLabel =
     regionCount.upper > regionCount.lower * REGION_DOMINANCE_THRESHOLD
       ? "Upper"
@@ -66,13 +71,7 @@ function determineWorkoutType(
       ? "Full Body"
       : "Mixed";
 
-  const dominantCategory =
-    Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ||
-    "Mixed";
-
-  return `${regionLabel} ${dominantCategory
-    .charAt(0)
-    .toUpperCase()}${dominantCategory.slice(1)}`;
+  return regionLabel as WorkoutTypes;
 }
 
 // ───────────────────────────────────────────────
