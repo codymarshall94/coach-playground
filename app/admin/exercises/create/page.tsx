@@ -27,6 +27,7 @@ import type {
   ExerciseCategory,
   MovementPlane,
 } from "@/types/Exercise";
+import type { LucideIcon } from "lucide-react";
 import {
   Activity,
   AlertCircle,
@@ -236,7 +237,7 @@ function MetricCard({
 }: {
   title: string;
   value: string;
-  icon: any;
+  icon: LucideIcon;
   description: string;
   percentage: number;
 }) {
@@ -259,7 +260,10 @@ export default function CreateExerciseAdminPage() {
   const [exercise, setExercise] = useState<Partial<Exercise>>(defaultExercise);
   const [isValid, setIsValid] = useState(false);
 
-  const handleChange = (key: keyof Exercise, value: any) => {
+  const handleChange = (
+    key: keyof Exercise,
+    value: Exercise[keyof Exercise] | Exercise[keyof Exercise][]
+  ) => {
     const updated = { ...exercise, [key]: value };
     const derived = calculateDerivedMetrics(updated);
     const finalExercise = { ...updated, ...derived };
