@@ -52,7 +52,7 @@ export const WorkoutBuilderHeader = ({
           onClick={handleSave}
           disabled={isSaving}
           className={cn(
-            "h-9 sm:h-10 flex items-center justify-center gap-2 px-4 transition-all duration-200",
+            "h-9 sm:h-10 flex items-center justify-center gap-2 px-4 transition-all duration-200 bg-brand text-brand-foreground hover:bg-brand/90",
             isSaving && " cursor-wait"
           )}
         >

@@ -66,7 +66,7 @@ export const ETLDisplay = ({
     <Tooltip>
       <TooltipTrigger asChild>
         <div className="flex items-center gap-1">
-          <Weight className="w-4 h-4 text-muted-foreground" />
+          <Weight className="w-3 h-3 text-muted-foreground" />
           <span
             className={`flex items-center gap-1 cursor-help ${className} text-muted-foreground`}
           >

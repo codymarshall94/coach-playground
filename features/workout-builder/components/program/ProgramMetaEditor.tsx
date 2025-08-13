@@ -78,7 +78,7 @@ export const ProgramMetaEditor = ({
               variant="ghost"
               size="icon"
               onClick={handleSave}
-              className="text-green-600 hover:text-green-700"
+              className="text-brand hover:text-brand/90"
             >
               <Check className="w-4 h-4" />
             </Button>

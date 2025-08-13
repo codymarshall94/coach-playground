@@ -25,7 +25,7 @@ export default function AvatarDropdown() {
         <div className="relative cursor-pointer">
           <Avatar className="w-10 h-10">
             <AvatarImage src={profile?.avatar_url || "/placeholder.svg"} />
-            <AvatarFallback className="text-xl bg-gradient-to-br from-blue-400 via-purple-400 to-green-400 text-foreground">
+            <AvatarFallback className="text-xl bg-gradient-to-br from-brand to-brand-foreground text-foreground">
               {profile?.full_name?.[0] ?? "U"}
             </AvatarFallback>
           </Avatar>
@@ -43,7 +43,7 @@ export default function AvatarDropdown() {
           <div className="flex items-center gap-4 mb-6">
             <Avatar className="w-16 h-16">
               <AvatarImage src={profile?.avatar_url || "/placeholder.svg"} />
-              <AvatarFallback className="text-xl bg-gradient-to-br from-blue-400 via-purple-400 to-green-400 text-foreground">
+              <AvatarFallback className="text-xl bg-gradient-to-br from-brand to-brand-foreground text-foreground">
                 {profile?.full_name?.[0] ?? "U"}
               </AvatarFallback>
             </Avatar>

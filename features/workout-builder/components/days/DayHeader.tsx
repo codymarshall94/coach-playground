@@ -7,11 +7,11 @@ import {
   Clock,
   MoreHorizontal,
   Trash2,
+  Weight,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { NotesPopover } from "@/components/NotesPopover";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -112,18 +112,18 @@ export function DayHeader({
               isEditingName={isEditingName}
               setIsEditingName={setIsEditingName}
             />
-
-            <ETLDisplay normalizedETL={normalizedETL_avg} />
           </div>
 
           <div className="flex items-center gap-3 type-secondary">
+            <ETLDisplay normalizedETL={normalizedETL_avg} />
             <div className="flex items-center gap-1">
               <Clock className="w-3 h-3" />
               <span className="type-num">{durationMin}</span> min
             </div>
-            <Badge variant="secondary" className="type-chip">
-              {exerciseCount}
-            </Badge>
+            <div className="flex items-center gap-1">
+              <Weight className="w-3 h-3" />
+              <span className="type-num">{exerciseCount} Exercises</span>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">

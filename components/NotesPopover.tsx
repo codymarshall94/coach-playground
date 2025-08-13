@@ -92,7 +92,7 @@ export function NotesPopover({
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full"
+              className="absolute top-1 right-1 w-2 h-2 bg-brand rounded-full"
             />
           )}
         </Button>

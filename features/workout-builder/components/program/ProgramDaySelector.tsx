@@ -72,17 +72,20 @@ function DayButton({
     day.workout?.[0]?.exercise_groups?.flatMap((g) => g.exercises).length ?? 0;
 
   return (
-    <div className="flex items-center gap-3 w-full">
-      <span className="truncate font-medium">{day.order_num + 1}.</span>
-      <span className="truncate font-medium">{day.name}</span>
-      {day.type === "rest" && <Bed className="w-4 h-4 ml-2 flex-shrink-0" />}
-      {day.type === "workout" && (
-        <Dumbbell className="w-4 h-4 ml-2 flex-shrink-0" />
-      )}
+    <div className="flex items-center justify-between gap-3 w-full">
+      <div className="flex items-center gap-3">
+        <span className="truncate font-medium">{day.order_num + 1}.</span>
+        <span className="truncate font-medium">{day.name}</span>
+        {day.type === "rest" && <Bed className="w-4 h-4 ml-2 flex-shrink-0" />}
+        {day.type === "workout" && (
+          <Dumbbell className="w-4 h-4 ml-2 flex-shrink-0" />
+        )}
+      </div>
+
       {day.type === "workout" && totalExercises > 0 && (
         <div
           className={cn(
-            "flex items-center justify-center ml-auto bg-secondary  text-secondary-foreground rounded-full min-w-[24px] h-6 px-2 text-xs font-medium shadow-sm",
+            "flex items-center justify-center ml-auto bg-primary  text-primary-foreground rounded-full min-w-[24px] h-6 px-2 text-xs font-medium shadow-sm",
             isActive && "bg-background text-foreground"
           )}
         >
