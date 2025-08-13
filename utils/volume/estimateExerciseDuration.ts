@@ -25,6 +25,7 @@ export function estimateExerciseDuration(
 
   const workingTime = totalReps * secondsPerRep;
 
+  // Returns the total time in seconds
   return workingTime + totalRest;
 }
 

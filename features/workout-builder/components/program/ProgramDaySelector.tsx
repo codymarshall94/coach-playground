@@ -73,32 +73,22 @@ function DayButton({
 
   return (
     <div className="flex items-center gap-3 w-full">
-      <Button
-        onClick={onClick}
-        variant={isActive ? "default" : "outline"}
-        className={`
-          flex-1 justify-start truncate transition-all duration-200
-          ${day.type === "rest" ? "text-muted-foreground italic" : ""}
-          ${isDragOverlay ? "shadow-lg" : ""}
-        `}
-      >
-        <span className="truncate font-medium">{day.order_num + 1}.</span>
-        <span className="truncate font-medium">{day.name}</span>
-        {day.type === "rest" && <Bed className="w-4 h-4 ml-2 flex-shrink-0" />}
-        {day.type === "workout" && (
-          <Dumbbell className="w-4 h-4 ml-2 flex-shrink-0" />
-        )}
-        {day.type === "workout" && totalExercises > 0 && (
-          <div
-            className={cn(
-              "flex items-center justify-center ml-auto bg-secondary  text-secondary-foreground rounded-full min-w-[24px] h-6 px-2 text-xs font-medium shadow-sm",
-              isActive && "bg-background text-foreground"
-            )}
-          >
-            {totalExercises}
-          </div>
-        )}
-      </Button>
+      <span className="truncate font-medium">{day.order_num + 1}.</span>
+      <span className="truncate font-medium">{day.name}</span>
+      {day.type === "rest" && <Bed className="w-4 h-4 ml-2 flex-shrink-0" />}
+      {day.type === "workout" && (
+        <Dumbbell className="w-4 h-4 ml-2 flex-shrink-0" />
+      )}
+      {day.type === "workout" && totalExercises > 0 && (
+        <div
+          className={cn(
+            "flex items-center justify-center ml-auto bg-secondary  text-secondary-foreground rounded-full min-w-[24px] h-6 px-2 text-xs font-medium shadow-sm",
+            isActive && "bg-background text-foreground"
+          )}
+        >
+          {totalExercises}
+        </div>
+      )}
 
       {!isDragOverlay && (
         <DropdownMenu>
@@ -191,8 +181,13 @@ export function ProgramDaySelector({
               key={day.id}
               id={day.id}
               className={cn(
-                i === activeIndex && "shadow-lg ring-2 ring-primary/30"
+                "cursor-pointer",
+                i !== activeIndex && "hover:bg-primary/10",
+                i === activeIndex &&
+                  "shadow-lg bg-primary text-primary-foreground border-primary/50"
               )}
+              draggerClassName={cn(i === activeIndex && "text-white")}
+              onClick={() => onSelect(i)}
             >
               <DayButton
                 day={day}

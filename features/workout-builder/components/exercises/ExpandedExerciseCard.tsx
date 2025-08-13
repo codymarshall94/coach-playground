@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { intensityConfig } from "@/config/intensityConfig";
+import { cn } from "@/lib/utils";
 import type {
   IntensitySystem,
   SetInfo,
@@ -56,6 +57,7 @@ const intensityIcons: Record<IntensitySystem, any> = {
 
 export function ExpandedExerciseCard({
   order,
+  onlyExercise,
   exercise,
   isDraggingAny,
   onRemove,
@@ -65,6 +67,7 @@ export function ExpandedExerciseCard({
   normalizedETL,
 }: {
   order: number;
+  onlyExercise: boolean;
   exercise: WorkoutExercise;
   isDraggingAny: boolean;
   onRemove: () => void;
@@ -117,7 +120,12 @@ export function ExpandedExerciseCard({
     intensityConfig[currentIntensity as keyof typeof intensityConfig] || {};
 
   return (
-    <Card className="group relative bg-background border border-border hover:border-primary/20 hover:shadow-lg transition-all duration-300">
+    <Card
+      className={cn(
+        "group relative bg-white dark:bg-background  transition-all duration-300",
+        onlyExercise ? "border-none shadow-none" : "border border-border "
+      )}
+    >
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
@@ -128,7 +136,7 @@ export function ExpandedExerciseCard({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-foreground text-xl mb-1">
+                <h3 className="text-xl leading-7 font-semibold tracking-[-0.01em]">
                   {exercise.name}
                 </h3>
                 <NotesPopover

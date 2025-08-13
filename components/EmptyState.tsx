@@ -7,6 +7,7 @@ import { ReactNode } from "react";
 
 interface EmptyStateProps {
   icon?: ReactNode;
+  image?: ReactNode;
   title: string;
   description?: string;
   action?: ReactNode;
@@ -17,6 +18,7 @@ interface EmptyStateProps {
 
 export const EmptyState = ({
   icon,
+  image,
   title,
   description,
   action,
@@ -36,11 +38,15 @@ export const EmptyState = ({
         className
       )}
     >
-      <div className="mb-4 text-muted-foreground">
-        <div className="w-10 h-10">
-          {icon ?? <Inbox className="w-full h-full opacity-50" />}
+      {image ? (
+        image
+      ) : (
+        <div className="mb-4 text-muted-foreground">
+          <div className="w-10 h-10">
+            {icon ?? <Inbox className="w-full h-full opacity-50" />}
+          </div>
         </div>
-      </div>
+      )}
 
       <h3 className="font-semibold mb-1">{title}</h3>
 

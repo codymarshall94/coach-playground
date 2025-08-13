@@ -1,7 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ChevronDown, ChevronUp, MoreHorizontal, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  MoreHorizontal,
+  Trash2,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { NotesPopover } from "@/components/NotesPopover";
@@ -15,13 +21,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { Exercise } from "@/types/Exercise";
 import { Program, ProgramDay, WorkoutExerciseGroup } from "@/types/Workout";
 import { WorkoutAnalyticsSummary } from "@/utils/analyzeWorkoutDay";
+import { getWorkoutDayETL } from "@/utils/etl";
+import { estimateWorkoutDuration } from "@/utils/volume/estimateExerciseDuration";
+import { ETLDisplay } from "../insights/EtlDisplay";
 import { WorkoutAnalyticsPanel } from "../insights/WorkoutAnalyticsPanel";
 import { DayNameEditor } from "./DayNameEditor";
 
 interface DayHeaderProps {
   day?: ProgramDay;
+  exercises: Exercise[];
   program: Program;
   activeBlockIndex: number;
   activeDayIndex: number;
@@ -39,6 +50,7 @@ interface DayHeaderProps {
 
 export function DayHeader({
   day,
+  exercises,
   program,
   activeBlockIndex,
   activeDayIndex,
@@ -66,18 +78,29 @@ export function DayHeader({
 
   const isCollapsed = collapsedIndex === -1;
 
+  const { normalizedETL_avg } = getWorkoutDayETL(
+    exerciseGroups.flatMap((group) => group.exercises),
+    exercises,
+    program.goal
+  );
+
+  const durationMin = Math.ceil(
+    estimateWorkoutDuration(
+      exerciseGroups.flatMap((group) => group.exercises)
+    ) / 60
+  );
+
   return (
     <motion.header
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className={cn(
-        "sticky top-0 z-20  backdrop-blur-md border-b transition-all duration-200 mb-4"
+        "sticky top-0 z-20 backdrop-blur-md border-b transition-all duration-200 mb-4"
       )}
     >
-      <div className="container mx-auto px-4 py-3">
-        {/* Main header row */}
-        <div className="flex items-center justify-between gap-4 mb-2">
+      <div className="container mx-auto px-4 py-3 space-y-2">
+        <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <DayNameEditor
               program={program}
@@ -90,73 +113,67 @@ export function DayHeader({
               setIsEditingName={setIsEditingName}
             />
 
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="text-xs font-medium">
-                {exerciseCount}
-              </Badge>
-              {day?.description && (
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-              )}
-            </div>
+            <ETLDisplay normalizedETL={normalizedETL_avg} />
           </div>
 
-          {isWorkoutDay && exerciseGroups.length > 0 && (
-            <div className="flex justify-between items-center mt-2 mb-2 px-1">
-              <div className="flex gap-2">
-                <WorkoutAnalyticsPanel
-                  workout={exerciseGroups}
-                  summary={insights!}
-                  open={analyticsOpen}
-                  setOpen={setAnalyticsOpen}
-                />
-              </div>
+          <div className="flex items-center gap-3 type-secondary">
+            <div className="flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              <span className="type-num">{durationMin}</span> min
             </div>
-          )}
+            <Badge variant="secondary" className="type-chip">
+              {exerciseCount}
+            </Badge>
+          </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCollapsedIndex(isCollapsed ? null : -1)}
-            className="flex items-center gap-2 min-w-fit"
-          >
-            {isCollapsed ? (
-              <>
-                <ChevronDown className="w-4 h-4" />
-                <span className="hidden sm:inline">Show</span>
-              </>
-            ) : (
-              <>
-                <ChevronUp className="w-4 h-4" />
-                <span className="hidden sm:inline">Hide</span>
-              </>
+          <div className="flex items-center gap-2">
+            {isWorkoutDay && exerciseGroups.length > 0 && (
+              <WorkoutAnalyticsPanel
+                workout={exerciseGroups}
+                summary={insights!}
+                open={analyticsOpen}
+                setOpen={setAnalyticsOpen}
+              />
             )}
-          </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCollapsedIndex(isCollapsed ? null : -1)}
+              className="flex items-center gap-1 type-secondary"
+            >
+              {isCollapsed ? (
+                <ChevronDown className="w-4 h-4" />
+              ) : (
+                <ChevronUp className="w-4 h-4" />
+              )}
+            </Button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="w-8 h-8 p-0">
-                <MoreHorizontal className="w-4 h-4" />
-                <span className="sr-only">More options</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem asChild>
-                <NotesPopover
-                  value={day?.description || ""}
-                  title="Day Notes"
-                  onSave={handleDescriptionSave}
-                />
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={clearWorkout}
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Clear Day
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="w-8 h-8 p-0">
+                  <MoreHorizontal className="w-4 h-4" />
+                  <span className="sr-only">More options</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem asChild>
+                  <NotesPopover
+                    value={day?.description || ""}
+                    title="Day Notes"
+                    onSave={handleDescriptionSave}
+                  />
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={clearWorkout}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Clear Day
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
     </motion.header>

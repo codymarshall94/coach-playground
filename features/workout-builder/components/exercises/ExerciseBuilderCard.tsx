@@ -1,6 +1,5 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { Exercise } from "@/types/Exercise";
 import { IntensitySystem, WorkoutExercise } from "@/types/Workout";
 import { getExerciseETL } from "@/utils/etl";
@@ -18,6 +17,7 @@ const animationProps: MotionProps = {
 
 type Props = {
   order: number;
+  onlyExercise: boolean;
   exercise: WorkoutExercise;
   exerciseMeta: Exercise;
   isDraggingAny: boolean;
@@ -32,6 +32,7 @@ type Props = {
 
 export const ExerciseBuilderCard = ({
   order,
+  onlyExercise,
   exercise,
   exerciseMeta,
   isDraggingAny,
@@ -43,7 +44,11 @@ export const ExerciseBuilderCard = ({
   onExpand,
   dragging = false,
 }: Props) => {
-  const { normalizedETL } = getExerciseETL(exercise, exerciseMeta);
+  const { normalizedETL } = getExerciseETL(
+    exercise,
+    exerciseMeta,
+    "hypertrophy"
+  );
   const durationMin = Math.ceil(estimateExerciseDuration(exercise) / 60);
 
   const showCollapsed = collapsed || isDraggingAny;
@@ -64,6 +69,7 @@ export const ExerciseBuilderCard = ({
     <motion.div key="expanded" layout {...animationProps}>
       <ExpandedExerciseCard
         order={order}
+        onlyExercise={onlyExercise}
         exercise={exercise}
         isDraggingAny={isDraggingAny}
         onRemove={onRemove}
@@ -76,13 +82,7 @@ export const ExerciseBuilderCard = ({
   );
 
   return (
-    <motion.div
-      layout
-      className={cn(
-        "rounded-xl border bg-background overflow-hidden transition-all",
-        dragging && "z-50 scale-[1.01] shadow-xl"
-      )}
-    >
+    <motion.div layout>
       <AnimatePresence mode="sync" initial={false}>
         {showCollapsed ? renderCollapsed() : renderExpanded()}
       </AnimatePresence>

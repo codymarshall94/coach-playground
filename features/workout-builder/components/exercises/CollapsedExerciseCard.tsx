@@ -24,7 +24,7 @@ export function CollapsedExerciseCard({
 
   return (
     <div
-      className="rounded-xl border bg-card hover:bg-card/80 border-border hover:border-primary transition-all p-4 flex items-center justify-between cursor-pointer"
+      className="rounded-xl border bg-white dark:bg-background hover:bg-card/80 border-border hover:border-primary transition-all p-4 flex items-center justify-between cursor-pointer"
       onClick={onExpand}
     >
       <div className="flex items-center gap-3">

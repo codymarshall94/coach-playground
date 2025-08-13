@@ -11,12 +11,16 @@ export function SortableItem({
   children,
   id,
   isDragging = false,
+  onClick,
   className,
+  draggerClassName,
 }: {
   id: string;
   children: React.ReactNode;
   isDragging?: boolean;
+  onClick?: () => void;
   className?: string;
+  draggerClassName?: string;
 }) {
   const {
     attributes,
@@ -49,19 +53,20 @@ export function SortableItem({
         flex items-center gap-3 px-3 py-2 bg-background border rounded-lg 
         transition-all duration-200 ease-in-out
         ${
-          isSortableDragging
-            ? "opacity-50 scale-105 shadow-lg ring-2 ring-blue-200 z-50"
-            : "hover:bg-muted hover:shadow-md"
+          isSortableDragging &&
+          "opacity-50 scale-105 shadow-lg ring-2 ring-primary/50 z-50"
         }
-        ${isDragging ? "shadow-xl ring-2 ring-blue-300" : ""}
+        ${isDragging && "shadow-xl ring-2 ring-primary/50"}
       `,
         className
       )}
+      onClick={onClick}
     >
       <div
         {...attributes}
         {...listeners}
-        className={`
+        className={cn(
+          `
           cursor-grab active:cursor-grabbing p-1 rounded
           transition-colors duration-200
           ${
@@ -69,9 +74,12 @@ export function SortableItem({
               ? "text-blue-500 bg-blue-50"
               : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
           }
-        `}
+        `
+        )}
       >
-        <GripVertical className="w-4 h-4 text-muted-foreground" />
+        <GripVertical
+          className={cn("w-4 h-4 text-muted-foreground", draggerClassName)}
+        />
       </div>
 
       {/* Content */}

@@ -64,7 +64,7 @@
   --radius: 0.875rem;
 
   /* Base */
-  --background: oklch(0.985 0.005 150);           /* soft paper white */
+  --background: oklch(1 0 0 / 0.9);           /* soft paper white */
   --foreground: oklch(0.1 0.01 130);              /* charcoal gray */
 
   /* UI Surface */
@@ -180,6 +180,15 @@
   body {
     @apply  text-foreground;
   }
-
-  
 }
+
+@layer utilities {
+  .type-title      { @apply text-xl leading-7 font-semibold tracking-[-0.01em]; }
+  .type-section    { @apply text-lg leading-6 font-semibold; }
+  .type-body       { @apply text-base leading-6 font-normal; }
+  .type-secondary  { @apply text-sm leading-5 text-muted-foreground; }
+  .type-meta       { @apply text-xs leading-5 uppercase tracking-wide text-muted-foreground; }
+  .type-chip       { @apply text-xs font-medium; }
+  .type-num        { @apply tabular-nums font-mono; }
+}
+

@@ -28,6 +28,7 @@ import {
 } from "@dnd-kit/sortable";
 import { Bed, Dumbbell, Plus } from "lucide-react";
 import { motion } from "motion/react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -81,6 +82,8 @@ export const WorkoutBuilder = ({
   const [isSaving, setIsSaving] = useState(false);
 
   const router = useRouter();
+
+  console.log(program.days?.[0]?.workout);
 
   const groupRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -289,6 +292,7 @@ export const WorkoutBuilder = ({
             <div className="w-full max-w-4xl p-4 mx-auto relative">
               <DayHeader
                 day={currentDays[activeDayIndex]}
+                exercises={exercises ?? []}
                 program={program}
                 activeBlockIndex={activeBlockIndex}
                 activeDayIndex={activeDayIndex}
@@ -306,7 +310,7 @@ export const WorkoutBuilder = ({
 
               {noWorkoutDays ? (
                 <div className="mt-6">
-                  <span className="px-2 py-1 text-sm font-medium bg-muted text-muted-foreground rounded-md">
+                  <span className="px-2 py-1 text-sm font-medium text-muted-foreground rounded-md">
                     {currentDays.length} Days
                   </span>
                 </div>
@@ -315,7 +319,14 @@ export const WorkoutBuilder = ({
                   {!isWorkoutDay ? (
                     <EmptyState
                       className="w-full mt-6"
-                      icon={<Bed className="w-10 h-10 text-muted-foreground" />}
+                      image={
+                        <Image
+                          src="/images/empty-states/rest-day.png"
+                          alt="Rest Day"
+                          width={300}
+                          height={300}
+                        />
+                      }
                       title="Rest Day"
                       description="You have programmed a rest day for this workout"
                     />
@@ -328,8 +339,13 @@ export const WorkoutBuilder = ({
                       <EmptyState
                         title="No Exercises Added"
                         description="Start building your program by adding exercises to this day."
-                        icon={
-                          <Dumbbell className="w-10 h-10 text-muted-foreground" />
+                        image={
+                          <Image
+                            src="/images/empty-states/no-exercises.png"
+                            alt="No Exercises Added"
+                            width={300}
+                            height={300}
+                          />
                         }
                         action={
                           <Button

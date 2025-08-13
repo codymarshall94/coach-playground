@@ -16,7 +16,6 @@ import { Separator } from "@/components/ui/separator";
 import { Activity, Dumbbell, Eye, Target, Zap } from "lucide-react";
 import { IntensitySystem, Program, ProgramDay, SetInfo } from "@/types/Workout";
 
-// ------------ helpers (same as you had) ------------
 const goalIcons = {
   strength: Zap,
   hypertrophy: Dumbbell,
@@ -72,7 +71,6 @@ function formatAdvancedSetInfo(set: SetInfo): string {
   }
 }
 
-// ------------ table for a day ------------
 function WorkoutDayTable({ day }: { day: ProgramDay }) {
   if (day.type !== "workout") return null;
   return (
@@ -172,7 +170,6 @@ function WorkoutDayTable({ day }: { day: ProgramDay }) {
   );
 }
 
-// ------------ printable sheet (reusable) ------------
 function ProgramSheet({ program }: { program: Program }) {
   const GoalIcon = goalIcons[program.goal];
   return (
@@ -195,9 +192,7 @@ function ProgramSheet({ program }: { program: Program }) {
       </div>
       <Separator className="my-4" />
       {program.description && (
-        <div className="w-full mt-2 text-sm leading-relaxed space-y-2">
-          {/* If you used RichTextRenderer, include it here if it doesn't pull in weird iframes */}
-          {/* <RichTextRenderer html={program.description} /> */}
+        <div className="w-full mt-2 text-sm  space-y-2 prose">
           <div dangerouslySetInnerHTML={{ __html: program.description }} />
         </div>
       )}
@@ -250,7 +245,6 @@ function ProgramSheet({ program }: { program: Program }) {
   );
 }
 
-// ------------ main preview + export ------------
 export default function ProgramPreview({
   open,
   onOpenChange,

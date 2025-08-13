@@ -83,11 +83,11 @@ export function ExerciseGroupCard({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "border rounded-lg p-4 space-y-4 bg-background shadow-sm transition",
+        "border rounded-lg p-4 space-y-4 bg-card shadow-sm transition",
         {
-          "border-blue-500": group.type === "superset",
-          "border-green-500": group.type === "circuit",
-          "border-yellow-500": group.type === "giant_set",
+          "border-indigo-700 bg-indigo-700/10": group.type === "superset",
+          "border-emerald-500 bg-emerald-500/10": group.type === "circuit",
+          "border-orange-500 bg-orange-500/10": group.type === "giant_set",
         }
       )}
     >
@@ -135,27 +135,31 @@ export function ExerciseGroupCard({
       </div>
 
       <div className="space-y-3">
-        {group.exercises.map((exercise, exerciseIndex) => (
-          <ExerciseBuilderCard
-            key={exercise.id}
-            order={groupOrder}
-            exercise={exercise}
-            exerciseMeta={exerciseMeta}
-            isDraggingAny={isDraggingAny}
-            collapsed={isCollapsed}
-            onExpand={onExpand}
-            onRemove={() => onRemoveExercise(groupIndex, exerciseIndex)}
-            onUpdateSets={(sets) =>
-              onUpdateSets(groupIndex, exerciseIndex, sets)
-            }
-            onUpdateIntensity={(intensity) =>
-              onUpdateIntensity(groupIndex, exerciseIndex, intensity)
-            }
-            onUpdateNotes={(notes) =>
-              onUpdateNotes(groupIndex, exerciseIndex, notes)
-            }
-          />
-        ))}
+        {group.exercises.map((exercise, exerciseIndex) => {
+          const onlyExercise = group.exercises.length === 1;
+          return (
+            <ExerciseBuilderCard
+              key={exercise.id}
+              order={groupOrder}
+              onlyExercise={onlyExercise}
+              exercise={exercise}
+              exerciseMeta={exerciseMeta}
+              isDraggingAny={isDraggingAny}
+              collapsed={isCollapsed}
+              onExpand={onExpand}
+              onRemove={() => onRemoveExercise(groupIndex, exerciseIndex)}
+              onUpdateSets={(sets) =>
+                onUpdateSets(groupIndex, exerciseIndex, sets)
+              }
+              onUpdateIntensity={(intensity) =>
+                onUpdateIntensity(groupIndex, exerciseIndex, intensity)
+              }
+              onUpdateNotes={(notes) =>
+                onUpdateNotes(groupIndex, exerciseIndex, notes)
+              }
+            />
+          );
+        })}
       </div>
     </motion.div>
   );
