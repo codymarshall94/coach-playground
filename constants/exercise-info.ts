@@ -54,3 +54,5 @@ export const FIELD_INFO = {
       "Indicates how many calories an exercise burns per rep. This is the base calorie cost of the exercise, which is used to calculate the total calorie cost of the exercise.",
   },
 };
+
+export type FieldInfo = keyof typeof FIELD_INFO;

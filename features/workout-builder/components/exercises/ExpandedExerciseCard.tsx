@@ -129,8 +129,8 @@ export function ExpandedExerciseCard({
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10  bg-secondary rounded-xl flex items-center justify-center">
-              <span className="text-sm font-bold text-secondary-foreground">
+            <div className="w-10 h-10  bg-muted rounded-xl flex items-center justify-center">
+              <span className="text-sm font-bold text-muted-foreground">
                 {order + 1}
               </span>
             </div>

@@ -3,211 +3,319 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  BACK_MUSCLES,
+  FRONT_MUSCLES,
+  MUSCLE_DISPLAY_MAP,
+  MUSCLE_NAME_MAP,
+} from "@/constants/muscles";
 import { MuscleVolumeRow } from "@/features/workout-builder/components/insights/MuscleVolumeRow";
+import { cn } from "@/lib/utils";
 import type { Exercise } from "@/types/Exercise";
 import type { WorkoutExercise, WorkoutExerciseGroup } from "@/types/Workout";
 import { RotateCcw, User, UserCheck } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Model, { type Muscle } from "react-body-highlighter";
 
-const muscleNameMap: Record<string, Muscle> = {
-  pectoralis_major: "chest",
-  triceps_brachii: "triceps",
-  biceps: "biceps",
-  forearms: "forearm",
-  anterior_deltoid: "front-deltoids",
-  lateral_deltoid: "front-deltoids",
-  posterior_deltoid: "back-deltoids",
-  upper_traps: "trapezius",
-  lower_traps: "trapezius",
-  latissimus_dorsi: "upper-back",
-  rhomboids: "upper-back",
-  erector_spinae: "lower-back",
-  gluteus_maximus: "gluteal",
-  quadriceps: "quadriceps",
-  hamstrings: "hamstring",
-  calves: "calves",
-  soleus: "calves",
-  core: "abs",
-  obliques: "obliques",
-  adductor: "adductor",
-  abductors: "abductors",
+/** ---------- Props (two modes) ---------- */
+type BaseProps = {
+  muscle_volumes?: Record<string, number>;
+  muscle_set_counts?: Record<string, number>;
+  maxVolume?: number;
+  workout?: WorkoutExerciseGroup[];
+  height?: number;
+  className?: string;
 };
 
-const backMuscles = [
-  "back-deltoids",
-  "trapezius",
-  "erector_spinae",
-  "gluteal",
-  "hamstring",
-  "quadriceps",
-  "calves",
-];
-const frontMuscles = [
-  "front-deltoids",
-  "triceps",
-  "biceps",
-  "forearm",
-  "abs",
-  "obliques",
-  "adductor",
-  "abductors",
-];
-
-export default function MuscleHeatmap({
-  workoutExercises,
-  exercises,
-  muscle_volumes,
-  muscle_set_counts,
-  maxVolume,
-  workout,
-}: {
+type WorkoutModeProps = BaseProps & {
+  mode: "workout";
   workoutExercises: WorkoutExercise[];
   exercises: Exercise[];
-  muscle_volumes: Record<string, number>;
-  muscle_set_counts: Record<string, number>;
-  maxVolume: number;
-  workout: WorkoutExerciseGroup[];
-}) {
+};
+
+type LibraryModeProps = BaseProps & {
+  mode: "library";
+  exerciseMetas: Exercise[];
+  intensityFrom?: "avg" | "max" | "constant";
+  constantIntensity?: number; // 1..5
+};
+
+type Props = WorkoutModeProps | LibraryModeProps;
+
+/** ---------- Helpers ---------- */
+const colorWithBucket = (bucket: number) =>
+  // Tailwind blue-500 as base; reads premium and neutral with your palette.
+  `rgba(59, 130, 246, ${Math.min(0.2 + bucket * 0.15, 0.9)})`;
+
+const mapActivationKeysToMuscles = (
+  activationMap: Record<string, number>
+): Muscle[] =>
+  Object.keys(activationMap)
+    .map((m) => MUSCLE_NAME_MAP[m as keyof typeof MUSCLE_NAME_MAP])
+    .filter((v): v is Muscle => !!v);
+
+const activationToBucket = (
+  activationMap: Record<string, number>,
+  strategy: "avg" | "max" | "constant",
+  constantIntensity?: number
+) => {
+  if (strategy === "constant")
+    return Math.max(1, Math.min(5, constantIntensity ?? 3));
+  const vals = Object.values(activationMap);
+  if (!vals.length) return 1;
+  const x =
+    strategy === "max"
+      ? Math.max(...vals)
+      : vals.reduce((a, b) => a + b, 0) / vals.length;
+  return Math.max(1, Math.min(5, Math.round(x * 5)));
+};
+
+export default function MuscleHeatmap(props: Props) {
+  // Default the first view to the side with more muscles highlighted.
   const [viewType, setViewType] = useState<"anterior" | "posterior">(
     "anterior"
   );
+  const height = props.height ?? 440;
 
-  const colorWithIntensity = (sets: number) =>
-    `rgba(59, 130, 246, ${Math.min(0.2 + sets * 0.15, 0.9)})`;
+  /** Build highlight data */
+  const highlightData = useMemo(() => {
+    if (props.mode === "workout") {
+      const { workoutExercises, exercises } = props;
+      return workoutExercises.map((w) => {
+        const activation =
+          exercises.find((e) => e.id === w.exercise_id)?.activation_map ?? {};
+        return {
+          name: w.name,
+          muscles: mapActivationKeysToMuscles(activation),
+          color: colorWithBucket(Math.max(1, Math.min(5, w.sets.length))),
+        };
+      });
+    } else {
+      const { exerciseMetas, intensityFrom = "avg", constantIntensity } = props;
+      return exerciseMetas.map((e) => ({
+        name: e.name,
+        muscles: mapActivationKeysToMuscles(e.activation_map),
+        color: colorWithBucket(
+          activationToBucket(e.activation_map, intensityFrom, constantIntensity)
+        ),
+      }));
+    }
+  }, [props]);
 
-  const getMuscles = (exercise: WorkoutExercise): Muscle[] => {
-    const rawMuscles =
-      exercises.find((e) => e.id === exercise.exercise_id)?.activation_map ||
-      {};
-    return Object.keys(rawMuscles)
-      .map((m) => muscleNameMap[m])
-      .filter((v): v is Muscle => !!v);
-  };
-
-  const getBackMuscleCount = (exercises: WorkoutExercise[]): number => {
-    const muscles = exercises.flatMap(getMuscles);
-    return muscles.filter((m) => backMuscles.includes(m)).length;
-  };
-
-  const getFrontMuscleCount = (exercises: WorkoutExercise[]): number => {
-    const muscles = exercises.flatMap(getMuscles);
-    return muscles.filter((m) => frontMuscles.includes(m)).length;
-  };
-
-  const highlightData = workoutExercises.map((w) => ({
-    name: w.name,
-    muscles: getMuscles(w),
-    color: colorWithIntensity(w.sets.length),
-  }));
-
-  const activatedMuscles = Array.from(
-    new Set(highlightData.flatMap((data) => data.muscles))
+  const allMuscles = useMemo(
+    () => highlightData.flatMap((d) => d.muscles),
+    [highlightData]
   );
 
-  // const totalSets = workoutExercises.reduce((sum, w) => sum + w.sets.length, 0);
-  // const uniqueExercises = workoutExercises.length;
+  const frontCount = useMemo(
+    () => allMuscles.filter((m) => FRONT_MUSCLES.includes(m)).length,
+    [allMuscles]
+  );
+  const backCount = useMemo(
+    () => allMuscles.filter((m) => BACK_MUSCLES.includes(m)).length,
+    [allMuscles]
+  );
+
+  const activatedMuscles = useMemo(
+    () => Array.from(new Set(allMuscles)).sort((a, b) => a.localeCompare(b)),
+    [allMuscles]
+  );
+
+  const showVolumes =
+    !!props.muscle_volumes &&
+    !!props.muscle_set_counts &&
+    typeof props.maxVolume === "number" &&
+    !!props.workout;
+
+  const hasAnyActivation = activatedMuscles.length > 0;
 
   return (
-    <Card className="w-full  mx-auto">
-      <CardHeader className="text-center flex flex-col gap-2">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <UserCheck className="h-5 w-5 text-blue-500" />
-          Muscle Activation
-        </CardTitle>
+    <Card className={cn("w-full mx-auto", props.className)}>
+      <CardHeader className="pb-3 @container">
+        <div className=" flex items-center @md:flex-row flex-col justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
+              <UserCheck className="h-4 w-4 text-primary" />
+            </span>
+            <div>
+              <CardTitle className="text-lg">Muscle Activation</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Visualize which regions your selection targets, at a glance.
+              </p>
+            </div>
+          </div>
 
-        <div className="flex justify-center">
-          <div className="flex bg-muted rounded-lg p-1">
+          <div
+            role="tablist"
+            aria-label="Body view"
+            className="flex rounded-lg border bg-muted/50 p-1"
+          >
             <Button
+              role="tab"
+              aria-selected={viewType === "anterior"}
               variant={viewType === "anterior" ? "default" : "ghost"}
               size="sm"
               onClick={() => setViewType("anterior")}
               className="flex items-center gap-2"
             >
               <User className="h-4 w-4" />
-              Front ({getFrontMuscleCount(workoutExercises)})
+              <span className="hidden sm:inline">Front</span>
+              <span
+                className={cn(
+                  "ml-1 text-xs rounded px-1.5 py-0.5 bg-background/60 border",
+                  viewType === "anterior" && "bg-primary/10"
+                )}
+              >
+                {frontCount}
+              </span>
             </Button>
             <Button
+              role="tab"
+              aria-selected={viewType === "posterior"}
               variant={viewType === "posterior" ? "default" : "ghost"}
               size="sm"
               onClick={() => setViewType("posterior")}
               className="flex items-center gap-2"
             >
               <RotateCcw className="h-4 w-4" />
-              Back ({getBackMuscleCount(workoutExercises)})
+              <span className="hidden sm:inline">Back</span>
+              <span
+                className={cn(
+                  "ml-1 text-xs rounded px-1.5 py-0.5 bg-background/60 border",
+                  viewType === "posterior" && "bg-primary/10"
+                )}
+              >
+                {backCount}
+              </span>
             </Button>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-6">
-        <div className="flex justify-center">
-          <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-xl p-8 shadow-inner">
-            <Model
-              data={highlightData}
-              style={{ width: "auto", height: 400, maxWidth: "100%" }}
-              bodyColor="#e5e7eb"
-              type={viewType}
-            />
+      <CardContent className="space-y-8">
+        {/* Canvas */}
+        <div className="mx-auto w-full max-w-[760px]">
+          <div
+            className={cn(
+              "relative rounded-2xl border bg-gradient-to-b from-background to-muted/60",
+              "shadow-sm ring-1 ring-black/5"
+            )}
+          >
+            <div className="absolute inset-0 rounded-2xl [mask-image:radial-gradient(70%_60%_at_50%_40%,black,transparent)] pointer-events-none" />
+            <div className="p-6 md:p-8">
+              {hasAnyActivation ? (
+                <div className="flex items-center justify-center">
+                  <Model
+                    data={highlightData}
+                    style={{ width: "auto", height, maxWidth: "100%" }}
+                    bodyColor="#e5e7eb"
+                    type={viewType}
+                  />
+                </div>
+              ) : (
+                <EmptyHeatmapState height={height} />
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="space-y-3">
-          <h3 className="font-semibold text-center">Intensity Scale</h3>
-          <div className="flex justify-center items-center gap-2">
-            <span className="text-xs text-muted-foreground">Low</span>
-            <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map((intensity) => (
-                <div
-                  key={intensity}
-                  className="w-6 h-4 rounded-sm border border-gray-300"
-                  style={{
-                    backgroundColor: colorWithIntensity(intensity),
-                  }}
-                />
-              ))}
+        {/* Legend + tags */}
+        <section className="mx-auto w-full max-w-[760px] space-y-6">
+          {/* Legend */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Low</span>
+              <span>High</span>
             </div>
-            <span className="text-xs text-muted-foreground">High</span>
-          </div>
-        </div>
-
-        {activatedMuscles.length > 0 && (
-          <div className="space-y-3">
-            <h3 className="font-semibold text-center">
-              Targeted Muscle Groups
-            </h3>
-            <div className="flex flex-wrap justify-center gap-2">
-              {activatedMuscles.map((muscle) => (
-                <Badge key={muscle} variant="secondary" className="capitalize">
-                  {muscle.replace("-", " ")}
-                </Badge>
-              ))}
+            <div className="h-2 w-full rounded-full bg-muted">
+              {/* stepped bar for accessibility (5 buckets) */}
+              <div className="grid grid-cols-5 h-2 gap-[2px]">
+                {[1, 2, 3, 4, 5].map((b) => (
+                  <div
+                    key={b}
+                    className="rounded-full"
+                    style={{ backgroundColor: colorWithBucket(b) }}
+                  />
+                ))}
+              </div>
             </div>
           </div>
-        )}
 
-        <div className="space-y-3">
-          <div className="grid gap-2  ">
+          {/* Tags */}
+          {hasAnyActivation && (
             <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-muted-foreground">
-                Muscle Group Volumes
-              </h4>
-              {Object.entries(muscle_volumes).map(([muscle, volume], index) => (
-                <MuscleVolumeRow
-                  key={muscle}
-                  index={index}
-                  muscleId={muscle}
-                  setCount={muscle_set_counts[muscle]}
-                  weightedVolume={volume}
-                  maxVolume={maxVolume}
-                  workout={workout.flatMap((g) => g.exercises)}
-                  exercises={exercises ?? []}
-                />
-              ))}
+              <h3 className="text-sm font-medium">Targeted Muscle Groups</h3>
+              <div className="flex flex-wrap gap-2">
+                {activatedMuscles.map((m) => {
+                  const pretty =
+                    MUSCLE_DISPLAY_MAP[m as keyof typeof MUSCLE_DISPLAY_MAP] ??
+                    m
+                      .replace("-", " ")
+                      .split(" ")
+                      .map(
+                        (word) => word.charAt(0).toUpperCase() + word.slice(1)
+                      )
+                      .join(" ");
+                  return (
+                    <Badge
+                      key={m}
+                      variant="secondary"
+                      className="rounded-full bg-primary/5 text-foreground border-primary/15"
+                    >
+                      {pretty}
+                    </Badge>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        </div>
+          )}
+        </section>
+
+        {/* Volumes (optional) */}
+        {showVolumes && (
+          <section className="mx-auto w-full max-w-[760px] space-y-3">
+            <h4 className="text-sm font-semibold text-muted-foreground">
+              Muscle Group Volumes
+            </h4>
+            <div className="grid gap-2">
+              {Object.entries(props.muscle_volumes!).map(
+                ([muscle, volume], index) => (
+                  <MuscleVolumeRow
+                    key={muscle}
+                    index={index}
+                    muscleId={muscle}
+                    setCount={props.muscle_set_counts![muscle]}
+                    weightedVolume={volume}
+                    maxVolume={props.maxVolume!}
+                    workout={props.workout!.flatMap((g) => g.exercises)}
+                    exercises={
+                      props.mode === "workout" ? props.exercises ?? [] : []
+                    }
+                  />
+                )
+              )}
+            </div>
+          </section>
+        )}
       </CardContent>
     </Card>
+  );
+}
+
+function EmptyHeatmapState({ height }: { height: number }) {
+  return (
+    <div
+      className="grid place-items-center rounded-xl bg-muted/40 border border-dashed"
+      style={{ height }}
+    >
+      <div className="text-center space-y-2 p-6">
+        <div className="mx-auto h-9 w-9 rounded-full bg-muted/70 grid place-items-center ring-1 ring-border">
+          <User className="h-4 w-4 text-muted-foreground" />
+        </div>
+        <p className="text-sm text-muted-foreground">
+          No activation data available.
+        </p>
+      </div>
+    </div>
   );
 }

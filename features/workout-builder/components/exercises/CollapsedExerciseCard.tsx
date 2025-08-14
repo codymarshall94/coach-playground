@@ -41,7 +41,7 @@ export function CollapsedExerciseCard({
           </Button>
         )}
 
-        <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center font-bold">
+        <div className="w-8 h-8 bg-muted/50 text-muted-foreground rounded-full flex items-center justify-center font-bold">
           {order + 1}
         </div>
 

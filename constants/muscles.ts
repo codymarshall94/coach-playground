@@ -292,3 +292,55 @@ export const MUSCLE_DISPLAY_MAP: Record<Muscle, string> = {
   peroneus_brevis: "Peroneus Brevis",
   // ...etc
 };
+
+export const MUSCLE_NAME_MAP: Record<Muscle, string> = {
+  pectoralis_major: "chest",
+  triceps_brachii: "triceps",
+  biceps: "biceps",
+  forearms: "forearm",
+  anterior_deltoid: "front-deltoids",
+  lateral_deltoid: "front-deltoids",
+  posterior_deltoid: "back-deltoids",
+  upper_traps: "trapezius",
+  lower_traps: "trapezius",
+  latissimus_dorsi: "upper-back",
+  rhomboids: "upper-back",
+  erector_spinae: "lower-back",
+  gluteus_maximus: "gluteal",
+  quadriceps: "quadriceps",
+  hamstrings: "hamstring",
+  soleus: "calves",
+  tibialis_anterior: "calves",
+  tibialis_posterior: "calves",
+  peroneus_longus: "calves",
+  peroneus_brevis: "calves",
+  core: "abs",
+  sartorius: "gluteal",
+  tensor_fasciae_latae: "gluteal",
+  vastus_lateralis: "quadriceps",
+  vastus_medialis: "quadriceps",
+  vastus_intermedius: "quadriceps",
+  rectus_femoris: "quadriceps",
+  iliopsoas: "posterior_chain",
+  gastrocnemius: "calves",
+};
+
+export const BACK_MUSCLES = [
+  "back-deltoids",
+  "trapezius",
+  "erector_spinae",
+  "gluteal",
+  "hamstring",
+  "quadriceps",
+  "calves",
+];
+export const FRONT_MUSCLES = [
+  "front-deltoids",
+  "triceps",
+  "biceps",
+  "forearm",
+  "abs",
+  "obliques",
+  "adductor",
+  "abductors",
+];

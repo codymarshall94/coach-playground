@@ -8,6 +8,11 @@ export function Logo({
   height?: number;
 }) {
   return (
-    <Image src="/logo/logo.png" alt="Logo" width={width} height={height} />
+    <Image
+      src="/logo/prgrm-logo.png"
+      alt="Logo"
+      width={width}
+      height={height}
+    />
   );
 }

@@ -5,7 +5,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import AvatarDropdown from "@/features/workout-builder/components/AvatarDropdown";
 import { createClient } from "@/utils/supabase/client";
 import type { User } from "@supabase/supabase-js";
-import { LogOut, Menu, Plus, UserIcon } from "lucide-react";
+import { LogOut, Menu, UserIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Logo } from "./Logo";
@@ -36,11 +36,6 @@ export function Navbar({ user }: { user: User | null }) {
         </Link>
 
         <div className="hidden md:flex items-center space-x-3">
-          <Button size="sm" className="font-medium">
-            <Plus className="w-4 h-4 mr-2" />
-            New Program
-          </Button>
-
           {user ? (
             <AvatarDropdown />
           ) : (
@@ -66,13 +61,6 @@ export function Navbar({ user }: { user: User | null }) {
               <div className="flex items-center space-x-2 pb-6">
                 <Logo />
               </div>
-
-              <nav className="flex flex-col space-y-1 flex-1">
-                <Button className="w-full justify-start text-base font-medium h-12">
-                  <Plus className="w-5 h-5 mr-3" />
-                  New Program
-                </Button>
-              </nav>
 
               <div className="pt-6 border-t">
                 {user ? (

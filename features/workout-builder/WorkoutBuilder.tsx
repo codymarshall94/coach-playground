@@ -26,7 +26,7 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Bed, Dumbbell, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { motion } from "motion/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";

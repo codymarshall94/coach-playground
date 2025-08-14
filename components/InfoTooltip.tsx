@@ -18,7 +18,7 @@ export const InfoTooltip = ({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger>
-          <HelpCircle className="w-3 h-3 ml-1 text-gray-400" />
+          <HelpCircle className="w-3 h-3 ml-1 text-muted-foreground" />
         </TooltipTrigger>
         <TooltipContent className="max-w-xs">
           <p className="text-xs">

@@ -1,8 +1,10 @@
+import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import { Weight } from "lucide-react";
 
 type Props = {
@@ -15,42 +17,42 @@ function getETLCategory(normalizedETL: number) {
   if (normalizedETL < 100)
     return {
       label: "Recovery",
-      textColor: "text-emerald-700",
-      bgColor: "bg-emerald-500",
+      textColor: "text-foreground",
+      bgColor: "bg-load-low/30",
       desc: "Very low stress. Good for rest days or active recovery.",
     };
   if (normalizedETL < 125)
     return {
       label: "Easy",
-      textColor: "text-primary",
-      bgColor: "bg-primary",
+      textColor: "text-foreground",
+      bgColor: "bg-load-medium/30",
       desc: "Light training. Great for deloads or low-impact movement.",
     };
   if (normalizedETL < 135)
     return {
       label: "Challenging",
-      textColor: "text-indigo-700",
-      bgColor: "bg-indigo-700",
+      textColor: "text-foreground",
+      bgColor: "bg-load-max/30",
       desc: "Moderate effort. Solid training session without overdoing it.",
     };
   if (normalizedETL < 145)
     return {
       label: "Hard",
-      textColor: "text-orange-700",
-      bgColor: "bg-orange-500",
+      textColor: "text-foreground",
+      bgColor: "bg-load-max/30",
       desc: "High effort. Pushes your limits but still manageable.",
     };
   if (normalizedETL < 155)
     return {
       label: "Heavy",
-      textColor: "text-red-700",
-      bgColor: "bg-red-500",
+      textColor: "text-foreground",
+      bgColor: "bg-load-max/30",
       desc: "Very demanding. Be mindful of fatigue and recovery.",
     };
   return {
     label: "Max Load",
-    textColor: "text-rose-700",
-    bgColor: "bg-rose-600",
+    textColor: "text-foreground",
+    bgColor: "bg-destructive/50",
     desc: "Extreme training load. Used for peak efforts or testing.",
   };
 }
@@ -71,9 +73,14 @@ export const ETLDisplay = ({
             className={`flex items-center gap-1 cursor-help ${className} text-muted-foreground`}
           >
             {label}:{" "}
-            <span className={`font-bold ${category.textColor}`}>
+            <Badge
+              className={cn(
+                `font-medium text-xs ${category.textColor}`,
+                category.bgColor
+              )}
+            >
               {category.label}
-            </span>
+            </Badge>
           </span>
         </div>
       </TooltipTrigger>

@@ -97,7 +97,7 @@ export const WorkoutAnalyticsPanel = ({
         </Button>
       </SheetTrigger>
 
-      <SheetContent className="space-y-6 overflow-y-auto w-full  sm:min-w-1/3 md:min-w-1/2 lg:min-w-1/2 xl:min-w-1/3 p-6">
+      <SheetContent className="space-y-6 overflow-y-auto w-full sm:min-w-1/3 md:min-w-1/2 xl:min-w-xl p-6">
         <SheetHeader>
           <SheetTitle className="text-xl font-bold text-foreground">
             Day Summary
@@ -165,6 +165,7 @@ export const WorkoutAnalyticsPanel = ({
         />
 
         <MuscleHeatmap
+          mode="workout"
           workoutExercises={workout.flatMap((g) => g.exercises)}
           exercises={exercises ?? []}
           muscle_volumes={muscle_volumes}

@@ -3,174 +3,120 @@
 import { TermTooltip } from "@/components/TermTooltip";
 import { Button } from "@/components/ui/button";
 import { ExerciseDetailModal } from "@/features/workout-builder/components/exercises/ExerciseDetailModal";
-import { Exercise } from "@/types/Exercise";
-import { Activity, AlertTriangle, Brain, Clock, Zap } from "lucide-react";
-import { useState } from "react";
+import type { Exercise } from "@/types/Exercise";
+import { Clock, Zap } from "lucide-react";
+import { useMemo } from "react";
 
 interface ExerciseCardProps {
   exercise: Exercise;
   onAdd: (exercise: Exercise) => void;
 }
 
+function SoftChip({
+  children,
+  className = "",
+  style,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <span
+      className={
+        "inline-flex items-center gap-1 rounded-full px-2 py-[2px] text-[11px] font-medium " +
+        "bg-[color:color-mix(in_oklch,currentColor_14%,transparent)] " +
+        "shadow-[inset_0_0_0_1px] shadow-[color:color-mix(in_oklch,currentColor_22%,transparent)] " +
+        className
+      }
+      style={style}
+    >
+      {children}
+    </span>
+  );
+}
+
 const Tag = ({ children }: { children: React.ReactNode }) => (
   <TermTooltip term={children?.toString().toLowerCase() ?? ""}>
-    <span className="px-1 py-0.5 bg-muted border border-muted/50 rounded text-[10px] font-medium text-muted-foreground">
+    <span className="px-1.5 py-[2px] rounded border border-border bg-muted text-[11px] font-medium text-muted-foreground">
       {children}
     </span>
   </TermTooltip>
 );
 
-const Metric = ({
-  icon,
-  label,
-  value,
-  color,
-  size = "text-sm",
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: number;
-  color?: string;
-  size?: string;
-}) => (
-  <div className={`flex items-center gap-1 ${size}`}>
-    {icon}
-    <TermTooltip term={label.toLowerCase().replace(" ", "_")}>
-      <span className={color || "text-muted-foreground"}>
-        {label}: {value.toFixed(1)}
-      </span>
-    </TermTooltip>
-  </div>
-);
-
 export const ExerciseCard = ({ exercise, onAdd }: ExerciseCardProps) => {
-  const [expanded, setExpanded] = useState(false);
-  const fatigueScore = exercise.fatigue_index * 10;
-
-  const getFatigueColor = (value: number) => {
-    if (value <= 3) return "text-load-low";
-    if (value <= 6) return "text-load-medium";
-    if (value <= 9) return "text-load-max";
-    return "text-destructive";
-  };
+  const fatigue10 = exercise.fatigue_index * 10;
+  const fatigueVar = useMemo<
+    `-load-low` | `-load-medium` | `-load-high` | `-load-max`
+  >(() => {
+    if (fatigue10 <= 3) return "-load-low";
+    if (fatigue10 <= 6) return "-load-medium";
+    if (fatigue10 <= 9) return "-load-high";
+    return "-load-max";
+  }, [fatigue10]);
 
   return (
-    <div className="group relative p-4 bg-background border border-border rounded-xl shadow-sm hover:shadow-md transition mb-3">
-      <div className="flex items-start justify-between">
-        {/* === LEFT PANEL === */}
-        <div className="flex-1">
-          {/* === TITLE === */}
-          <div className="flex items-center gap-2 mb-1">
-            <h3 className="text-base font-semibold text-foreground leading-snug">
+    <div
+      className="
+        group relative mb-3 rounded-2xl border border-border bg-card
+        p-4 shadow-sm transition hover:shadow-md
+      "
+    >
+      <div className="flex items-start justify-between gap-3">
+        {/* LEFT */}
+        <div className="min-w-0 flex-1">
+          {/* Title row */}
+          <div className="mb-1 flex items-center gap-2">
+            <h3 className="truncate text-base font-semibold leading-snug text-foreground">
               {exercise.name}
             </h3>
             {exercise.aliases?.[0] && (
-              <span className="text-xs italic text-muted-foreground">
+              <span className="shrink-0 text-xs italic text-muted-foreground">
                 ({exercise.aliases[0]})
               </span>
             )}
           </div>
 
-          {/* === KEY METRICS === */}
-          <div className="flex items-center gap-4 mb-2">
-            <Metric
-              icon={<Clock className="w-4 h-4" />}
-              label="Recovery"
-              value={exercise.recovery_days}
-            />
-            <Metric
-              icon={
-                <Zap className={`w-4 h-4 ${getFatigueColor(fatigueScore)}`} />
-              }
-              label="Fatigue"
-              value={fatigueScore}
-              color={getFatigueColor(fatigueScore)}
-            />
+          {/* Primary metrics row */}
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <SoftChip className="text-muted-foreground">
+              <Clock className="h-3.5 w-3.5" />
+              <TermTooltip term="recovery_days">
+                <span>Recovery: {exercise.recovery_days.toFixed(1)}</span>
+              </TermTooltip>
+            </SoftChip>
+
+            <SoftChip
+              className="text-[color:var(--load-low)]"
+              style={{ color: `var(${fatigueVar})` }}
+            >
+              <Zap className="h-3.5 w-3.5" />
+              <TermTooltip term="fatigue">
+                <span>Fatigue: {fatigue10.toFixed(1)}</span>
+              </TermTooltip>
+            </SoftChip>
           </div>
 
-          {/* === HIGHLIGHTED TAGS === */}
-          <div className="flex flex-wrap gap-1 mb-1">
+          {/* Tags */}
+          <div className="mb-1 flex flex-wrap gap-1.5">
             {exercise.compound && <Tag>Compound</Tag>}
             <Tag>ROM: {exercise.rom_rating}</Tag>
           </div>
-
-          {/* === EXPANDABLE METRICS === */}
-          {expanded && (
-            <>
-              <div className="text-xs text-muted-foreground mb-2">
-                <TermTooltip term={exercise.load_profile.toLowerCase()}>
-                  <span>{exercise.load_profile.toUpperCase()} • </span>
-                </TermTooltip>
-                <TermTooltip term={exercise.movement_plane.toLowerCase()}>
-                  <span>{exercise.movement_plane.toUpperCase()} • </span>
-                </TermTooltip>
-                <TermTooltip term={exercise.force_curve.toLowerCase()}>
-                  <span>{exercise.force_curve.toUpperCase()}</span>
-                </TermTooltip>
-              </div>
-
-              <div className="flex flex-wrap gap-1 mb-2">
-                {exercise.unilateral && <Tag>Unilateral</Tag>}
-                {exercise.ballistic && (
-                  <TermTooltip term="ballistic">
-                    <span className="px-1 py-0.5 bg-orange-100 text-orange-800 border border-orange-200 rounded text-[10px] font-medium">
-                      Ballistic
-                    </span>
-                  </TermTooltip>
-                )}
-                <Tag>Skill: {exercise.skill_requirement}</Tag>
-              </div>
-
-              <div className="flex gap-4 text-xs text-muted-foreground mb-1">
-                <Metric
-                  icon={<Brain className="w-3 h-3" />}
-                  label="CNS"
-                  value={exercise.cns_demand * 10}
-                  size="text-xs"
-                />
-                <Metric
-                  icon={<Activity className="w-3 h-3" />}
-                  label="Met"
-                  value={exercise.metabolic_demand * 10}
-                  size="text-xs"
-                />
-                <Metric
-                  icon={<AlertTriangle className="w-3 h-3" />}
-                  label="Joint"
-                  value={exercise.joint_stress * 10}
-                  size="text-xs"
-                />
-              </div>
-            </>
-          )}
-
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-xs mt-2 text-muted-foreground hover:text-primary"
-            onClick={() => setExpanded((p) => !p)}
-          >
-            {expanded ? "Hide details" : "Show more metrics"}
-            <span
-              className={`transition-transform ml-1 ${
-                expanded ? "rotate-180" : ""
-              }`}
-            >
-              ▼
-            </span>
-          </Button>
         </div>
 
-        {/* === RIGHT PANEL === */}
-        <div className="flex flex-col items-end gap-2 ml-4">
+        {/* RIGHT */}
+        <div className="ml-2 flex shrink-0 flex-col items-end gap-2">
           <ExerciseDetailModal exercise={exercise} />
           <Button
             onClick={() => onAdd(exercise)}
-            variant="outline"
             size="sm"
-            className="rounded-full text-xs px-3"
+            className="
+              rounded-full px-3 text-xs
+              bg-primary text-primary-foreground hover:bg-primary/90
+              hover:opacity-90
+            "
           >
-            Add +
+            Add
           </Button>
         </div>
       </div>

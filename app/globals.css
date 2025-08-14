@@ -66,18 +66,21 @@
   --radius: 0.875rem;
 
   /* Base */
-  --background: oklch(1 0 0 / 0.9);
-  --foreground: oklch(0.12 0.01 250);         /* charcoal gray */
+  --background: oklch(1 0 0 );
+  --foreground: oklch(0.12 0.01 250);
+
 
    /* Neutral surfaces */
-   --card: oklch(1 0 0 / 0.9);
-   --card-foreground: var(--foreground);
-   --popover: oklch(0.97 0.01 240);
-   --popover-foreground: var(--foreground);
-   --muted: oklch(0.94 0.01 240);
-   --muted-foreground: oklch(0.45 0.01 240);
-   --border: oklch(0.88 0.01 240);
-   --input: oklch(0.91 0.01 240);
+  --card:       oklch(1 0 0 / 0.9);
+  --card-foreground: var(--foreground);
+  --popover:    oklch(0.97 0.01 250);
+  --popover-foreground: var(--foreground);
+  --muted:      oklch(0.94 0.01 250);
+  --muted-foreground: oklch(0.45 0.01 250);
+  --border:     oklch(0.88 0.01 250);
+  --input:      oklch(0.91 0.01 250);
+  --ring:       var(--brand); /* subtle green focus ring */
+  --bar-bg:     oklch(0.92 0.01 250);
  
    /* Buttons: make “primary” the dark neutral  */
    --primary: oklch(0.298 0.0036 286);   /* #2d2d2f */
@@ -103,23 +106,27 @@
   --border: oklch(0.88 0.01 140);
   --input: oklch(0.91 0.01 140);
   --ring: oklch(0.7 0.2 145);                     /* forest ring */
-  --destructive: oklch(0.6 0.2 30);               /* brick red */
+  --destructive: oklch(0.64 0.20 30);            /* brick red */
 
   /* Emotional Tone */
-  --positive: oklch(0.78 0.22 150);
-  --warning: oklch(0.85 0.18 90);                 /* caution yellow */
-  --critical: oklch(0.7 0.24 27);
-  --info: oklch(0.82 0.18 230);                   /* tech blue */
-  --neutral: oklch(0.86 0.01 140);
+  --positive: oklch(0.70 0.15 150); /* same family as brand, slightly calmer */
+  --warning:  oklch(0.80 0.15 95);  /* warm amber, not neon */
+  --critical: oklch(0.64 0.20 30);  /* red-orange; lower L for legibility */
+  --info:     oklch(0.72 0.13 230); /* calm blue to sit with cool neutrals */
+  --neutral:  oklch(0.86 0.01 250);
 
   /* Load & Bar */
-  --load-low: oklch(0.8 0.2 150);
-  --load-medium: oklch(0.75 0.22 120);
-  --load-high: oklch(0.7 0.24 70);
-  --load-max: oklch(0.6 0.26 30);
-  --bar-bg: oklch(0.9 0.01 140);
+  --load-low:    var(--brand);            /* green = easy */
+  --load-medium: oklch(0.78 0.16 95);     /* amber = moderate */
+  --load-high:   oklch(0.72 0.17 70);     /* orange = heavy */
+  --load-max:    oklch(0.64 0.19 30);     /* red-orange = max */
 
-    --color-set-type-warmup:     oklch(0.72 0.15 140); /* sage green */
+  --color-group-type-standard: oklch(0.62 0.17 115); /* mossy olive */
+  --color-group-type-superset: oklch(0.62 0.17 115); /* mossy olive */
+  --color-group-type-giant_set: oklch(0.62 0.17 115); /* mossy olive */
+  --color-group-type-circuit: oklch(0.62 0.17 115); /* mossy olive */
+
+  --color-set-type-warmup:     oklch(0.72 0.15 140); /* sage green */
   --color-set-type-standard:   oklch(0.62 0.17 115); /* mossy olive */
   --color-set-type-top_set:    oklch(0.58 0.26 25);  /* bold red-orange */
   --color-set-type-backoff:    oklch(0.6 0.12 60);   /* tan / khaki */
@@ -133,11 +140,11 @@
 }
 
 .dark {
-  --background: oklch(0.12 0.015 140);
-  --foreground: oklch(0.98 0.01 140);
+  --background: oklch(0.12 0.015 250);
+  --foreground: oklch(0.98 0.01 250);
 
-  --card: oklch(0.20 0.01 250 / 0.85);
-  --muted: oklch(0.26 0.01 250);
+  --card:   oklch(0.20 0.01 250 / 0.85);
+  --muted:  oklch(0.26 0.01 250);
   --muted-foreground: oklch(0.70 0.01 250);
   --border: oklch(0.30 0.01 250);
   --input:  oklch(0.30 0.01 250);
@@ -156,17 +163,21 @@
   --accent-foreground: var(--background);
 
 
-  --positive: oklch(0.82 0.25 150);
-  --warning: oklch(0.85 0.25 90);
-  --critical: oklch(0.78 0.26 27);
-  --info: oklch(0.82 0.22 230);
-  --neutral: oklch(0.5 0.01 140);
+  --positive: oklch(0.82 0.17 150);
+  --warning:  oklch(0.86 0.18 95);
+  --critical: oklch(0.78 0.22 30);
+  --info:     oklch(0.82 0.15 230);
+  --neutral:  oklch(0.62 0.01 250);
 
-  --load-low: oklch(0.78 0.22 150);
-  --load-medium: oklch(0.78 0.22 120);
-  --load-high: oklch(0.82 0.22 70);
-  --load-max: oklch(0.78 0.22 27);
-  --bar-bg: oklch(0.28 0.01 140);
+  --load-low:    var(--brand);
+  --load-medium: oklch(0.84 0.18 95);
+  --load-high:   oklch(0.78 0.20 70);
+  --load-max:    oklch(0.76 0.22 30);
+
+  --color-group-type-standard: oklch(0.62 0.17 115); /* mossy olive */
+  --color-group-type-superset: oklch(0.62 0.17 115); /* mossy olive */
+  --color-group-type-giant_set: oklch(0.62 0.17 115); /* mossy olive */
+  --color-group-type-circuit: oklch(0.62 0.17 115); /* mossy olive */
 
   --color-set-type-warmup:     oklch(0.75 0.22 140); /* minty sage, clean and light */
   --color-set-type-standard:   oklch(0.78 0.2 150);  /* fresh forest (same as primary) */
