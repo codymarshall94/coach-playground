@@ -26,7 +26,7 @@ import {
   EQUIPMENT_LIST,
 } from "@/constants/equipment-list";
 import { CATEGORY_DISPLAY_MAP } from "@/constants/movement-category";
-import { MUSCLES } from "@/constants/muscles";
+import { MuscleGroup, MUSCLES } from "@/constants/muscles";
 import { cn } from "@/lib/utils";
 import { Equipment } from "@/types/Exercise";
 import { groupBy } from "@/utils/groupBy";
@@ -336,8 +336,8 @@ export function FilterPopover(props: Props) {
             {!showAdvancedMuscles ? (
               <div className="flex flex-wrap items-center gap-2 mt-2">
                 {groupNames.map((group) => {
-                  const allSelected = muscleGroups[group].every((m) =>
-                    selectedMuscles.includes(m.id)
+                  const allSelected = muscleGroups[group as MuscleGroup].every(
+                    (m) => selectedMuscles.includes(m.id)
                   );
                   return (
                     <ChipBadge
@@ -362,7 +362,9 @@ export function FilterPopover(props: Props) {
             ) : (
               <>
                 {groupNames.map((group) => {
-                  const ids = muscleGroups[group].map((m) => m.id);
+                  const ids = muscleGroups[group as MuscleGroup].map(
+                    (m) => m.id
+                  );
                   const noneSelected = ids.every(
                     (id) => !selectedMuscles.includes(id)
                   );
@@ -410,7 +412,7 @@ export function FilterPopover(props: Props) {
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {muscleGroups[group].map((m) => {
+                        {muscleGroups[group as MuscleGroup].map((m) => {
                           const active = selectedMuscles.includes(m.id);
                           return (
                             <ChipBadge

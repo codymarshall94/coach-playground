@@ -1,21 +1,21 @@
 import { MUSCLE_DISPLAY_MAP } from "@/constants/muscles";
-import { ActivationMap, Muscle } from "@/types/Exercise";
+import { ExerciseMuscleJoined } from "@/types/Exercise";
 
 interface MuscleActivationChartProps {
-  activationMap: ActivationMap;
+  activationMap: ExerciseMuscleJoined[];
 }
 
 export function MuscleActivationChart({
   activationMap,
 }: MuscleActivationChartProps) {
-  const sortedMuscles = Object.entries(activationMap)
-    .sort((a, b) => b[1] - a[1])
+  const sortedMuscles = activationMap
+    .sort((a, b) => (b.contribution ?? 0) - (a.contribution ?? 0))
     .slice(0, 8);
 
   return (
     <div className="space-y-3">
-      {sortedMuscles.map(([muscle, activation]) => {
-        const percentage = activation * 100;
+      {sortedMuscles.map((muscle) => {
+        const percentage = (muscle.contribution ?? 0) * 100;
         const getBarColor = (val: number) => {
           if (val >= 80) return "bg-red-500";
           if (val >= 60) return "bg-orange-500";
@@ -24,10 +24,10 @@ export function MuscleActivationChart({
         };
 
         return (
-          <div key={muscle} className="space-y-1">
+          <div key={muscle.muscles.id} className="space-y-1">
             <div className="flex items-center justify-between text-sm">
               <span className="font-medium text-gray-700 capitalize">
-                {MUSCLE_DISPLAY_MAP[muscle as Muscle]}
+                {MUSCLE_DISPLAY_MAP[muscle.muscles.id]}
               </span>
               <span className="text-gray-600 font-semibold">
                 {percentage.toFixed(0)}%
