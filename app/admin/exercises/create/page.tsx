@@ -69,7 +69,7 @@ const defaultExercise: Partial<Exercise> = {
   intensity_ceiling: 0,
   recovery_days: 0,
   base_calorie_cost: 8,
-  activation_map: {},
+  exercise_muscles: [],
   energy_system: "Glycolytic",
   volume_per_set: { strength: 100, hypertrophy: 80 },
   cues: [],

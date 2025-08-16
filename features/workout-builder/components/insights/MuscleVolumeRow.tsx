@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/tooltip";
 import { MUSCLE_DISPLAY_MAP } from "@/constants/muscles";
 import { cn } from "@/lib/utils";
-import type { Exercise, Muscle } from "@/types/Exercise";
+import type { Exercise } from "@/types/Exercise";
 import type { WorkoutExercise } from "@/types/Workout";
 import { Info } from "lucide-react";
 import { useMemo } from "react";
@@ -31,8 +31,10 @@ const countExercisesForMuscle = (
   const ids = new Set(
     workout
       .map((w) => {
-        const meta = exercises.find((e) => e.id === w.exercise_id); // <-- fix
-        const hits = meta?.activation_map?.[muscleId as Muscle];
+        const meta = exercises.find((e) => e.id === w.exercise_id);
+        const hits = meta?.exercise_muscles?.find(
+          (m) => m.muscles.id === muscleId
+        )?.contribution;
         return hits ? w.exercise_id : null;
       })
       .filter(Boolean)
@@ -51,7 +53,9 @@ const topContributors = (
   const rows = workout
     .map((w) => {
       const meta = exercises.find((e) => e.id === w.exercise_id);
-      const act = meta?.activation_map?.[muscleId as Muscle] ?? 0;
+      const act =
+        meta?.exercise_muscles?.find((m) => m.muscles.id === muscleId)
+          ?.contribution ?? 0;
       const sets = w.sets?.length ?? 0;
       return {
         id: w.exercise_id,

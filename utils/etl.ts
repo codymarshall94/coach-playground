@@ -8,10 +8,11 @@ function getDifficultyMultiplier(exercise: Exercise): number {
   const skill = exercise.skill_requirement;
   const rom = exercise.rom_rating;
 
-  const activationTotal = Object.values(exercise.activation_map ?? {}).reduce(
-    (sum, val) => sum + val,
-    0
-  );
+  const activationTotal =
+    exercise.exercise_muscles?.reduce(
+      (sum, muscle) => sum + (muscle.contribution ?? 0),
+      0
+    ) ?? 0;
 
   // Base values: CNS and compound-ness weigh more
   const base =

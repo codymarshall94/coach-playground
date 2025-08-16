@@ -83,8 +83,6 @@ export const WorkoutBuilder = ({
 
   const router = useRouter();
 
-  console.log(program.days?.[0]?.workout);
-
   const groupRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const handleSave = async () => {

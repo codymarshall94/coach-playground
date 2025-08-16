@@ -42,26 +42,23 @@ type LibraryModeProps = BaseProps & {
 
 type Props = WorkoutModeProps | LibraryModeProps;
 
-/** ---------- Helpers ---------- */
-const colorWithBucket = (bucket: number) =>
-  // Tailwind blue-500 as base; reads premium and neutral with your palette.
-  `rgba(59, 130, 246, ${Math.min(0.2 + bucket * 0.15, 0.9)})`;
+/** Map joined rows -> react-body-highlighter muscle keys */
+type Joined = { contribution?: number | null; muscles: { id: string } };
 
-const mapActivationKeysToMuscles = (
-  activationMap: Record<string, number>
-): Muscle[] =>
-  Object.keys(activationMap)
-    .map((m) => MUSCLE_NAME_MAP[m as keyof typeof MUSCLE_NAME_MAP])
-    .filter((v): v is Muscle => !!v);
+const mapJoinedToMuscles = (ems: Joined[]): Muscle[] =>
+  ems
+    .map((em) => MUSCLE_NAME_MAP[em.muscles.id as keyof typeof MUSCLE_NAME_MAP])
+    .filter((v): v is Muscle => Boolean(v));
 
-const activationToBucket = (
-  activationMap: Record<string, number>,
+/** Convert contributions -> 1..5 bucket for color */
+const contributionsToBucket = (
+  ems: Joined[],
   strategy: "avg" | "max" | "constant",
   constantIntensity?: number
 ) => {
   if (strategy === "constant")
     return Math.max(1, Math.min(5, constantIntensity ?? 3));
-  const vals = Object.values(activationMap);
+  const vals = ems.map((em) => Number(em.contribution ?? 0));
   if (!vals.length) return 1;
   const x =
     strategy === "max"
@@ -69,6 +66,9 @@ const activationToBucket = (
       : vals.reduce((a, b) => a + b, 0) / vals.length;
   return Math.max(1, Math.min(5, Math.round(x * 5)));
 };
+
+const colorWithBucket = (b: number) =>
+  `rgba(59, 130, 246, ${Math.min(0.2 + b * 0.15, 0.9)})`;
 
 export default function MuscleHeatmap(props: Props) {
   // Default the first view to the side with more muscles highlighted.
@@ -82,23 +82,27 @@ export default function MuscleHeatmap(props: Props) {
     if (props.mode === "workout") {
       const { workoutExercises, exercises } = props;
       return workoutExercises.map((w) => {
-        const activation =
-          exercises.find((e) => e.id === w.exercise_id)?.activation_map ?? {};
+        const ex = exercises.find((e) => e.id === w.exercise_id);
+        const ems = ex?.exercise_muscles ?? [];
         return {
           name: w.name,
-          muscles: mapActivationKeysToMuscles(activation),
+          muscles: mapJoinedToMuscles(ems),
+          // for workout view you're already using set count as intensity
           color: colorWithBucket(Math.max(1, Math.min(5, w.sets.length))),
         };
       });
     } else {
       const { exerciseMetas, intensityFrom = "avg", constantIntensity } = props;
-      return exerciseMetas.map((e) => ({
-        name: e.name,
-        muscles: mapActivationKeysToMuscles(e.activation_map),
-        color: colorWithBucket(
-          activationToBucket(e.activation_map, intensityFrom, constantIntensity)
-        ),
-      }));
+      return exerciseMetas.map((e) => {
+        const ems = e.exercise_muscles ?? [];
+        return {
+          name: e.name,
+          muscles: mapJoinedToMuscles(ems),
+          color: colorWithBucket(
+            contributionsToBucket(ems, intensityFrom, constantIntensity)
+          ),
+        };
+      });
     }
   }, [props]);
 

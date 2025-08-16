@@ -13,9 +13,16 @@ import {
 import { FieldInfo } from "@/constants/exercise-info";
 import { cn } from "@/lib/utils";
 import type { Exercise } from "@/types/Exercise";
-import { BarChart3, Brain, Clock, Eye, Flame, Target } from "lucide-react";
+import { BarChart3, Brain, Clock, Eye, Flame } from "lucide-react";
+import Image from "next/image";
 
-export function ExerciseDetailModal({ exercise }: { exercise: Exercise }) {
+export function ExerciseDetailModal({
+  exercise,
+  triggerClassName,
+}: {
+  exercise: Exercise;
+  triggerClassName?: string;
+}) {
   const fatigueDemands = [
     {
       name: "CNS Demand",
@@ -86,19 +93,27 @@ export function ExerciseDetailModal({ exercise }: { exercise: Exercise }) {
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          size="icon"
-          className="hover:bg-green-50 hover:border-green-200 bg-transparent"
+          className={cn(
+            "hover:bg-green-50 rounded p-1 hover:border-green-200 bg-transparent",
+            triggerClassName
+          )}
         >
-          <Eye className="w-4 h-4" />
+          <Eye className="w-5 h-5" />
         </Button>
       </DialogTrigger>
       <DialogContent className="lg:min-w-[30vw] max-w-[300px]   max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-start gap-2">
+            {exercise.image_url && (
+              <Image
+                src={exercise.image_url}
+                alt={exercise.name}
+                width={100}
+                height={100}
+                className="rounded-md"
+              />
+            )}
             <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <Target className="w-5 h-5 text-green-600" />
-              </div>
               {exercise.name}
             </DialogTitle>
           </div>

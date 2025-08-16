@@ -1,77 +1,64 @@
-import { Muscle } from "@/types/Exercise";
+import { MuscleType } from "react-body-highlighter";
+
+export type MuscleGroup =
+  | "quads"
+  | "glutes"
+  | "hamstrings"
+  | "back"
+  | "chest"
+  | "shoulders"
+  | "arms"
+  | "core"
+  | "obliques"
+  | "adductors"
+  | "abductors"
+  | "calves"
+  | "rotator_cuff"
+  | "hip_flexors";
+
+export type Muscle = keyof typeof MUSCLE_DISPLAY_MAP;
+
+export type MuscleRole = "prime" | "synergist" | "stabilizer";
 
 export interface MuscleInfo {
   id: Muscle;
   displayName: string;
   region: "upper" | "lower" | "core";
-  movementType: "push" | "pull" | "neutral";
-  role?: "prime" | "support" | "stabilizer";
-  group?: string; // e.g. "quads", "delts", "posterior chain"
+  movementType: "push" | "pull" | "neutral" | "abduction";
+  role?: MuscleRole;
+  group?: MuscleGroup;
 }
 
 export const MUSCLES: MuscleInfo[] = [
+  // --- Shoulders ---
   {
-    id: "forearms",
-    displayName: "Forearms",
-    region: "upper",
-    movementType: "neutral",
-    role: "support",
-    group: "arms",
-  },
-  {
-    id: "peroneus_brevis",
-    displayName: "Peroneus Brevis",
-    region: "lower",
-    movementType: "push",
-    role: "prime",
-    group: "calves",
-  },
-  {
-    id: "quadriceps",
-    displayName: "Quadriceps",
-    region: "lower",
-    movementType: "push",
-    role: "prime",
-    group: "quads",
-  },
-  {
-    id: "hamstrings",
-    displayName: "Hamstrings",
-    region: "lower",
-    movementType: "pull",
-    role: "prime",
-    group: "posterior_chain",
-  },
-  {
-    id: "gluteus_maximus",
-    displayName: "Gluteus Maximus",
-    region: "lower",
-    movementType: "push",
-    role: "prime",
-    group: "posterior_chain",
-  },
-  {
-    id: "pectoralis_major",
-    displayName: "Pectoralis Major",
+    id: "anterior_deltoid",
+    displayName: "Anterior Deltoid",
     region: "upper",
     movementType: "push",
-    role: "prime",
-    group: "chest",
+    group: "shoulders",
   },
   {
-    id: "latissimus_dorsi",
-    displayName: "Latissimus Dorsi",
+    id: "lateral_deltoid",
+    displayName: "Lateral Deltoid",
+    region: "upper",
+    movementType: "abduction",
+    group: "shoulders",
+  },
+  {
+    id: "posterior_deltoid",
+    displayName: "Posterior Deltoid",
     region: "upper",
     movementType: "pull",
-    role: "prime",
-    group: "back",
+    group: "shoulders",
   },
+
+  // --- Arms ---
   {
     id: "biceps",
-    displayName: "Biceps",
+    displayName: "Biceps Brachii",
     region: "upper",
     movementType: "pull",
-    role: "support",
     group: "arms",
   },
   {
@@ -79,268 +66,248 @@ export const MUSCLES: MuscleInfo[] = [
     displayName: "Triceps Brachii",
     region: "upper",
     movementType: "push",
-    role: "support",
     group: "arms",
   },
+  {
+    id: "forearm",
+    displayName: "Forearm",
+    region: "upper",
+    movementType: "neutral",
+    group: "arms",
+  },
+
+  // --- Core ---
   {
     id: "core",
     displayName: "Core",
     region: "core",
     movementType: "neutral",
-    role: "stabilizer",
+    group: "core",
   },
+
+  // --- Back ---
   {
     id: "erector_spinae",
     displayName: "Erector Spinae",
-    region: "core",
+    region: "upper",
     movementType: "pull",
-    role: "stabilizer",
-    group: "posterior_chain",
+    group: "back",
   },
   {
-    id: "anterior_deltoid",
-    displayName: "Anterior Deltoid",
+    id: "latissimus_dorsi",
+    displayName: "Latissimus Dorsi",
     region: "upper",
-    movementType: "push",
-    role: "prime",
-    group: "delts",
-  },
-  {
-    id: "lateral_deltoid",
-    displayName: "Lateral Deltoid",
-    region: "upper",
-    movementType: "push",
-    role: "prime",
-    group: "delts",
-  },
-  {
-    id: "upper_traps",
-    displayName: "Upper Traps",
-    region: "upper",
-    movementType: "push",
-    role: "prime",
-    group: "delts",
+    movementType: "pull",
+    group: "back",
   },
   {
     id: "rhomboids",
     displayName: "Rhomboids",
     region: "upper",
     movementType: "pull",
-    role: "prime",
     group: "back",
   },
   {
-    id: "posterior_deltoid",
-    displayName: "Posterior Deltoid",
+    id: "lower_traps",
+    displayName: "Lower Trapezius",
     region: "upper",
-    movementType: "push",
-    role: "prime",
-    group: "delts",
+    movementType: "pull",
+    group: "back",
+  },
+  {
+    id: "upper_traps",
+    displayName: "Upper Trapezius",
+    region: "upper",
+    movementType: "pull",
+    group: "back",
   },
 
+  // --- Chest ---
   {
-    id: "lower_traps",
-    displayName: "Lower Traps",
+    id: "pectoralis_major",
+    displayName: "Pectoralis Major",
     region: "upper",
     movementType: "push",
-    role: "prime",
-    group: "delts",
+    group: "chest",
+  },
+
+  // --- Glutes ---
+  {
+    id: "gluteus_maximus",
+    displayName: "Gluteus Maximus",
+    region: "lower",
+    movementType: "push",
+    group: "glutes",
+  },
+
+  // --- Legs ---
+  {
+    id: "hamstrings",
+    displayName: "Hamstrings",
+    region: "lower",
+    movementType: "pull",
+    group: "hamstrings",
+  },
+  {
+    id: "quadriceps",
+    displayName: "Quadriceps",
+    region: "lower",
+    movementType: "push",
+    group: "quads",
   },
   {
     id: "sartorius",
     displayName: "Sartorius",
     region: "lower",
-    movementType: "pull",
-    role: "prime",
-    group: "posterior_chain",
-  },
-  {
-    id: "tensor_fasciae_latae",
-    displayName: "Tensor Fasciae Latae",
-    region: "lower",
-    movementType: "pull",
-    role: "prime",
-    group: "posterior_chain",
-  },
-  {
-    id: "vastus_lateralis",
-    displayName: "Vastus Lateralis",
-    region: "lower",
-    movementType: "push",
-    role: "prime",
+    movementType: "neutral",
     group: "quads",
   },
-  {
-    id: "vastus_medialis",
-    displayName: "Vastus Medialis",
-    region: "lower",
-    movementType: "push",
-    role: "prime",
-    group: "quads",
-  },
-  {
-    id: "vastus_intermedius",
-    displayName: "Vastus Intermedius",
-    region: "lower",
-    movementType: "push",
-    role: "prime",
-    group: "quads",
-  },
-  {
-    id: "rectus_femoris",
-    displayName: "Rectus Femoris",
-    region: "lower",
-    movementType: "push",
-    role: "prime",
-    group: "quads",
-  },
-  {
-    id: "iliopsoas",
-    displayName: "Iliopsoas",
-    region: "lower",
-    movementType: "pull",
-    role: "prime",
-    group: "posterior_chain",
-  },
+
+  // --- Calves ---
   {
     id: "gastrocnemius",
     displayName: "Gastrocnemius",
     region: "lower",
-    movementType: "pull",
-    role: "prime",
+    movementType: "push",
     group: "calves",
   },
   {
     id: "soleus",
     displayName: "Soleus",
     region: "lower",
-    movementType: "pull",
-    role: "prime",
+    movementType: "push",
     group: "calves",
   },
   {
     id: "tibialis_anterior",
     displayName: "Tibialis Anterior",
     region: "lower",
-    movementType: "push",
-    role: "prime",
+    movementType: "neutral",
     group: "calves",
   },
   {
     id: "tibialis_posterior",
     displayName: "Tibialis Posterior",
     region: "lower",
-    movementType: "push",
-    role: "prime",
+    movementType: "neutral",
+    group: "calves",
+  },
+  {
+    id: "peroneus_brevis",
+    displayName: "Peroneus Brevis",
+    region: "lower",
+    movementType: "neutral",
     group: "calves",
   },
   {
     id: "peroneus_longus",
     displayName: "Peroneus Longus",
     region: "lower",
-    movementType: "push",
-    role: "prime",
+    movementType: "neutral",
     group: "calves",
+  },
+
+  // --- Hip Flexors / Abductors ---
+  {
+    id: "tensor_fasciae_latae",
+    displayName: "Tensor Fasciae Latae",
+    region: "lower",
+    movementType: "abduction",
+    group: "abductors",
+  },
+  {
+    id: "iliopsoas",
+    displayName: "Iliopsoas",
+    region: "lower",
+    movementType: "pull",
+    group: "hip_flexors",
   },
 ];
 
-// const usedMuscles = new Set<string>();
-// EXERCISES.forEach((exercise) => {
-//   Object.keys(exercise.activationMap || {}).forEach((muscle) => {
-//     usedMuscles.add(muscle);
-//   });
-// });
+export const MUSCLE_DISPLAY_MAP = MUSCLES.reduce((acc, muscle) => {
+  acc[muscle.id] = muscle.displayName;
+  return acc;
+}, {} as Record<string, string>);
 
-// const definedMuscles = new Set<string>(MUSCLES.map((m) => m.id));
-// console.log(definedMuscles);
+export const MUSCLE_NAME_MAP: Record<string, Muscle> = {
+  anterior_deltoid: MuscleType.FRONT_DELTOIDS,
+  lateral_deltoid: MuscleType.FRONT_DELTOIDS,
+  posterior_deltoid: MuscleType.BACK_DELTOIDS,
 
-// const musclesToAdd = Array.from(usedMuscles).filter(
-//   (muscle) => !definedMuscles.has(muscle)
-// );
+  biceps: MuscleType.BICEPS,
+  triceps_brachii: MuscleType.TRICEPS,
+  forearm: MuscleType.FOREARM,
 
-// console.log(musclesToAdd);
+  core: MuscleType.ABS,
 
-export const MUSCLE_DISPLAY_MAP: Record<Muscle, string> = {
-  quadriceps: "Quadriceps",
-  gluteus_maximus: "Gluteus Maximus",
-  hamstrings: "Hamstrings",
-  erector_spinae: "Erector Spinae",
-  core: "Core",
-  pectoralis_major: "Pectoralis Major",
-  triceps_brachii: "Triceps Brachii",
-  anterior_deltoid: "Anterior Deltoid",
-  lateral_deltoid: "Lateral Deltoid",
-  upper_traps: "Upper Traps",
-  latissimus_dorsi: "Latissimus Dorsi",
-  rhomboids: "Rhomboids",
-  posterior_deltoid: "Posterior Deltoid",
-  biceps: "Biceps",
-  forearms: "Forearms",
-  lower_traps: "Lower Traps",
-  sartorius: "Sartorius",
-  tensor_fasciae_latae: "Tensor Fasciae Latae",
-  vastus_lateralis: "Vastus Lateralis",
-  vastus_medialis: "Vastus Medialis",
-  vastus_intermedius: "Vastus Intermedius",
-  rectus_femoris: "Rectus Femoris",
-  iliopsoas: "Iliopsoas",
-  gastrocnemius: "Gastrocnemius",
-  soleus: "Soleus",
-  tibialis_anterior: "Tibialis Anterior",
-  tibialis_posterior: "Tibialis Posterior",
-  peroneus_longus: "Peroneus Longus",
-  peroneus_brevis: "Peroneus Brevis",
-  // ...etc
-};
+  erector_spinae: MuscleType.LOWER_BACK,
+  latissimus_dorsi: MuscleType.UPPER_BACK,
+  rhomboids: MuscleType.UPPER_BACK,
 
-export const MUSCLE_NAME_MAP: Record<Muscle, string> = {
-  pectoralis_major: "chest",
-  triceps_brachii: "triceps",
-  biceps: "biceps",
-  forearms: "forearm",
-  anterior_deltoid: "front-deltoids",
-  lateral_deltoid: "front-deltoids",
-  posterior_deltoid: "back-deltoids",
-  upper_traps: "trapezius",
-  lower_traps: "trapezius",
-  latissimus_dorsi: "upper-back",
-  rhomboids: "upper-back",
-  erector_spinae: "lower-back",
-  gluteus_maximus: "gluteal",
-  quadriceps: "quadriceps",
-  hamstrings: "hamstring",
-  soleus: "calves",
-  tibialis_anterior: "calves",
-  tibialis_posterior: "calves",
-  peroneus_longus: "calves",
-  peroneus_brevis: "calves",
-  core: "abs",
-  sartorius: "gluteal",
-  tensor_fasciae_latae: "gluteal",
-  vastus_lateralis: "quadriceps",
-  vastus_medialis: "quadriceps",
-  vastus_intermedius: "quadriceps",
-  rectus_femoris: "quadriceps",
-  iliopsoas: "posterior_chain",
-  gastrocnemius: "calves",
+  lower_traps: MuscleType.TRAPEZIUS,
+  upper_traps: MuscleType.TRAPEZIUS,
+
+  pectoralis_major: MuscleType.CHEST,
+
+  gluteus_maximus: MuscleType.GLUTEAL,
+
+  hamstrings: MuscleType.HAMSTRING,
+  quadriceps: MuscleType.QUADRICEPS,
+  sartorius: MuscleType.QUADRICEPS,
+
+  gastrocnemius: MuscleType.CALVES,
+  soleus: MuscleType.CALVES,
+  tibialis_anterior: MuscleType.CALVES,
+  tibialis_posterior: MuscleType.CALVES,
+  peroneus_brevis: MuscleType.CALVES,
+  peroneus_longus: MuscleType.CALVES,
+
+  tensor_fasciae_latae: MuscleType.ABDUCTORS,
+  iliopsoas: MuscleType.ABDUCTOR,
 };
 
 export const BACK_MUSCLES = [
-  "back-deltoids",
-  "trapezius",
+  // Shoulders / Upper Back
+  "posterior_deltoid",
+  "rhomboids",
+  "latissimus_dorsi",
   "erector_spinae",
-  "gluteal",
-  "hamstring",
-  "quadriceps",
-  "calves",
-];
-export const FRONT_MUSCLES = [
-  "front-deltoids",
-  "triceps",
-  "biceps",
+  "lower_traps",
+  "upper_traps",
+
+  // Arms (posterior view)
+  "triceps_brachii",
+  "biceps", // still visible from the back
   "forearm",
-  "abs",
-  "obliques",
-  "adductor",
-  "abductors",
+
+  // Glutes & Legs
+  "gluteus_maximus",
+  "hamstrings",
+  "gastrocnemius",
+  "soleus",
+  "tibialis_posterior",
+  "peroneus_brevis",
+  "peroneus_longus",
+];
+
+export const FRONT_MUSCLES = [
+  // Shoulders / Chest
+  "anterior_deltoid",
+  "lateral_deltoid",
+  "pectoralis_major",
+
+  // Arms (front view)
+  "biceps",
+  "triceps_brachii",
+  "forearm",
+
+  // Core
+  "core",
+  "iliopsoas",
+  "tensor_fasciae_latae",
+
+  // Legs
+  "quadriceps",
+  "sartorius",
+  "tibialis_anterior",
 ];

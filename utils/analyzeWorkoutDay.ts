@@ -1,10 +1,5 @@
-import { MUSCLES } from "@/constants/muscles";
-import {
-  EnergySystem,
-  Exercise,
-  ExerciseCategory,
-  Muscle,
-} from "@/types/Exercise";
+import { Muscle, MUSCLES } from "@/constants/muscles";
+import { EnergySystem, Exercise, ExerciseCategory } from "@/types/Exercise";
 import { WorkoutExerciseGroup, WorkoutTypes } from "@/types/Workout";
 import { WorkoutSummaryStats } from "@/types/WorkoutSummary";
 
@@ -115,9 +110,10 @@ export function analyzeWorkoutDay(
       totalJointStress += baseEx.joint_stress;
       totalVolume += volumePerSet;
 
-      for (const [muscleId, activation] of Object.entries(
-        baseEx.activation_map
-      )) {
+      for (const muscle of baseEx.exercise_muscles ?? []) {
+        const muscleId = muscle.muscles.id;
+        const activation = muscle.contribution ?? 0;
+
         increment(muscleVolumes, muscleId, activation);
         increment(muscleSetCounts, muscleId);
         increment(activationTotals, muscleId, activation);

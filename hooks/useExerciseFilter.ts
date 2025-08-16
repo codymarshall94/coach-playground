@@ -102,7 +102,7 @@ export function useExerciseFilter() {
         const matchesMuscle =
           effectiveMuscles.length === 0 ||
           effectiveMuscles.some((muscle) =>
-            Object.keys(ex.activation_map).includes(muscle)
+            ex.exercise_muscles?.some((m) => m.muscles.id === muscle)
           );
 
         const matchesTraits =
@@ -110,12 +110,12 @@ export function useExerciseFilter() {
           selectedTraits.every((trait) => ex[trait as keyof Exercise] === true);
 
         const matchesFatigue =
-          maxFatigue === null || ex.fatigue.index <= maxFatigue;
-        const matchesCNS = maxCNS === null || ex.fatigue.cns_demand <= maxCNS;
+          maxFatigue === null || ex.fatigue_index <= maxFatigue;
+        const matchesCNS = maxCNS === null || ex.cns_demand <= maxCNS;
         const matchesMetabolic =
-          maxMetabolic === null || ex.fatigue.metabolic_demand <= maxMetabolic;
+          maxMetabolic === null || ex.metabolic_demand <= maxMetabolic;
         const matchesJoint =
-          maxJointStress === null || ex.fatigue.joint_stress <= maxJointStress;
+          maxJointStress === null || ex.joint_stress <= maxJointStress;
 
         return (
           matchesSearch &&
@@ -132,7 +132,7 @@ export function useExerciseFilter() {
       })
       .sort((a, b) => {
         if (sortKey === "recovery") return a.recovery_days - b.recovery_days;
-        if (sortKey === "fatigue") return b.fatigue.index - a.fatigue.index;
+        if (sortKey === "fatigue") return b.fatigue_index - a.fatigue_index;
         return a.name.localeCompare(b.name);
       });
   }, [

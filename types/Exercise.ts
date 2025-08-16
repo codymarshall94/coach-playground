@@ -20,16 +20,29 @@ export interface Exercise {
   joint_stress: number; // 0-1
   recovery_days: number; // typical after hard session
   base_calorie_cost: number; // kcals per hard set (est.)
-  activation_map: ActivationMap; // 0-1 per muscle
   energy_system: EnergySystem;
   volume_per_set: { strength: number; hypertrophy: number }; // kg-reps
   cues: string[];
   variations: ExerciseVariation[];
   contra_indications: string[];
   external_links: { label: string; url: string }[];
+  image_url: string;
+  exercise_muscles: ExerciseMuscleJoined[] | null;
 }
 
-export type ActivationMap = Partial<Record<Muscle, number>>;
+export type MuscleRole = "prime" | "synergist" | "stabilizer" | null;
+
+export type MuscleRow = {
+  id: string;
+  display_name: string;
+  group_name: string | null;
+};
+
+export type ExerciseMuscleJoined = {
+  role: MuscleRole;
+  contribution: number | null;
+  muscles: MuscleRow;
+};
 
 export type SkillRequirement = "low" | "moderate" | "high";
 
@@ -82,37 +95,6 @@ export type ExerciseCategory =
   | "jump"
   | "brace"
   | "other";
-
-export type Muscle =
-  | "quadriceps"
-  | "gluteus_maximus"
-  | "hamstrings"
-  | "erector_spinae"
-  | "core"
-  | "pectoralis_major"
-  | "triceps_brachii"
-  | "anterior_deltoid"
-  | "lateral_deltoid"
-  | "upper_traps"
-  | "lower_traps"
-  | "latissimus_dorsi"
-  | "rhomboids"
-  | "posterior_deltoid"
-  | "biceps"
-  | "forearms"
-  | "sartorius"
-  | "tensor_fasciae_latae"
-  | "vastus_lateralis"
-  | "vastus_medialis"
-  | "vastus_intermedius"
-  | "rectus_femoris"
-  | "iliopsoas"
-  | "gastrocnemius"
-  | "soleus"
-  | "tibialis_anterior"
-  | "tibialis_posterior"
-  | "peroneus_longus"
-  | "peroneus_brevis";
 
 export type ExerciseVariation =
   | "high-bar"

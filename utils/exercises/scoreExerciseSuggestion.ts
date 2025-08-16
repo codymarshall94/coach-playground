@@ -1,4 +1,4 @@
-import { Exercise, Muscle } from "@/types/Exercise";
+import { Exercise } from "@/types/Exercise";
 import { ProgramDay } from "@/types/Workout";
 import { analyzeWorkoutDay } from "../analyzeWorkoutDay";
 
@@ -14,9 +14,9 @@ export function scoreExerciseSuggestion({
   let score = 0;
 
   // 🧠 Fill gaps in muscle activation
-  for (const muscle in candidate.activation_map) {
-    const activation = candidate.activation_map[muscle as Muscle] ?? 0;
-    const current = insights?.muscle_volumes?.[muscle as Muscle] ?? 0;
+  for (const muscle of candidate.exercise_muscles ?? []) {
+    const activation = muscle.contribution ?? 0;
+    const current = insights?.muscle_volumes?.[muscle.muscles.id] ?? 0;
     if (current < 0.3 && activation > 0.4) {
       score += 10;
     }
