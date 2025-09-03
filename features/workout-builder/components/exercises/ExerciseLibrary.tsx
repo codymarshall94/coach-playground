@@ -1,15 +1,21 @@
 "use client";
 
-import { EmptyState } from "@/components/EmptyState";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Filter, Trash2, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ExerciseCard } from "./ExerciseCard";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
@@ -18,336 +24,268 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  EQUIPMENT_DISPLAY_MAP,
+  EQUIPMENT_LIST,
+} from "@/constants/equipment-list";
 import { CATEGORY_DISPLAY_MAP } from "@/constants/movement-category";
-import { ExerciseCard } from "@/features/workout-builder/components/exercises/ExerciseCard";
-import { FilterPopover } from "@/features/workout-builder/components/exercises/FilterPopover";
-import { SortPopover } from "@/features/workout-builder/components/exercises/SortPopover";
-import { useExerciseFilter } from "@/hooks/useExerciseFilter";
-import { cn } from "@/lib/utils";
-import type { Exercise } from "@/types/Exercise";
-import { ChevronDown, Library } from "lucide-react";
-import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { MUSCLES } from "@/constants/muscles";
+import type { Equipment, Exercise } from "@/types/Exercise";
 
-type ExerciseLibraryProps = {
-  addExercise: (exercise: Exercise) => void;
+type Props = {
+  exercises: Exercise[];
+  onAdd: (exercise: Exercise) => void;
   open: boolean;
   setOpen: (open: boolean) => void;
-  groupIndex?: number;
-  addToGroup?: (groupIndex: number, exercise: Exercise) => void;
 };
 
-export const ExerciseLibrary = ({
-  addExercise,
-  open,
-  setOpen,
-  groupIndex,
-  addToGroup,
-}: ExerciseLibraryProps) => {
-  const [openMap, setOpenMap] = useState<Record<string, boolean>>({});
+type Filters = {
+  query: string;
+  muscle: string | null;
+  category: string | null;
+  equipment: string | null;
+  sort: "relevance" | "a-z";
+};
 
-  const {
-    filtered,
-    search,
-    setSearch,
-    activeCategories,
-    toggleCategory,
-    selectedMuscles,
-    setSelectedSkill,
-    selectedEquipment,
-    toggleEquipment,
-    toggleMuscle,
-    selectedTraits,
-    toggleTrait,
-    selectedSkill,
-    maxFatigue,
-    setMaxFatigue,
-    maxCNS,
-    setMaxCNS,
-    maxMetabolic,
-    setMaxMetabolic,
-    maxJointStress,
-    setMaxJointStress,
-    resetFilters,
-    sortKey,
-    setSortKey,
-    grouped,
-    isLoading,
-  } = useExerciseFilter();
+const INITIAL: Filters = {
+  query: "",
+  muscle: null,
+  category: null,
+  equipment: null,
+  sort: "relevance",
+};
 
-  const activeChips = useMemo(() => {
-    const chips: { key: string; label: string; onRemove: () => void }[] = [];
+const normalize = (s: string) => s.toLowerCase();
 
-    if (activeCategories.length) {
-      chips.push({
-        key: "categories",
-        label: activeCategories
-          .map((c) => CATEGORY_DISPLAY_MAP[c] ?? c)
-          .join(", "),
-        onRemove: () => activeCategories.forEach((c) => toggleCategory(c)),
-      });
-    }
-    if (selectedMuscles.length) {
-      chips.push({
-        key: "muscles",
-        label: selectedMuscles.join(", "),
-        onRemove: () => selectedMuscles.forEach((id) => toggleMuscle(id)),
-      });
-    }
-    if (selectedTraits.length) {
-      chips.push({
-        key: "traits",
-        label: selectedTraits.join(", "),
-        onRemove: () => selectedTraits.forEach((t) => toggleTrait(t)),
-      });
-    }
-    if (selectedEquipment.length) {
-      chips.push({
-        key: "equipment",
-        label: selectedEquipment.join(", "),
-        onRemove: () => selectedEquipment.forEach((e) => toggleEquipment(e)),
-      });
-    }
-    if (selectedSkill) {
-      chips.push({
-        key: "skill",
-        label:
-          selectedSkill === "low"
-            ? "Beginner"
-            : selectedSkill === "moderate"
-            ? "Intermediate"
-            : "Advanced",
-        onRemove: () => setSelectedSkill(""),
-      });
-    }
-    const limitParts: string[] = [];
-    if (maxFatigue !== null && maxFatigue < 1)
-      limitParts.push(`Fatigue ≤ ${maxFatigue.toFixed(1)}`);
-    if (maxCNS !== null && maxCNS < 1)
-      limitParts.push(`CNS ≤ ${maxCNS.toFixed(1)}`);
-    if (maxMetabolic !== null && maxMetabolic < 1)
-      limitParts.push(`Metabolic ≤ ${maxMetabolic.toFixed(1)}`);
-    if (maxJointStress !== null && maxJointStress < 1)
-      limitParts.push(`Joint ≤ ${maxJointStress.toFixed(1)}`);
-    if (limitParts.length) {
-      chips.push({
-        key: "limits",
-        label: limitParts.join(" · "),
-        onRemove: () => {
-          setMaxFatigue(null);
-          setMaxCNS(null);
-          setMaxMetabolic(null);
-          setMaxJointStress(null);
-        },
-      });
-    }
-    return chips;
-  }, [
-    activeCategories,
-    selectedMuscles,
-    selectedTraits,
-    selectedEquipment,
-    selectedSkill,
-    maxFatigue,
-    maxCNS,
-    maxMetabolic,
-    maxJointStress,
-  ]);
+function relevanceScore(ex: Exercise, q: string) {
+  if (!q) return 0;
+  const n = normalize(q);
+  let s = 0;
+  if (normalize(ex.name).includes(n)) s += 3;
+  if (normalize(ex.category ?? "").includes(n)) s += 1;
+  if (ex.equipment?.some((e) => normalize(e).includes(n))) s += 1;
+  if (
+    ex.exercise_muscles?.some((m) =>
+      normalize(m.muscles.display_name).includes(n)
+    )
+  )
+    s += 1.5;
+  return -s;
+}
 
-  const expandAll = () =>
-    setOpenMap((m) => Object.fromEntries(Object.keys(m).map((k) => [k, true])));
-  const collapseAll = () =>
-    setOpenMap((m) =>
-      Object.fromEntries(Object.keys(m).map((k) => [k, false]))
-    );
+export function ExerciseLibrary({ open, setOpen, exercises, onAdd }: Props) {
+  const [f, setF] = useState<Filters>(INITIAL);
 
-  useEffect(() => {
-    if (search.length > 0) expandAll();
-    else collapseAll();
-  }, [search]);
+  const list = useMemo(() => {
+    let L = exercises;
+
+    if (f.query) {
+      const q = normalize(f.query);
+      L = L.filter((ex) => {
+        const n = normalize(ex.name).includes(q);
+        const c = normalize(ex.category ?? "").includes(q);
+        const e = ex.equipment?.some((e) => normalize(e).includes(q));
+        const m = ex.exercise_muscles?.some((m) =>
+          normalize(m.muscles.display_name).includes(q)
+        );
+        return n || c || e || m;
+      });
+    }
+    if (f.muscle) {
+      L = L.filter((ex) =>
+        ex.exercise_muscles?.some((m) => m.muscles.display_name === f.muscle)
+      );
+    }
+    if (f.category) {
+      L = L.filter((ex) => ex.category === f.category);
+    }
+    if (f.equipment) {
+      L = L.filter((ex) => ex.equipment?.includes(f.equipment as Equipment));
+    }
+
+    if (f.sort === "a-z") {
+      L = [...L].sort((a, b) => a.name.localeCompare(b.name));
+    } else {
+      L = [...L].sort(
+        (a, b) => relevanceScore(a, f.query) - relevanceScore(b, f.query)
+      );
+    }
+    return L;
+  }, [exercises, f]);
+
+  const clearKey = (k: keyof Filters) =>
+    setF((prev) => ({ ...prev, [k]: (INITIAL as any)[k] }));
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-muted-foreground hover:text-foreground"
-        >
-          <Library className="h-4 w-4 mr-2" />
+        <Button variant="outline" onClick={() => setOpen(true)}>
           Exercise Library
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-full max-w-lg min-w-1/3 p-2">
-        <div className="sticky top-0 z-20 border-b border-border bg-card/90 backdrop-blur">
-          <SheetHeader className="">
-            <SheetTitle className="text-xl font-bold text-foreground">
-              Exercise Library
-            </SheetTitle>
-            <SheetDescription>
-              {filtered?.length ?? 0} exercises found
-            </SheetDescription>
-          </SheetHeader>
-          <div className="pb-6">
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <Input
-                  placeholder="Search exercises… "
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-3"
-                />
-              </div>
-              <FilterPopover
-                categories={Object.keys(CATEGORY_DISPLAY_MAP)}
-                activeCategories={activeCategories}
-                toggleCategory={toggleCategory}
-                selectedMuscles={selectedMuscles}
-                setSkill={setSelectedSkill}
-                selectedEquipment={selectedEquipment}
-                toggleEquipment={toggleEquipment}
-                toggleMuscle={toggleMuscle}
-                selectedTraits={selectedTraits}
-                toggleTrait={toggleTrait}
-                skill={selectedSkill}
-                maxFatigue={maxFatigue}
-                setMaxFatigue={setMaxFatigue}
-                maxCNS={maxCNS}
-                setMaxCNS={setMaxCNS}
-                maxMetabolic={maxMetabolic}
-                setMaxMetabolic={setMaxMetabolic}
-                maxJointStress={maxJointStress}
-                setMaxJointStress={setMaxJointStress}
-                clearFilters={resetFilters}
-              />
 
-              <SortPopover sortKey={sortKey} setSortKey={setSortKey} />
+      <SheetContent
+        side="left"
+        className="p-0 min-w-[500px] h-full flex flex-col"
+      >
+        <div className="sticky top-0 z-20 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+          <div className="flex items-center justify-between px-4 pt-3">
+            <SheetHeader>
+              <SheetTitle className="text-xl font-bold text-foreground">
+                Exercise Library
+              </SheetTitle>
+              <SheetDescription>{list.length} exercises found</SheetDescription>
+            </SheetHeader>
+          </div>
+
+          <div className="px-4 pb-3">
+            <div className="flex flex-col items-center gap-2">
+              <Input
+                value={f.query}
+                onChange={(e) => setF((s) => ({ ...s, query: e.target.value }))}
+                placeholder="Search (name, muscle, equipment)…"
+                className="h-9"
+              />
+              <Separator orientation="vertical" className="mx-1 h-6" />
+              <div className="flex items-center gap-2 flex-wrap">
+                <Select
+                  value={f.muscle ?? ""}
+                  onValueChange={(value) =>
+                    setF((s) => ({ ...s, muscle: value || null }))
+                  }
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Muscle" />
+                  </SelectTrigger>
+                  <SelectContent className="z-[1000]">
+                    {MUSCLES.map((m) => (
+                      <SelectItem key={m.id} value={m.displayName}>
+                        {m.displayName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={f.category ?? ""}
+                  onValueChange={(value) =>
+                    setF((s) => ({ ...s, category: value || null }))
+                  }
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent className="z-[1000]">
+                    {Object.keys(CATEGORY_DISPLAY_MAP).map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {
+                          CATEGORY_DISPLAY_MAP[
+                            c as keyof typeof CATEGORY_DISPLAY_MAP
+                          ]
+                        }
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={f.equipment ?? ""}
+                  onValueChange={(value) =>
+                    setF((s) => ({ ...s, equipment: value || null }))
+                  }
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Equipment" />
+                  </SelectTrigger>
+                  <SelectContent className="z-[1000]">
+                    {EQUIPMENT_LIST.map((e) => (
+                      <SelectItem key={e} value={e}>
+                        {EQUIPMENT_DISPLAY_MAP[
+                          e as keyof typeof EQUIPMENT_DISPLAY_MAP
+                        ] ?? e}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={f.sort}
+                  onValueChange={(value) =>
+                    setF((s) => ({ ...s, sort: value as Filters["sort"] }))
+                  }
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Sort" />
+                  </SelectTrigger>
+                  <SelectContent className="z-[1000]">
+                    <SelectItem value="relevance">Relevance</SelectItem>
+                    <SelectItem value="a-z">A–Z</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              {activeChips.length > 0 && (
+              {(
+                [
+                  ["muscle", f.muscle],
+                  ["category", f.category],
+                  ["equipment", f.equipment],
+                ] as const
+              )
+                .filter(([, v]) => !!v)
+                .map(([k, v]) => (
+                  <Badge key={k} variant="secondary" className="rounded-full">
+                    <Filter className="mr-1 h-3.5 w-3.5" />
+                    {String(v)}
+                    <button
+                      className="ml-1 inline-flex"
+                      onClick={() => clearKey(k)}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+
+              {(f.query || f.muscle || f.category || f.equipment) && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 px-2 text-xs"
-                  onClick={resetFilters}
+                  className="ml-auto h-8"
+                  onClick={() => setF(INITIAL)}
                 >
-                  Clear all
+                  <Trash2 className="mr-1.5 h-4 w-4" />
+                  Clear
                 </Button>
               )}
-              {activeChips.map((chip) => (
-                <button
-                  key={chip.key}
-                  onClick={chip.onRemove}
-                  className="inline-flex items-center gap-1 rounded-full px-2 py-[2px] text-[11px] bg-secondary border border-border/60"
-                >
-                  {chip.label} ✕
-                </button>
-              ))}
-            </div>
-            <div
-              className={cn(
-                "mt-2 flex items-center gap-2",
-                search.length > 0 && "hidden"
-              )}
-            >
-              <Button variant="outline" size="sm" onClick={expandAll}>
-                Expand all
-              </Button>
-              <Button variant="outline" size="sm" onClick={collapseAll}>
-                Collapse all
-              </Button>
             </div>
           </div>
         </div>
 
-        <ScrollArea className="mt-4 h-[calc(100vh-200px)] pr-2">
-          {filtered?.length === 0 && !isLoading ? (
-            <EmptyState
-              image={
-                <Image
-                  src="/images/empty-states/no-exercises.png"
-                  alt="No Exercises Added"
-                  width={300}
-                  height={300}
-                />
-              }
-              title="No exercises found"
-              description="Try adjusting your filters or search terms to find matching exercises."
-              action={
-                <Button onClick={resetFilters} variant="outline">
-                  Clear Search
-                </Button>
-              }
-            />
-          ) : (
-            <div className="space-y-6">
-              {search.length > 0 ? (
-                <div className="space-y-2">
-                  {filtered?.map((exercise) => (
-                    <ExerciseCard
-                      key={exercise.id}
-                      exercise={exercise}
-                      onAdd={(exercise) => {
-                        if (groupIndex !== undefined && addToGroup) {
-                          addToGroup(groupIndex, exercise);
-                        } else {
-                          addExercise(exercise);
-                        }
-                      }}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <>
-                  {Object.entries(grouped).map(([category, list]) => (
-                    <Collapsible
-                      key={category}
-                      className="space-y-2"
-                      open={openMap[category]}
-                      onOpenChange={() =>
-                        setOpenMap((m) => ({ ...m, [category]: !m[category] }))
-                      }
-                    >
-                      <CollapsibleTrigger
-                        className={cn(
-                          "cursor-pointer text-sm w-full py-2 px-1 rounded font-semibold text-muted-foreground uppercase flex items-center justify-between",
-                          openMap[category] &&
-                            "bg-primary text-primary-foreground "
-                        )}
-                      >
-                        {CATEGORY_DISPLAY_MAP[category] ?? category}
-                        <ChevronDown
-                          className={cn(
-                            "ml-2 w-4 h-4 transition-transform",
-                            openMap[category] && "-rotate-180"
-                          )}
-                        />
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="space-y-2">
-                        {list.map((exercise) => (
-                          <ExerciseCard
-                            key={exercise.id}
-                            exercise={exercise}
-                            onAdd={(exercise) => {
-                              if (groupIndex !== undefined && addToGroup) {
-                                addToGroup(groupIndex, exercise);
-                              } else {
-                                addExercise(exercise);
-                              }
-                            }}
-                          />
-                        ))}
-                      </CollapsibleContent>
-                      <Separator />
-                    </Collapsible>
-                  ))}
-                </>
-              )}
-            </div>
-          )}
+        <ScrollArea className="w-full h-full flex-1 px-4 ">
+          <div className="space-y-2 py-3">
+            {list.length === 0 ? (
+              <EmptyState />
+            ) : (
+              list.map((ex) => (
+                <ExerciseCard key={ex.id} exercise={ex} onAdd={onAdd} />
+              ))
+            )}
+          </div>
         </ScrollArea>
       </SheetContent>
     </Sheet>
   );
-};
+}
+
+function EmptyState() {
+  return (
+    <div className="mx-auto mt-12 max-w-sm rounded-2xl border bg-card/50 p-6 text-center">
+      <div className="mx-auto mb-3 h-10 w-10 rounded-full bg-muted" />
+      <h3 className="mb-1 text-sm font-semibold">No exercises found</h3>
+      <p className="text-xs text-muted-foreground">
+        Try removing a filter or searching a broader term (e.g., “press”).
+      </p>
+    </div>
+  );
+}

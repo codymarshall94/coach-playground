@@ -7,7 +7,6 @@ import {
   Clock,
   MoreHorizontal,
   Trash2,
-  Weight,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -20,50 +19,44 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { DayMetrics } from "@/engines/core/types";
 import { cn } from "@/lib/utils";
-import { Exercise } from "@/types/Exercise";
 import { Program, ProgramDay, WorkoutExerciseGroup } from "@/types/Workout";
-import { WorkoutAnalyticsSummary } from "@/utils/analyzeWorkoutDay";
-import { getWorkoutDayETL } from "@/utils/etl";
 import { estimateWorkoutDuration } from "@/utils/volume/estimateExerciseDuration";
+import InlineNameEditor from "../InlineNameEditor";
 import { ETLDisplay } from "../insights/EtlDisplay";
 import { WorkoutAnalyticsPanel } from "../insights/WorkoutAnalyticsPanel";
-import { DayNameEditor } from "./DayNameEditor";
 
 interface DayHeaderProps {
   day?: ProgramDay;
-  exercises: Exercise[];
   program: Program;
-  activeBlockIndex: number;
-  activeDayIndex: number;
-  exerciseCount: number;
+  activeBlockIndex: number | null;
+  activeDayIndex: number | null;
   clearWorkout: () => void;
   updateDayDetails: (dayDetails: Partial<ProgramDay>) => void;
   collapsedIndex: number | null;
   setCollapsedIndex: (index: number | null) => void;
   isWorkoutDay: boolean;
   exerciseGroups: WorkoutExerciseGroup[];
-  insights: WorkoutAnalyticsSummary;
   analyticsOpen: boolean;
   setAnalyticsOpen: (open: boolean) => void;
+  dayMetrics: DayMetrics;
 }
 
 export function DayHeader({
   day,
-  exercises,
   program,
   activeBlockIndex,
   activeDayIndex,
-  exerciseCount,
   clearWorkout,
   updateDayDetails,
   collapsedIndex,
   setCollapsedIndex,
   isWorkoutDay,
   exerciseGroups,
-  insights,
   analyticsOpen,
   setAnalyticsOpen,
+  dayMetrics,
 }: DayHeaderProps) {
   const [editedName, setEditedName] = useState(day?.name || "");
   const [isEditingName, setIsEditingName] = useState(false);
@@ -72,17 +65,18 @@ export function DayHeader({
     setEditedName(day?.name || "");
   }, [day?.name]);
 
+  const handleSave = (next: string) => {
+    const trimmed = next.trim();
+    if (trimmed) updateDayDetails({ name: trimmed });
+    setEditedName(trimmed);
+    setIsEditingName(false);
+  };
+
   const handleDescriptionSave = (description: string) => {
     updateDayDetails({ description });
   };
 
   const isCollapsed = collapsedIndex === -1;
-
-  const { normalizedETL_avg } = getWorkoutDayETL(
-    exerciseGroups.flatMap((group) => group.exercises),
-    exercises,
-    program.goal
-  );
 
   const durationMin = Math.ceil(
     estimateWorkoutDuration(
@@ -102,27 +96,25 @@ export function DayHeader({
       <div className="container mx-auto px-4 py-3 space-y-2">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0 flex-1">
-            <DayNameEditor
-              program={program}
-              activeBlockIndex={activeBlockIndex}
-              activeDayIndex={activeDayIndex}
-              editedName={editedName}
-              setEditedName={setEditedName}
-              updateDayDetails={updateDayDetails}
-              isEditingName={isEditingName}
-              setIsEditingName={setIsEditingName}
+            <InlineNameEditor
+              name={
+                program.mode === "blocks"
+                  ? program.blocks?.[activeBlockIndex ?? 0]?.days?.[
+                      activeDayIndex ?? 0
+                    ]?.name || "Untitled Day"
+                  : program.days?.[activeDayIndex ?? 0]?.name || "Untitled Day"
+              }
+              onSave={(next) => updateDayDetails({ name: next })}
+              placeholder="Day name"
+              size="lg"
             />
           </div>
 
-          <div className="flex items-center gap-3 type-secondary">
-            <ETLDisplay normalizedETL={normalizedETL_avg} />
+          <div className="flex items-center gap-3 text-meta">
+            <ETLDisplay normalizedETL={dayMetrics.sessionLoad} />
             <div className="flex items-center gap-1">
               <Clock className="w-3 h-3" />
               <span className="type-num">{durationMin}</span> min
-            </div>
-            <div className="flex items-center gap-1">
-              <Weight className="w-3 h-3" />
-              <span className="type-num">{exerciseCount} Exercises</span>
             </div>
           </div>
 
@@ -130,7 +122,7 @@ export function DayHeader({
             {isWorkoutDay && exerciseGroups.length > 0 && (
               <WorkoutAnalyticsPanel
                 workout={exerciseGroups}
-                summary={insights!}
+                dayMetrics={dayMetrics}
                 open={analyticsOpen}
                 setOpen={setAnalyticsOpen}
               />

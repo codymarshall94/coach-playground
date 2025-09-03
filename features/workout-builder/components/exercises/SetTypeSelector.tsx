@@ -31,6 +31,7 @@ export const SET_TYPE_CONFIG: Record<
     category: "Basic" | "Advanced" | "Intensity";
     colorClass: string;
     short: string;
+    other?: boolean;
   }
 > = {
   warmup: {
@@ -48,6 +49,7 @@ export const SET_TYPE_CONFIG: Record<
     category: "Basic",
     colorClass: "bg-set-type-standard/10 text-set-type-standard",
     short: "S",
+    other: true,
   },
   amrap: {
     label: "AMRAP",

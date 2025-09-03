@@ -18,28 +18,22 @@ export default async function ProgramEditPage({
         *,
         days:program_days (
           *,
-          workout:workouts (
+          groups:workout_exercise_groups (
             *,
-            exercise_groups:workout_exercise_groups (
+            exercises:workout_exercises (
               *,
-              exercises:workout_exercises (
-                *,
-                sets:exercise_sets (*)
-              )
+              sets:exercise_sets (*)
             )
           )
         )
       ),
       days:program_days (
         *,
-        workout:workouts (
+        groups:workout_exercise_groups (
           *,
-          exercise_groups:workout_exercise_groups (
+          exercises:workout_exercises (
             *,
-            exercises:workout_exercises (
-              *,
-              sets:exercise_sets (*)
-            )
+            sets:exercise_sets (*)
           )
         )
       )

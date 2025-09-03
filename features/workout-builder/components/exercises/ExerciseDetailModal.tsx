@@ -118,13 +118,13 @@ export function ExerciseDetailModal({
             </DialogTitle>
           </div>
         </DialogHeader>
-
+        {/* 
         <MuscleHeatmap
-          mode="library"
+          mode="library"  
           exerciseMetas={[exercise]}
           intensityFrom="avg"
           constantIntensity={0}
-        />
+        /> */}
         <div className="grid grid-cols-1 gap-6">
           <h3 className="text-lg font-semibold text-gray-900">
             Fatigue Demands

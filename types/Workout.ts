@@ -9,6 +9,29 @@ export type SetType =
   | "top_set"
   | "backoff";
 
+export type DayType = "workout" | "rest" | "active_rest" | "other";
+
+export type WorkoutExerciseGroupType =
+  | "standard"
+  | "superset"
+  | "giant_set"
+  | "circuit";
+
+export type ProgramGoal = "strength" | "hypertrophy" | "endurance" | "power";
+
+export type IntensitySystem = "rpe" | "one_rep_max_percent" | "rir" | "none";
+
+export type WorkoutTypes =
+  | "strength"
+  | "hypertrophy"
+  | "endurance"
+  | "power"
+  | "balance";
+
+// -----------------------------------------------------------------------------
+// CORE STRUCTURES
+// -----------------------------------------------------------------------------
+
 export type SetInfo = {
   reps: number;
   rest: number;
@@ -16,7 +39,7 @@ export type SetInfo = {
   rir: number | null;
   one_rep_max_percent: number | null;
 
-  set_type: SetType; //Standard is default
+  set_type: SetType;
 
   // Optional dynamic fields for special set types
   drop_percent?: number;
@@ -31,62 +54,51 @@ export type SetInfo = {
   initial_reps?: number;
   pause_duration?: number;
 
-  notes?: string; // custom notes per set
+  notes?: string;
+  params?: Record<string, any>; // optional JSON blob for advanced settings
 };
 
 export type WorkoutExercise = {
   id: string;
   exercise_id: string;
   order_num: number;
-  name: string;
-  sets: SetInfo[]; // reps, rpe, rest, etc.
+  display_name: string;
+  sets: SetInfo[];
   notes?: string;
   intensity: IntensitySystem;
 };
 
-export type WorkoutExerciseGroupType =
-  | "standard"
-  | "superset"
-  | "giant_set"
-  | "circuit";
-
 export type WorkoutExerciseGroup = {
   id: string;
-  type: WorkoutExerciseGroupType; // extensible
-  rest_after_group?: number; // rest in seconds
+  type: WorkoutExerciseGroupType;
+  rest_after_group?: number;
   order_num: number;
   notes?: string;
   exercises: WorkoutExercise[];
 };
 
-export type Workout = {
-  exercise_groups: WorkoutExerciseGroup[];
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-export type DayType = "workout" | "rest" | "active_rest" | "other";
-
-export type ProgramBlock = {
-  id: string;
-  name: string;
-  order_num: number;
-  description?: string;
-  weeks?: number; // Optional: useful for labeling (e.g., "Weeks 1-4")
-  days: ProgramDay[];
-};
+// -----------------------------------------------------------------------------
+// PROGRAM STRUCTURE
+// -----------------------------------------------------------------------------
 
 export type ProgramDay = {
   id: string;
   name: string;
   block_id?: string;
   description: string;
-  workout: Workout[];
   order_num: number;
   type: DayType;
+  groups: WorkoutExerciseGroup[];
 };
 
-export type ProgramGoal = "strength" | "hypertrophy" | "endurance" | "power";
+export type ProgramBlock = {
+  id: string;
+  name: string;
+  order_num: number;
+  description?: string;
+  weeks?: number;
+  days: ProgramDay[];
+};
 
 export type Program = {
   id: string;
@@ -96,20 +108,14 @@ export type Program = {
   mode: "days" | "blocks";
   blocks?: ProgramBlock[];
   days?: ProgramDay[];
-  createdAt: Date;
-  updatedAt: Date;
+  created_at: Date;
+  updated_at: Date;
 };
+
+// -----------------------------------------------------------------------------
+// CONVENIENCE TYPES
+// -----------------------------------------------------------------------------
 
 export type NewProgramDay = Omit<ProgramDay, "id">;
 export type NewProgram = Omit<Program, "id">;
 export type NewProgramBlock = Omit<ProgramBlock, "id">;
-
-export type IntensitySystem = "rpe" | "one_rep_max_percent" | "rir" | "none";
-
-export type WorkoutTypes =
-  | "strength"
-  | "hypertrophy"
-  | "endurance"
-  | "power"
-  | "balance"
-  | "other";

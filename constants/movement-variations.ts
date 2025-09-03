@@ -6,5 +6,4 @@ export const VARIATION_DISPLAY_MAP: Record<string, string> = {
   spoto: "Spoto Press",
   goblet: "Goblet Style",
   deficit: "Deficit",
-  // ...
 };

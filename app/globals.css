@@ -205,12 +205,25 @@
 }
 
 @layer utilities {
-  .type-title      { @apply text-xl leading-7 font-semibold tracking-[-0.01em]; }
-  .type-section    { @apply text-lg leading-6 font-semibold; }
-  .type-body       { @apply text-base leading-6 font-normal; }
-  .type-secondary  { @apply text-sm leading-5 text-muted-foreground; }
-  .type-meta       { @apply text-xs leading-5 uppercase tracking-wide text-muted-foreground; }
-  .type-chip       { @apply text-xs font-medium; }
-  .type-num        { @apply tabular-nums font-mono; }
+  /* Display / page headings */
+  .text-display {
+    @apply text-2xl md:text-3xl font-semibold leading-tight tracking-[-0.01em] text-foreground;
+  }
+  /* Card titles / section headings */
+  .text-title {
+    @apply text-lg font-semibold leading-tight ;
+  }
+  /* Body copy (default for content) */
+  .text-body {
+    @apply text-sm leading-6 ;
+  }
+  /* Metadata / utility text (labels, helpers, micro-copy) */
+  .text-meta {
+    @apply text-xs leading-5 text-muted-foreground;
+  }
+  /* Key numeric values (sets, reps, times, scores) */
+  .text-value {
+    @apply text-xl font-semibold tabular-nums ;
+  }
 }
 

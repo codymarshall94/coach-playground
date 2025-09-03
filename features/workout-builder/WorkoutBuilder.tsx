@@ -1,44 +1,51 @@
 "use client";
 
+import { BuilderLayout } from "./BuilderLayout";
+
 import { Droppable } from "@/components/Droppable";
-import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { WelcomeModal } from "@/components/WelcomeModal";
-import { ProgramDaySelector } from "@/features/workout-builder/components/program/ProgramDaySelector";
+
+import {
+  buildSequence,
+  buildSpecFromProgram,
+} from "@/engines/core/utils/helpers";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useProgramEngine } from "@/hooks/useProgramEngine";
 import { useUser } from "@/hooks/useUser";
 import { useWorkoutBuilder } from "@/hooks/useWorkoutBuilder";
 import { saveOrUpdateProgramService } from "@/services/programService";
-import { Program } from "@/types/Workout";
-import { analyzeWorkoutDay } from "@/utils/analyzeWorkoutDay";
+
+import type { Program } from "@/types/Workout";
+
+import { DndContext } from "@dnd-kit/core";
 import {
-  DndContext,
-  DragEndEvent,
-  DragOverlay,
-  DragStartEvent,
-} from "@dnd-kit/core";
-import {
-  restrictToVerticalAxis,
-  restrictToWindowEdges,
-} from "@dnd-kit/modifiers";
-import {
-  arrayMove,
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+
+import { VERTICAL_LIST_MODIFIERS } from "@/features/workout-builder/dnd/constants";
+import { DragOverlayPortal } from "@/features/workout-builder/dnd/overlay";
+import { useSortableSensors } from "@/features/workout-builder/dnd/sensors";
+import { useDragAndDrop } from "@/features/workout-builder/hooks/useDragAndDrop";
+
 import { Plus } from "lucide-react";
 import { motion } from "motion/react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+
 import { DayHeader } from "./components/days/DayHeader";
+import { NoExercisesEmpty } from "./components/empty-states/NoExercisesEmpty";
+import { RestDayEmpty } from "./components/empty-states/RestDayEmpty";
 import { ExerciseGroupCard } from "./components/exercises/ExerciseGroupCard";
-import { ExerciseSuggestions } from "./components/exercises/ExerciseSuggestions";
 import { BlockSelector } from "./components/program/BlockSelector";
+import { ProgramDaySelector } from "./components/program/ProgramDaySelector";
 import { ProgramMetaEditor } from "./components/program/ProgramMetaEditor";
+import { ProgramOverviewPanel } from "./components/program/ProgramOverview";
 import { SavePromptModal } from "./components/SavePromptModal";
 import { WorkoutBuilderHeader } from "./components/WorkoutBuilderHeader";
+import { moveDayWithinList } from "./utils/days";
 
 export const WorkoutBuilder = ({
   initialProgram,
@@ -71,7 +78,7 @@ export const WorkoutBuilder = ({
     reorderBlocks,
     usingBlocks,
     updateBlockDetails,
-    updateDayWorkout,
+    updateDayGroups,
     updateGroupType,
     addExerciseToGroup,
     moveExerciseByIdToGroup,
@@ -80,17 +87,28 @@ export const WorkoutBuilder = ({
   } = useWorkoutBuilder(initialProgram);
 
   const [isSaving, setIsSaving] = useState(false);
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  const [exerciseLibraryOpen, setExerciseLibraryOpen] = useState(false);
+  const [savePromptOpen, setSavePromptOpen] = useState(false);
+  const [collapsedIndex, setCollapsedIndex] = useState<number | null>(null);
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+  const [programPreviewOpen, setProgramPreviewOpen] = useState(false);
+  const [welcomeModalOpen, setWelcomeModalOpen] = useState(true);
+  const [overviewOpen, setOverviewOpen] = useState(false);
 
   const router = useRouter();
-
   const groupRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  const { days, program: programMetrics } = useProgramEngine(
+    buildSpecFromProgram(program),
+    buildSequence(program, exercises ?? [])
+  );
 
   const handleSave = async () => {
     if (!user) {
       setSavePromptOpen(true);
       return;
     }
-
     await doSave();
   };
 
@@ -110,12 +128,12 @@ export const WorkoutBuilder = ({
 
   useKeyboardShortcuts({
     onNextDay: () => {
-      if (activeDayIndex < currentDays.length - 1) {
+      if (activeDayIndex !== null && activeDayIndex < currentDays.length - 1) {
         setActiveDayIndex(activeDayIndex + 1);
       }
     },
     onPreviousDay: () => {
-      if (activeDayIndex > 0) {
+      if (activeDayIndex !== null && activeDayIndex > 0) {
         setActiveDayIndex(activeDayIndex - 1);
       }
     },
@@ -124,10 +142,7 @@ export const WorkoutBuilder = ({
       const prev = [...exerciseGroups];
       clearWorkout();
       toast("Workout cleared", {
-        action: {
-          label: "Undo",
-          onClick: () => updateDayWorkout(prev),
-        },
+        action: { label: "Undo", onClick: () => updateDayGroups(prev) },
       });
     },
     onToggleCollapseAll: () =>
@@ -138,32 +153,14 @@ export const WorkoutBuilder = ({
     onOpenHelpModal: () => setShowShortcutsModal(true),
   });
 
-  const [analyticsOpen, setAnalyticsOpen] = useState(false);
-  const [exerciseLibraryOpen, setExerciseLibraryOpen] = useState(false);
-  const [savePromptOpen, setSavePromptOpen] = useState(false);
-  const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [collapsedIndex, setCollapsedIndex] = useState<number | null>(null);
-  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
-  const [programPreviewOpen, setProgramPreviewOpen] = useState(false);
-  const [welcomeModalOpen, setWelcomeModalOpen] = useState(true);
   useEffect(() => {
     if (lastAddedIndex !== null) {
       const group = exerciseGroups[lastAddedIndex];
       const ref = groupRefs.current[group.id];
-      if (ref) {
-        ref.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
+      if (ref) ref.scrollIntoView({ behavior: "smooth", block: "center" });
       setLastAddedIndex(null);
     }
   }, [lastAddedIndex, exerciseGroups]);
-
-  const handleDragStart = (event: DragStartEvent) => {
-    setDraggingId(event.active.id as string);
-  };
-
-  const insights = isWorkoutDay
-    ? analyzeWorkoutDay(exerciseGroups, exercises ?? [])
-    : null;
 
   const currentDays = useMemo(() => {
     if (usingBlocks && typeof activeBlockIndex === "number") {
@@ -172,29 +169,110 @@ export const WorkoutBuilder = ({
     return program.days ?? [];
   }, [program, activeBlockIndex, usingBlocks]);
 
-  const handleDragEndExerciseGroup = (event: DragEndEvent) => {
-    const { active, over } = event;
-    setDraggingId(null);
-    if (!over || active.id === over.id) return;
-
-    const oldIndex = exerciseGroups.findIndex((g) => g.id === active.id);
-    const newIndex = exerciseGroups.findIndex((g) => g.id === over.id);
-    if (oldIndex === -1 || newIndex === -1) return;
-
-    const reordered = arrayMove(exerciseGroups, oldIndex, newIndex).map(
-      (group, index) => ({
-        ...group,
-        order_num: index,
-      })
-    );
-
-    updateDayWorkout(reordered);
-  };
-
   const noWorkoutDays = currentDays.length === 0;
 
-  return (
-    <div className="flex flex-col h-screen">
+  const sensors = useSortableSensors();
+  const { draggingId, handlers, modifiers } = useDragAndDrop({
+    items: exerciseGroups,
+    onReorder: (next) =>
+      updateDayGroups(next.map((g, i) => ({ ...g, order_num: i }))),
+    modifiers: VERTICAL_LIST_MODIFIERS,
+  });
+
+  const headerNode = (
+    <WorkoutBuilderHeader
+      program={program}
+      isSaving={isSaving}
+      handleSave={handleSave}
+      isWorkoutDay={isWorkoutDay}
+      addExercise={(exercise) => {
+        addExercise(exercise);
+        setLastAddedIndex(exerciseGroups.length);
+      }}
+      exercises={exercises ?? []}
+      user={user}
+      showShortcutsModal={showShortcutsModal}
+      setShowShortcutsModal={setShowShortcutsModal}
+      programPreviewOpen={programPreviewOpen}
+      setProgramPreviewOpen={setProgramPreviewOpen}
+      exerciseLibraryOpen={exerciseLibraryOpen}
+      setExerciseLibraryOpen={setExerciseLibraryOpen}
+    />
+  );
+
+  const sidebarNode = (
+    <div className="flex flex-col gap-6">
+      <ProgramMetaEditor
+        program={program}
+        programScore={programMetrics?.goalFitScore ?? 0}
+        onChange={(fields) => setProgram((prev) => ({ ...prev, ...fields }))}
+        onSwitchMode={(updated) => setProgram(updated)}
+        overviewOpen={overviewOpen}
+        onOpenOverview={() => {
+          setOverviewOpen(true);
+          setActiveDayIndex(null);
+        }}
+      />
+
+      {usingBlocks ? (
+        <BlockSelector
+          blocks={program.blocks ?? []}
+          activeIndex={activeBlockIndex ?? null}
+          activeDayIndex={activeDayIndex ?? null}
+          onSelect={(i) => setActiveBlockIndex(i)}
+          onAddBlock={addTrainingBlock}
+          onRemoveBlock={(index) => removeTrainingBlock(index)}
+          onReorder={(reordered) => reorderBlocks(reordered)}
+          onSelectDay={(i) => {
+            setActiveDayIndex(i);
+            setOverviewOpen(false);
+          }}
+          onAddWorkoutDay={() => handleAddDay("workout")}
+          onAddRestDay={() => handleAddDay("rest")}
+          onRemoveWorkoutDay={handleRemoveWorkoutDay}
+          onDuplicateWorkoutDay={handleDuplicateWorkoutDay}
+          onMoveDay={(from, to) =>
+            setProgram((prev) => {
+              const blocks = [...(prev.blocks ?? [])];
+              const target = blocks[activeBlockIndex];
+              if (!target) return prev;
+              const nextDays = moveDayWithinList(target.days, from, to, {
+                autoRenameDefault: true,
+              });
+              blocks[activeBlockIndex] = { ...target, days: nextDays };
+              return { ...prev, blocks };
+            })
+          }
+          onUpdateBlockDetails={updateBlockDetails}
+        />
+      ) : (
+        <ProgramDaySelector
+          days={currentDays}
+          activeIndex={activeDayIndex ?? null}
+          onSelect={(i) => {
+            setActiveDayIndex(i);
+            setOverviewOpen(false);
+          }}
+          onAddWorkoutDay={() => handleAddDay("workout")}
+          onAddRestDay={() => handleAddDay("rest")}
+          onRemoveWorkoutDay={handleRemoveWorkoutDay}
+          onDuplicateWorkoutDay={handleDuplicateWorkoutDay}
+          onMove={(from, to) =>
+            setProgram((prev) => {
+              const days = [...(prev.days ?? [])];
+              const nextDays = moveDayWithinList(days, from, to, {
+                autoRenameDefault: true,
+              });
+              return { ...prev, days: nextDays };
+            })
+          }
+        />
+      )}
+    </div>
+  );
+
+  const modalsNode = (
+    <>
       <SavePromptModal
         open={savePromptOpen}
         onClose={() => {
@@ -203,301 +281,166 @@ export const WorkoutBuilder = ({
         }}
         onSave={doSave}
       />
-      <WorkoutBuilderHeader
-        program={program}
-        isSaving={isSaving}
-        handleSave={handleSave}
-        isWorkoutDay={isWorkoutDay}
-        addExercise={(exercise) => {
-          addExercise(exercise);
-          setLastAddedIndex(exerciseGroups.length);
-        }}
-        exerciseLibraryOpen={exerciseLibraryOpen}
-        setExerciseLibraryOpen={setExerciseLibraryOpen}
-        user={user}
-        showShortcutsModal={showShortcutsModal}
-        setShowShortcutsModal={setShowShortcutsModal}
-        programPreviewOpen={programPreviewOpen}
-        setProgramPreviewOpen={setProgramPreviewOpen}
-      />
-
       <WelcomeModal
         open={welcomeModalOpen}
         onClose={() => setWelcomeModalOpen(false)}
       />
-      <div className="flex flex-1 overflow-hidden">
-        <aside className=" border-r border-border bg-muted/20 p-4 space-y-6 overflow-y-auto">
-          <div className="space-y-4">
-            <ProgramMetaEditor
-              program={program}
-              onChange={(fields) =>
-                setProgram((prev) => ({ ...prev, ...fields }))
-              }
-              onSwitchMode={(updated) => setProgram(updated)}
-            />
+    </>
+  );
+
+  const mainNode = overviewOpen ? (
+    <ProgramOverviewPanel program={program} />
+  ) : (
+    <DndContext sensors={sensors} {...handlers} modifiers={modifiers}>
+      <div className="w-full max-w-4xl p-4 mx-auto relative">
+        <DayHeader
+          day={currentDays[activeDayIndex ?? 0]}
+          dayMetrics={days[activeDayIndex ?? 0]}
+          program={program}
+          activeBlockIndex={activeBlockIndex}
+          activeDayIndex={activeDayIndex || null}
+          updateDayDetails={updateDayDetails}
+          setCollapsedIndex={setCollapsedIndex}
+          collapsedIndex={collapsedIndex}
+          clearWorkout={clearWorkout}
+          isWorkoutDay={isWorkoutDay}
+          exerciseGroups={exerciseGroups}
+          analyticsOpen={analyticsOpen}
+          setAnalyticsOpen={setAnalyticsOpen}
+        />
+
+        {noWorkoutDays ? (
+          <div className="mt-6">
+            <span className="px-2 py-1 text-sm font-medium text-muted-foreground rounded-md">
+              {currentDays.length} Days
+            </span>
           </div>
-
-          <div className="pt-4 border-t border-border">
-            {usingBlocks ? (
-              <BlockSelector
-                blocks={program.blocks ?? []}
-                activeIndex={activeBlockIndex}
-                activeDayIndex={activeDayIndex}
-                onSelect={(i) => setActiveBlockIndex(i)}
-                onAddBlock={addTrainingBlock}
-                onRemoveBlock={(index) => removeTrainingBlock(index)}
-                onReorder={(reordered) => reorderBlocks(reordered)}
-                onSelectDay={setActiveDayIndex}
-                onAddWorkoutDay={() => handleAddDay("workout")}
-                onAddRestDay={() => handleAddDay("rest")}
-                onRemoveWorkoutDay={handleRemoveWorkoutDay}
-                onDuplicateWorkoutDay={handleDuplicateWorkoutDay}
-                onReorderDays={(reordered) =>
-                  setProgram((prev) => {
-                    const blocks = [...(prev.blocks ?? [])];
-                    blocks[activeBlockIndex].days = reordered;
-                    return { ...prev, blocks };
-                  })
-                }
-                onUpdateBlockDetails={updateBlockDetails}
-              />
-            ) : (
-              <ProgramDaySelector
-                days={currentDays}
-                activeIndex={activeDayIndex}
-                onSelect={setActiveDayIndex}
-                onAddWorkoutDay={() => handleAddDay("workout")}
-                onAddRestDay={() => handleAddDay("rest")}
-                onRemoveWorkoutDay={handleRemoveWorkoutDay}
-                onDuplicateWorkoutDay={handleDuplicateWorkoutDay}
-                onReorder={(reordered) =>
-                  setProgram((prev) => ({ ...prev, days: reordered }))
-                }
-              />
-            )}
-          </div>
-        </aside>
-
-        <main className="flex-1  overflow-y-auto">
-          <DndContext
-            onDragStart={handleDragStart}
-            onDragEnd={(event) => {
-              handleDragEndExerciseGroup(event);
-            }}
-            onDragCancel={() => setDraggingId(null)}
-            modifiers={[restrictToVerticalAxis, restrictToWindowEdges]}
-          >
-            <div className="w-full max-w-4xl p-4 mx-auto relative">
-              <DayHeader
-                day={currentDays[activeDayIndex]}
-                exercises={exercises ?? []}
-                program={program}
-                activeBlockIndex={activeBlockIndex}
-                activeDayIndex={activeDayIndex}
-                updateDayDetails={updateDayDetails}
-                exerciseCount={exerciseGroups.length}
-                setCollapsedIndex={setCollapsedIndex}
-                collapsedIndex={collapsedIndex}
-                clearWorkout={clearWorkout}
-                isWorkoutDay={isWorkoutDay}
-                exerciseGroups={exerciseGroups}
-                insights={insights!}
-                analyticsOpen={analyticsOpen}
-                setAnalyticsOpen={setAnalyticsOpen}
-              />
-
-              {noWorkoutDays ? (
-                <div className="mt-6">
-                  <span className="px-2 py-1 text-sm font-medium text-muted-foreground rounded-md">
-                    {currentDays.length} Days
-                  </span>
-                </div>
-              ) : (
-                <Droppable id="workout-drop">
-                  {!isWorkoutDay ? (
-                    <EmptyState
-                      className="w-full mt-6"
-                      image={
-                        <Image
-                          src="/images/empty-states/rest-day.png"
-                          alt="Rest Day"
-                          width={300}
-                          height={300}
-                        />
-                      }
-                      title="Rest Day"
-                      description="You have programmed a rest day for this workout"
-                    />
-                  ) : exerciseGroups.length === 0 ? (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <EmptyState
-                        title="No Exercises Added"
-                        description="Start building your program by adding exercises to this day."
-                        image={
-                          <Image
-                            src="/images/empty-states/no-exercises.png"
-                            alt="No Exercises Added"
-                            width={300}
-                            height={300}
-                          />
-                        }
-                        action={
-                          <Button
-                            onClick={() => setExerciseLibraryOpen(true)}
-                            variant="outline"
-                            size="sm"
-                          >
-                            Add First Exercise
-                          </Button>
-                        }
-                        center
-                      />
-                    </motion.div>
-                  ) : (
-                    <div className="space-y-3">
-                      <SortableContext
-                        items={exerciseGroups.map((e) => e.id)}
-                        strategy={verticalListSortingStrategy}
-                      >
-                        {exerciseGroups.map((group, groupIndex) => (
-                          <div
-                            key={group.id}
-                            id={`exercise-group-${group.id}`}
-                            ref={(el) => {
-                              groupRefs.current[group.id] = el;
-                            }}
-                          >
-                            <ExerciseGroupCard
-                              exerciseGroups={exerciseGroups}
-                              group={group}
-                              groupIndex={groupIndex}
-                              exerciseMeta={
-                                exercises?.find(
-                                  (e) => e.id === group.exercises[0].exercise_id
-                                )!
-                              }
-                              allExercises={exercises || []}
-                              isDraggingAny={!!draggingId}
-                              collapsedIndex={collapsedIndex}
-                              onExpand={() => setCollapsedIndex(groupIndex)}
-                              onRemoveExercise={removeExercise}
-                              onUpdateSets={updateExerciseSets}
-                              onUpdateIntensity={updateExerciseIntensity}
-                              onUpdateNotes={updateExerciseNotes}
-                              onUpdateGroupType={updateGroupType}
-                              onAddExerciseToGroup={addExerciseToGroup}
-                              onMoveExerciseByIdToGroup={
-                                moveExerciseByIdToGroup
-                              }
-                            />
-                          </div>
-                        ))}
-                      </SortableContext>
-                    </div>
-                  )}
-                </Droppable>
-              )}
-
-              {isWorkoutDay && exerciseGroups.length > 0 && (
-                <div className="mt-8 flex justify-center">
-                  <Button
-                    onClick={() => setExerciseLibraryOpen(true)}
-                    variant="outline"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Browse Exercise Library
-                  </Button>
-                </div>
-              )}
-              {isWorkoutDay && exerciseGroups.length > 0 && (
-                <ExerciseSuggestions
-                  workout={currentDays}
-                  allExercises={exercises ?? []}
-                  onAddExercise={addExercise}
-                />
-              )}
-            </div>
-
-            <DragOverlay
-              dropAnimation={{
-                duration: 300,
-                easing: "cubic-bezier(0.18, 0.67, 0.6, 1.22)",
-              }}
-              style={{
-                transformOrigin: "0 0",
-              }}
+        ) : (
+          <Droppable id="workout-drop">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
             >
-              {draggingId && (
-                <motion.div
-                  initial={{
-                    scale: 1,
-                    rotate: 0,
-                    opacity: 1,
-                  }}
-                  animate={{
-                    scale: 1.05,
-                    opacity: 0.95,
-                  }}
-                  exit={{
-                    scale: 0.95,
-                    rotate: 0,
-                    opacity: 0.8,
-                  }}
-                  transition={{
-                    duration: 0.2,
-                    ease: "easeOut",
-                  }}
-                  className="z-[999] pointer-events-none shadow-2xl"
-                  style={{
-                    filter: "drop-shadow(0 25px 25px rgb(0 0 0 / 0.15))",
-                  }}
-                >
-                  <div className="relative">
-                    {/* Glow effect */}
-                    <div className="absolute inset-0 bg-primary/20 rounded-lg blur-sm" />
-
-                    {/* Main card */}
-                    <div className="relative bg-background border-2 border-primary/50 rounded-lg">
-                      <ExerciseGroupCard
-                        exerciseGroups={exerciseGroups}
-                        group={exerciseGroups.find((g) => g.id === draggingId)!}
-                        groupIndex={0}
-                        exerciseMeta={
-                          exercises?.find(
-                            (e) =>
-                              exerciseGroups.find((g) => g.id === draggingId)
-                                ?.exercises[0]?.exercise_id === e.id
-                          )!
-                        }
-                        isDraggingAny={true}
-                        collapsedIndex={null}
-                        onExpand={() => {}}
-                        onRemoveExercise={() => {}}
-                        onUpdateSets={() => {}}
-                        onUpdateIntensity={() => {}}
-                        onUpdateNotes={() => {}}
-                        onUpdateGroupType={() => {}}
-                        onAddExerciseToGroup={() => {}}
-                        onMoveExerciseByIdToGroup={() => {}}
-                        allExercises={exercises || []}
-                      />
-                    </div>
-
-                    {/* Drag indicator */}
-                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                      <div className="w-2 h-2 bg-white rounded-full" />
-                    </div>
-                  </div>
-                </motion.div>
+              {!isWorkoutDay ? (
+                <RestDayEmpty />
+              ) : exerciseGroups.length === 0 ? (
+                <NoExercisesEmpty
+                  action={
+                    <Button
+                      onClick={() => setExerciseLibraryOpen(true)}
+                      variant="outline"
+                    >
+                      Add First Exercise
+                    </Button>
+                  }
+                />
+              ) : (
+                <div className="space-y-3">
+                  <SortableContext
+                    items={exerciseGroups.map((e) => e.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {exerciseGroups.map((group, groupIndex) => (
+                      <div
+                        key={group.id}
+                        id={`exercise-group-${group.id}`}
+                        ref={(el) => {
+                          groupRefs.current[group.id] = el;
+                        }}
+                      >
+                        <ExerciseGroupCard
+                          exerciseGroups={exerciseGroups}
+                          group={group}
+                          groupIndex={groupIndex}
+                          exerciseMeta={
+                            exercises?.find(
+                              (e) => e.id === group.exercises[0].exercise_id
+                            )!
+                          }
+                          allExercises={exercises || []}
+                          isDraggingAny={!!draggingId}
+                          collapsedIndex={collapsedIndex}
+                          onExpand={() => setCollapsedIndex(groupIndex)}
+                          onRemoveExercise={removeExercise}
+                          onUpdateSets={updateExerciseSets}
+                          onUpdateIntensity={updateExerciseIntensity}
+                          onUpdateNotes={(groupIndex, notes: string) =>
+                            updateExerciseNotes(groupIndex, notes)
+                          }
+                          onUpdateGroupType={updateGroupType}
+                          onAddExerciseToGroup={addExerciseToGroup}
+                          onMoveExerciseByIdToGroup={moveExerciseByIdToGroup}
+                          exerciseLibraryOpen={exerciseLibraryOpen}
+                          setExerciseLibraryOpen={setExerciseLibraryOpen}
+                        />
+                      </div>
+                    ))}
+                  </SortableContext>
+                </div>
               )}
-            </DragOverlay>
-          </DndContext>
-        </main>
+            </motion.div>
+          </Droppable>
+        )}
+
+        {isWorkoutDay && exerciseGroups.length > 0 && (
+          <>
+            <div className="mt-8 flex justify-center">
+              <Button
+                onClick={() => setExerciseLibraryOpen(true)}
+                variant="outline"
+              >
+                <Plus className="w-4 h-4" />
+                Browse Exercise Library
+              </Button>
+            </div>
+          </>
+        )}
       </div>
-    </div>
+
+      <DragOverlayPortal
+        draggingId={draggingId}
+        render={(id) => {
+          const group = exerciseGroups.find((g) => g.id === id)!;
+          const meta = exercises?.find(
+            (e) => e.id === group.exercises[0].exercise_id
+          )!;
+          return (
+            <div className="bg-background border-2 border-primary/50 rounded-lg">
+              <ExerciseGroupCard
+                exerciseGroups={exerciseGroups}
+                group={group}
+                groupIndex={0}
+                exerciseMeta={meta}
+                allExercises={exercises || []}
+                isDraggingAny
+                collapsedIndex={null}
+                onExpand={() => {}}
+                onRemoveExercise={() => {}}
+                onUpdateSets={() => {}}
+                onUpdateIntensity={() => {}}
+                onUpdateNotes={() => {}}
+                exerciseLibraryOpen={exerciseLibraryOpen}
+                setExerciseLibraryOpen={setExerciseLibraryOpen}
+                onUpdateGroupType={() => {}}
+                onAddExerciseToGroup={() => {}}
+                onMoveExerciseByIdToGroup={() => {}}
+              />
+            </div>
+          );
+        }}
+        withHalo
+      />
+    </DndContext>
+  );
+
+  return (
+    <BuilderLayout
+      header={headerNode}
+      sidebar={sidebarNode}
+      modals={modalsNode}
+    >
+      {mainNode}
+    </BuilderLayout>
   );
 };

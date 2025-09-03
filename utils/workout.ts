@@ -11,16 +11,15 @@ export function createWorkoutExercise(
   order: number,
   sets: number = 3
 ): WorkoutExercise {
-  const reps = Math.round(
-    (exercise.ideal_rep_range[0] + exercise.ideal_rep_range[1]) / 2
-  );
+  const [minReps, maxReps] = exercise.ideal_rep_range ?? [8, 12];
+  const avgReps = Math.round((minReps + maxReps) / 2);
 
-  const getIntensity = (): Partial<SetInfo> => {
+  const getIntensityDefaults = (): Partial<SetInfo> => {
     switch (intensity) {
       case "rpe":
         return { rpe: 8, rir: null, one_rep_max_percent: null };
       case "one_rep_max_percent":
-        return { one_rep_max_percent: 75, rir: null, rpe: null };
+        return { one_rep_max_percent: 75, rpe: null, rir: null };
       case "rir":
         return { rir: 2, rpe: null, one_rep_max_percent: null };
       default:
@@ -29,19 +28,22 @@ export function createWorkoutExercise(
   };
 
   return {
-    id: exercise.id,
-    exercise_id: exercise.id,
+    id: crypto.randomUUID(), // unique per workout exercise
+    exercise_id: exercise.id, // links back to exercise catalog
     order_num: order,
-    name: exercise.name,
+    display_name: exercise.name,
     intensity,
-    sets: Array.from({ length: sets }, () => ({
+    notes: "",
+    sets: Array.from({ length: sets }, (_, i) => ({
+      id: crypto.randomUUID(),
+      set_index: i,
+      set_type: "standard",
+      reps: avgReps,
+      rest: 90,
       rpe: null,
       rir: null,
       one_rep_max_percent: null,
-      reps,
-      rest: 90,
-      ...getIntensity(),
-      set_type: "standard",
+      ...getIntensityDefaults(),
     })),
   };
 }

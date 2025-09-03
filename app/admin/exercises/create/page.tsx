@@ -73,7 +73,6 @@ const defaultExercise: Partial<Exercise> = {
   energy_system: "Glycolytic",
   volume_per_set: { strength: 100, hypertrophy: 80 },
   cues: [],
-  variations: [],
   contra_indications: [],
   external_links: [],
 };

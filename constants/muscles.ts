@@ -277,7 +277,6 @@ export const BACK_MUSCLES = [
 
   // Arms (posterior view)
   "triceps_brachii",
-  "biceps", // still visible from the back
   "forearm",
 
   // Glutes & Legs

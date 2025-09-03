@@ -20,26 +20,28 @@ export const WorkoutBuilderHeader = ({
   handleSave,
   isWorkoutDay,
   addExercise,
-  exerciseLibraryOpen,
-  setExerciseLibraryOpen,
+  exercises,
   user,
   showShortcutsModal,
   setShowShortcutsModal,
   programPreviewOpen,
   setProgramPreviewOpen,
+  exerciseLibraryOpen,
+  setExerciseLibraryOpen,
 }: {
   program: Program;
   isSaving: boolean;
   handleSave: () => void;
   isWorkoutDay: boolean;
   addExercise: (exercise: Exercise) => void;
-  exerciseLibraryOpen: boolean;
-  setExerciseLibraryOpen: (open: boolean) => void;
+  exercises: Exercise[];
   user: User | null;
   showShortcutsModal: boolean;
   setShowShortcutsModal: (open: boolean) => void;
   programPreviewOpen: boolean;
   setProgramPreviewOpen: (open: boolean) => void;
+  exerciseLibraryOpen: boolean;
+  setExerciseLibraryOpen: (open: boolean) => void;
 }) => {
   const router = useRouter();
 
@@ -77,9 +79,10 @@ export const WorkoutBuilderHeader = ({
 
         {isWorkoutDay && (
           <ExerciseLibrary
-            addExercise={addExercise}
             open={exerciseLibraryOpen}
             setOpen={setExerciseLibraryOpen}
+            onAdd={addExercise}
+            exercises={exercises}
           />
         )}
 

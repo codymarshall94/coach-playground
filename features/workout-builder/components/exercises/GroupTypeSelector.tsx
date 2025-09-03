@@ -71,14 +71,12 @@ interface GroupTypeSelectorProps {
   groupType: WorkoutExerciseGroupType;
   onGroupTypeChange: (groupType: WorkoutExerciseGroupType) => void;
   disabled?: boolean;
-  showDetails?: boolean;
 }
 
 export function GroupTypeSelector({
   groupType,
   onGroupTypeChange,
   disabled = false,
-  showDetails = true,
 }: GroupTypeSelectorProps) {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const currentConfig = GROUP_CONFIG[groupType];

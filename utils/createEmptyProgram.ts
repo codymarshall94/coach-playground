@@ -13,8 +13,8 @@ export const createEmptyProgram = (
     description: "",
     workout: [
       {
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
         exercise_groups: [],
       },
     ],
@@ -26,8 +26,8 @@ export const createEmptyProgram = (
     description: "",
     goal: "strength",
     mode,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    created_at: new Date(),
+    updated_at: new Date(),
     ...(mode === "blocks"
       ? {
           blocks: [

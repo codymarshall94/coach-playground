@@ -1,4 +1,4 @@
-import { fetchAllExercises, fetchExerciseById } from "@/lib/supabase/exercises";
+import { fetchAllExercises } from "@/lib/supabase/exercises";
 import type {
   Exercise,
   ExerciseMuscleJoined,
@@ -25,17 +25,4 @@ export async function getAllExercises(): Promise<Exercise[]> {
   if (error) throw new Error(error.message || "Failed to load exercises");
 
   return (data ?? []).map(shapeExercise);
-}
-
-export async function getExerciseWithFormattedCues(
-  id: string
-): Promise<Exercise & { cues: string[] }> {
-  const { data, error } = await fetchExerciseById(id);
-  if (error || !data) throw new Error(error?.message || "Exercise not found");
-
-  const shaped = shapeExercise(data);
-  return {
-    ...shaped,
-    cues: (data.cues ?? []).map((c: string, i: number) => `${i + 1}. ${c}`),
-  };
 }

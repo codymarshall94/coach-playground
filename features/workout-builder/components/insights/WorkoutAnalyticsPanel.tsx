@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/sheet";
 import { CATEGORY_DISPLAY_MAP } from "@/constants/movement-category";
 import { WorkoutExerciseGroup } from "@/types/Workout";
-import { WorkoutSummaryStats } from "@/types/WorkoutSummary";
 import {
   ArrowDown,
   BarChart2,
@@ -27,29 +26,68 @@ import MuscleHeatmap from "@/components/MuscleHeatmap";
 import { getAllExercises } from "@/services/exerciseService";
 import { Exercise } from "@/types/Exercise";
 import { useQuery } from "@tanstack/react-query";
-import { EnergySystemChart } from "./EnergySystemChart";
 import { FatigueBreakdown } from "./FatigueBreakdown";
 import { RatioIndicator } from "./RatioIndicator";
 
+import { DayMetrics } from "@/engines/main";
 import { ArrowLeftRight, ArrowUpDown } from "lucide-react";
+import { EnergySystemChart } from "./EnergySystemChart";
 
 export const MOVEMENT_ICONS = {
   push_vertical: <ArrowUpDown className="w-4 h-4" />,
   push_horizontal: <ArrowLeftRight className="w-4 h-4" />,
   pull_horizontal: <ArrowLeftRight className="w-4 h-4 rotate-180" />,
+  pull_vertical: <ArrowUpDown className="w-4 h-4 rotate-180" />,
+  hinge: <ArrowDown className="w-4 h-4" />,
+  lunge: <ArrowDown className="w-4 h-4" />,
   squat: <ArrowDown className="w-4 h-4" />,
 };
 
+const PUSH = ["push_horizontal", "push_vertical"] as const;
+const PULL = ["pull_horizontal", "pull_vertical"] as const;
+const LOWER = ["squat", "hinge", "lunge"] as const;
+const UPPER = [...PUSH, ...PULL] as const;
+
+function sumKeys(rec: Record<string, number>, keys: readonly string[]) {
+  return keys.reduce((s, k) => s + (rec[k] ?? 0), 0);
+}
+
+function deriveWorkoutType(p: Record<string, number>) {
+  const lower = sumKeys(p, LOWER);
+  const upper = sumKeys(p, UPPER);
+  if (lower > 0 && upper > 0) return "full body";
+  if (lower > 0) return "lower";
+  if (upper > 0) return "upper";
+  return "other";
+}
+
+function deriveInjuryRisk(day: DayMetrics): "Low" | "Moderate" | "High" {
+  if (day.riskFlags?.some((f) => /High joint|High CNS/i.test(f))) return "High";
+  const j = day.fatigue.joint,
+    c = day.fatigue.cns;
+  if (j > 70 || c > 75) return "High";
+  if (j > 55 || c > 60) return "Moderate";
+  return "Low";
+}
+
+function estimateRecoveryDays(day: DayMetrics) {
+  const c = day.fatigue.cns / 100,
+    j = day.fatigue.joint / 100,
+    m = day.fatigue.metabolic / 100;
+  const weighted = 0.5 * c + 0.3 * j + 0.2 * m;
+  return +(1.0 + 2.0 * weighted).toFixed(2);
+}
+
 interface Props {
   workout: WorkoutExerciseGroup[];
-  summary: WorkoutSummaryStats;
+  dayMetrics: DayMetrics;
   open: boolean;
   setOpen: (open: boolean) => void;
 }
 
 export const WorkoutAnalyticsPanel = ({
   workout,
-  summary,
+  dayMetrics,
   open,
   setOpen,
 }: Props) => {
@@ -68,23 +106,37 @@ export const WorkoutAnalyticsPanel = ({
     );
   }
 
-  const {
-    total_sets,
-    total_fatigue,
-    injury_risk,
-    avgRecovery,
-    push_pull_ratio,
-    lower_upper_ratio,
-    workout_type,
-    top_muscles,
-    muscle_volumes,
-    muscle_set_counts,
-    systemBreakdown,
-    movementFocus,
-    avgCNS,
-    avgMet,
-    avgJoint,
-  } = summary;
+  const avgCNS = dayMetrics.fatigue.cns;
+  const avgMet = dayMetrics.fatigue.metabolic;
+  const avgJoint = dayMetrics.fatigue.joint;
+
+  const total_fatigue = (avgCNS + avgMet + avgJoint) / 3;
+
+  const movementFocus = dayMetrics.patternExposure;
+
+  const push_pull_ratio = (() => {
+    const push = sumKeys(movementFocus, PUSH);
+    const pull = sumKeys(movementFocus, PULL);
+    if (!push && !pull) return 1;
+    return (push || 1) / (pull || 1);
+  })();
+
+  const lower_upper_ratio = (() => {
+    const lower = sumKeys(movementFocus, LOWER);
+    const upper = sumKeys(movementFocus, UPPER);
+    if (!lower && !upper) return 1;
+    return (lower || 1) / (upper || 1);
+  })();
+
+  const workout_type = deriveWorkoutType(movementFocus);
+  const injury_risk = deriveInjuryRisk(dayMetrics);
+  const avgRecovery = estimateRecoveryDays(dayMetrics);
+  const muscle_volumes = dayMetrics.muscleSets;
+  const muscle_set_counts = dayMetrics.muscleSetHits;
+
+  const top_muscles = Object.entries(dayMetrics.muscleSets)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8);
 
   const maxVolume = top_muscles[0]?.[1] || 1;
 
@@ -141,7 +193,9 @@ export const WorkoutAnalyticsPanel = ({
                 <Flame className="w-4 h-4" />
                 Fatigue Score
               </div>
-              <div className="text-foreground">{total_fatigue.toFixed(1)}</div>
+              <div className="text-foreground">
+                {total_fatigue.toFixed(1)} / 100
+              </div>
             </div>
             <div>
               <div className="font-medium flex items-center gap-2">
@@ -155,14 +209,9 @@ export const WorkoutAnalyticsPanel = ({
           </CardContent>
         </Card>
 
-        {/* Fatigue */}
         <FatigueBreakdown avgCNS={avgCNS} avgMet={avgMet} avgJoint={avgJoint} />
 
-        {/* Energy Systems */}
-        <EnergySystemChart
-          systemBreakdown={systemBreakdown}
-          totalExercises={workout.length}
-        />
+        <EnergySystemChart systemBreakdown={dayMetrics.energy} />
 
         <MuscleHeatmap
           mode="workout"
@@ -174,7 +223,6 @@ export const WorkoutAnalyticsPanel = ({
           workout={workout}
         />
 
-        {/* Ratios */}
         <Card>
           <CardContent className="p-4 space-y-4">
             <div>
@@ -182,21 +230,20 @@ export const WorkoutAnalyticsPanel = ({
                 Push / Pull Ratio
               </h4>
               <RatioIndicator
-                value={push_pull_ratio ?? 1}
+                value={push_pull_ratio}
                 labelLeft="Pull"
                 labelRight="Push"
                 normalized
               />
             </div>
-
             <div>
               <h4 className="font-semibold text-sm text-muted-foreground mb-1">
                 Upper / Lower Ratio
               </h4>
               <RatioIndicator
-                value={lower_upper_ratio ?? 1}
-                labelLeft="Lower"
-                labelRight="Upper"
+                value={lower_upper_ratio}
+                labelLeft="Upper"
+                labelRight="Lower"
                 normalized
               />
             </div>
@@ -214,8 +261,7 @@ export const WorkoutAnalyticsPanel = ({
                   CATEGORY_DISPLAY_MAP[
                     cat as keyof typeof CATEGORY_DISPLAY_MAP
                   ];
-                const icon = MOVEMENT_ICONS[cat as keyof typeof MOVEMENT_ICONS]; // define this map
-
+                const icon = MOVEMENT_ICONS[cat as keyof typeof MOVEMENT_ICONS];
                 return (
                   <li key={cat} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">

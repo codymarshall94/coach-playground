@@ -1,20 +1,15 @@
 "use client";
 
-import { useRef } from "react";
-import html2canvas from "html2canvas-pro";
-import jsPDF from "jspdf";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Activity, Dumbbell, Eye, Target, Zap } from "lucide-react";
 import { IntensitySystem, Program, ProgramDay, SetInfo } from "@/types/Workout";
+import html2canvas from "html2canvas-pro";
+import jsPDF from "jspdf";
+import { Activity, Dumbbell, Eye, Target, Zap } from "lucide-react";
+import { useRef } from "react";
 
 const goalIcons = {
   strength: Zap,
@@ -71,6 +66,43 @@ function formatAdvancedSetInfo(set: SetInfo): string {
   }
 }
 
+type SetGroup = { startIndex: number; count: number; set: SetInfo };
+
+function setGroupingSignature(set: SetInfo, system: IntensitySystem) {
+  // Only include fields that actually show up in the table
+  return [
+    set.set_type,
+    set.reps,
+    formatIntensity(set, system), // RPE/RIR/%1RM as displayed
+    // advanced-set fields that affect the "Type" cell text
+    set.drop_percent,
+    set.drop_sets,
+    set.cluster_reps,
+    set.intra_rest,
+    set.activation_set_reps,
+    set.mini_sets,
+    set.initial_reps,
+    set.pause_duration,
+  ].join("|");
+}
+
+function groupConsecutiveSets(
+  sets: SetInfo[],
+  system: IntensitySystem
+): SetGroup[] {
+  const groups: SetGroup[] = [];
+  let i = 0;
+  while (i < sets.length) {
+    const sig = setGroupingSignature(sets[i], system);
+    let j = i + 1;
+    while (j < sets.length && setGroupingSignature(sets[j], system) === sig)
+      j++;
+    groups.push({ startIndex: i, count: j - i, set: sets[i] });
+    i = j;
+  }
+  return groups;
+}
+
 function WorkoutDayTable({ day }: { day: ProgramDay }) {
   if (day.type !== "workout") return null;
   return (
@@ -123,34 +155,44 @@ function WorkoutDayTable({ day }: { day: ProgramDay }) {
                   </tr>
                 );
 
-                const exerciseRows = group.exercises.map((exercise) => {
-                  const setCount = exercise.sets.length;
-                  return exercise.sets.map((set, setIndex) => (
+                const exerciseRows = group.exercises.flatMap((exercise) => {
+                  const groups = groupConsecutiveSets(
+                    exercise.sets,
+                    exercise.intensity
+                  );
+                  const rowSpan = groups.length;
+
+                  return groups.map((g, gi) => (
                     <tr
-                      key={`${exercise.id}-set-${setIndex}`}
+                      key={`${exercise.id}-grp-${g.startIndex}`}
                       className={`${
-                        setIndex % 2 ? "bg-gray-50" : "bg-white"
+                        gi % 2 ? "bg-gray-50" : "bg-white"
                       } border-t border-gray-200`}
                     >
-                      {setIndex === 0 && (
+                      {gi === 0 && (
                         <td
-                          rowSpan={setCount}
+                          rowSpan={rowSpan}
                           className="px-3 py-2 font-semibold align-top"
                         >
                           {exercise.name}
                         </td>
                       )}
-                      <td className="px-3 py-2 text-center">{setIndex + 1}</td>
-                      <td className="px-3 py-2 whitespace-pre-line">
-                        {formatAdvancedSetInfo(set)}
-                      </td>
-                      <td className="px-3 py-2 text-center">{set.reps}</td>
+
                       <td className="px-3 py-2 text-center">
-                        {formatIntensity(set, exercise.intensity) || "—"}
+                        {g.count > 1 ? `×${g.count}` : `${g.startIndex + 1}`}
                       </td>
-                      {setIndex === 0 && (
+
+                      <td className="px-3 py-2 whitespace-pre-line">
+                        {formatAdvancedSetInfo(g.set)}
+                      </td>
+                      <td className="px-3 py-2 text-center">{g.set.reps}</td>
+                      <td className="px-3 py-2 text-center">
+                        {formatIntensity(g.set, exercise.intensity) || "—"}
+                      </td>
+
+                      {gi === 0 && (
                         <td
-                          rowSpan={setCount}
+                          rowSpan={rowSpan}
                           className="px-3 py-2 text-xs text-gray-600 italic align-top"
                         >
                           {exercise.notes || "—"}
@@ -302,20 +344,16 @@ export default function ProgramPreview({
       </DialogTrigger>
 
       <DialogContent className="min-w-[800px] w-full px-6 py-8 rounded-2xl shadow-lg bg-white">
-        {/* Export button (NOT inside capture area) */}
         <div className="mb-4 flex justify-end">
           <Button onClick={exportToPDF}>Export to PDF</Button>
         </div>
 
-        {/* Visible on-screen preview (clipped for UX) */}
         <ScrollArea className="h-[calc(100vh-260px)]">
           <ProgramSheet program={program} />
         </ScrollArea>
 
-        {/* Off-screen, un-clipped copy for high-fidelity capture */}
         <div
           ref={captureRef}
-          // keep it rendered but off-screen; don't use display: none
           style={{
             position: "fixed",
             left: -10000,

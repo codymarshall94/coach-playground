@@ -2,6 +2,8 @@
 
 import type React from "react";
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -10,10 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { RotateCcw, Edit3, Check, AlertCircle } from "lucide-react";
-import { useId, useState, useRef, useEffect } from "react";
+import { AlertCircle, Check, Edit3, RotateCcw } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
 
 interface SmartInputProps {
   label?: string;
@@ -137,10 +137,7 @@ export function SmartInput({
   return (
     <div className="space-y-1 w-full">
       {label && (
-        <label
-          htmlFor={inputId}
-          className="text-xs font-medium text-muted-foreground block"
-        >
+        <label htmlFor={inputId} className="text-meta block">
           {label}
         </label>
       )}
@@ -157,7 +154,7 @@ export function SmartInput({
               value={isCustomValue ? "custom" : String(value)}
               disabled={disabled}
             >
-              <SelectTrigger className="h-9 text-center font-medium w-full">
+              <SelectTrigger className="h-9 flex items-center justify-center tabular-nums  w-full ">
                 <SelectValue placeholder={placeholder || "Select value"} />
               </SelectTrigger>
               <SelectContent>
@@ -200,7 +197,7 @@ export function SmartInput({
                   handleReset();
                 }
               }}
-              className={`h-9 text-center font-medium pr-16 transition-colors ${
+              className={`h-9 text-center font-medium pr-16 transition-colors text-meta ${
                 !isValid
                   ? "border-red-300 focus:border-red-500 focus:ring-red-200"
                   : ""

@@ -8,54 +8,34 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { VERTICAL_LIST_MODIFIERS } from "@/features/workout-builder/dnd/constants";
+import { DragOverlayPortal } from "@/features/workout-builder/dnd/overlay";
+import { useSortableSensors } from "@/features/workout-builder/dnd/sensors";
+import { useDragAndDrop } from "@/features/workout-builder/hooks/useDragAndDrop";
 import { cn } from "@/lib/utils";
 import type { ProgramDay } from "@/types/Workout";
-import {
-  DndContext,
-  DragOverlay,
-  PointerSensor,
-  closestCenter,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  type DragStartEvent,
-} from "@dnd-kit/core";
-import {
-  restrictToVerticalAxis,
-  restrictToWindowEdges,
-} from "@dnd-kit/modifiers";
+import { DndContext, closestCenter } from "@dnd-kit/core";
 import {
   SortableContext,
-  arrayMove,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import {
-  Bed,
-  Dumbbell,
-  GripVertical,
-  MoreVertical,
-  Plus,
-  Trash,
-} from "lucide-react";
-import { motion } from "motion/react";
-import { useState } from "react";
+import { Bed, Dumbbell, MoreVertical, Plus, Trash } from "lucide-react";
 
 type Props = {
   days: ProgramDay[];
-  activeIndex: number;
+  activeIndex: number | null;
   onSelect: (index: number) => void;
   onRemoveWorkoutDay: (index: number) => void;
   onDuplicateWorkoutDay: (index: number) => void;
   onAddWorkoutDay: () => void;
   onAddRestDay: () => void;
-  onReorder: (updated: ProgramDay[]) => void;
+  onMove: (fromIndex: number, toIndex: number) => void;
 };
 
 function DayButton({
   day,
   index,
   isActive,
-  onClick,
   onRemove,
   onDuplicate,
   isDragOverlay = false,
@@ -63,7 +43,6 @@ function DayButton({
   day: ProgramDay;
   index: number;
   isActive: boolean;
-  onClick: () => void;
   onRemove: () => void;
   onDuplicate: () => void;
   isDragOverlay?: boolean;
@@ -74,19 +53,44 @@ function DayButton({
   return (
     <div className="flex items-center justify-between gap-3 w-full">
       <div className="flex items-center gap-3">
-        <span className="truncate font-medium">{day.order_num + 1}.</span>
-        <span className="truncate font-medium">{day.name}</span>
-        {day.type === "rest" && <Bed className="w-4 h-4 ml-2 flex-shrink-0" />}
-        {day.type === "workout" && (
-          <Dumbbell className="w-4 h-4 ml-2 flex-shrink-0" />
+        <span
+          className={cn(
+            "text-body",
+            isActive && "text-primary-foreground font-semibold"
+          )}
+        >
+          {(day.order_num ?? index) + 1}.
+        </span>
+        <span
+          className={cn(
+            "text-title",
+            isActive && "text-primary-foreground font-semibold"
+          )}
+        >
+          {day.name}
+        </span>
+        {day.type === "rest" ? (
+          <Bed
+            className={cn(
+              "w-4 h-4 ml-2 flex-shrink-0 text-muted-foreground",
+              isActive && "text-primary-foreground"
+            )}
+          />
+        ) : (
+          <Dumbbell
+            className={cn(
+              "w-4 h-4 ml-2 flex-shrink-0 text-muted-foreground",
+              isActive && "text-primary-foreground"
+            )}
+          />
         )}
       </div>
 
       {day.type === "workout" && totalExercises > 0 && (
         <div
           className={cn(
-            "flex items-center justify-center ml-auto bg-primary  text-primary-foreground rounded-full min-w-[24px] h-6 px-2 text-xs font-medium shadow-sm",
-            isActive && "bg-background text-foreground"
+            "ml-auto rounded-full min-w-[24px] h-6 px-2 grid place-items-center text-xs font-medium bg-foreground/5 text-foreground/80 shadow-sm",
+            isActive && "bg-primary/10 text-primary-foreground"
           )}
         >
           {totalExercises}
@@ -96,21 +100,22 @@ function DayButton({
       {!isDragOverlay && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 hover:bg-gray-100 transition-colors text-muted-foreground"
-            >
-              <MoreVertical className="w-4 h-4 text-muted-foreground" />
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <MoreVertical
+                className={cn(
+                  "w-4 h-4 text-muted-foreground",
+                  isActive && "text-primary-foreground"
+                )}
+              />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuContent align="end" className="w-44">
             <DropdownMenuItem onClick={onDuplicate} className="cursor-pointer">
               <Plus className="w-4 h-4 mr-2" /> Duplicate
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={onRemove}
-              className="cursor-pointer text-red-600 focus:text-red-600"
+              className="cursor-pointer text-destructive focus:text-destructive"
             >
               <Trash className="w-4 h-4 mr-2" /> Remove
             </DropdownMenuItem>
@@ -129,50 +134,31 @@ export function ProgramDaySelector({
   onDuplicateWorkoutDay,
   onAddWorkoutDay,
   onAddRestDay,
-  onReorder,
+  onMove,
 }: Props) {
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8, // Require 8px of movement before drag starts
-      },
-    })
-  );
+  const sensors = useSortableSensors();
 
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
-  };
+  const { draggingId, handlers, modifiers } = useDragAndDrop({
+    items: days,
+    onReorder: (next) => {
+      if (!draggingId) return;
+      const from = days.findIndex((d) => d.id === draggingId);
+      const to = next.findIndex((d) => d.id === draggingId);
+      if (from !== -1 && to !== -1 && from !== to) onMove(from, to);
+    },
+    modifiers: VERTICAL_LIST_MODIFIERS,
+  });
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    setActiveId(null);
-
-    if (!over || active.id === over.id) return;
-
-    const oldIndex = days.findIndex((d) => d.id === active.id);
-    const newIndex = days.findIndex((d) => d.id === over.id);
-
-    const reordered = arrayMove(days, oldIndex, newIndex).map((d, i) => ({
-      ...d,
-      order_num: i,
-    }));
-
-    onReorder(reordered);
-  };
-
-  const activeDayIndex = activeId
-    ? days.findIndex((d) => d.id === activeId)
-    : -1;
-  const activeDay = activeDayIndex >= 0 ? days[activeDayIndex] : null;
+  const activeDraggedIndex = draggingId
+    ? days.findIndex((d) => d.id === draggingId)
+    : null;
 
   return (
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      modifiers={[restrictToVerticalAxis, restrictToWindowEdges]}
+      {...handlers}
+      modifiers={modifiers}
     >
       <SortableContext
         items={days.map((d) => d.id)}
@@ -184,26 +170,27 @@ export function ProgramDaySelector({
               key={day.id}
               id={day.id}
               className={cn(
-                "cursor-pointer",
-                i !== activeIndex && "hover:bg-primary/10",
-                i === activeIndex &&
-                  "shadow-lg bg-primary text-primary-foreground border-primary/50"
+                "px-3 py-2.5 rounded-xl min-h-[44px] cursor-pointer transition-colors ",
+                i === activeIndex
+                  ? "bg-primary text-primary-foreground ring-1 ring-inset ring-primary/20"
+                  : "hover:bg-foreground/5 "
               )}
-              draggerClassName={cn(i === activeIndex && "text-white")}
+              draggerClassName={cn(
+                i === activeIndex && "text-primary-foreground/80"
+              )}
               onClick={() => onSelect(i)}
             >
               <DayButton
                 day={day}
                 index={i}
                 isActive={i === activeIndex}
-                onClick={() => onSelect(i)}
                 onRemove={() => onRemoveWorkoutDay(i)}
                 onDuplicate={() => onDuplicateWorkoutDay(i)}
               />
             </SortableItem>
           ))}
 
-          <div className="flex gap-2 mt-4 pt-2 border-t border-border">
+          <div className="flex gap-2">
             <Button
               onClick={onAddWorkoutDay}
               variant="outline"
@@ -224,66 +211,25 @@ export function ProgramDaySelector({
         </div>
       </SortableContext>
 
-      <DragOverlay
-        dropAnimation={{
-          duration: 300,
-          easing: "cubic-bezier(0.18, 0.67, 0.6, 1.22)",
-        }}
-        style={{
-          transformOrigin: "0 0",
-        }}
-      >
-        {activeDay && (
-          <motion.div
-            initial={{
-              scale: 1,
-              rotate: 0,
-              opacity: 1,
-            }}
-            animate={{
-              scale: 1.03,
-              opacity: 0.95,
-            }}
-            exit={{
-              scale: 0.98,
-              rotate: 0,
-              opacity: 0.8,
-            }}
-            transition={{
-              duration: 0.2,
-              ease: "easeOut",
-            }}
-            className="z-[999] pointer-events-none"
-            style={{
-              filter: "drop-shadow(0 20px 25px rgb(0 0 0 / 0.15))",
-            }}
-          >
-            <div className="relative">
-              <div className="absolute inset-0 bg-primary/20 rounded-lg blur-sm" />
-
-              <div className="relative bg-background border-2 border-primary/50 rounded-lg p-3 shadow-2xl">
-                <div className="flex items-center gap-3">
-                  <GripVertical className="w-4 h-4 text-primary" />
-
-                  <DayButton
-                    day={activeDay}
-                    index={activeDayIndex}
-                    isActive={activeDayIndex === activeIndex}
-                    onClick={() => {}}
-                    onRemove={() => {}}
-                    onDuplicate={() => {}}
-                    isDragOverlay={true}
-                  />
-                </div>
-              </div>
-
-              <motion.div className="absolute -top-2 -right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center shadow-lg">
-                <div className="w-2 h-2 bg-white rounded-full" />
-              </motion.div>
+      <DragOverlayPortal
+        draggingId={draggingId}
+        render={(id) => {
+          const day = days.find((d) => d.id === id)!;
+          return (
+            <div className="px-3 py-2.5 rounded-xl min-h-[44px] bg-background ring-2 ring-primary/30 shadow-lg">
+              <DayButton
+                day={day}
+                index={activeDraggedIndex ?? 0}
+                isActive
+                onRemove={() => {}}
+                onDuplicate={() => {}}
+                isDragOverlay
+              />
             </div>
-          </motion.div>
-        )}
-      </DragOverlay>
+          );
+        }}
+        withHalo
+      />
     </DndContext>
   );
 }

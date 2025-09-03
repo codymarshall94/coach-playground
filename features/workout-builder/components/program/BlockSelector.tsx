@@ -10,37 +10,28 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import type { ProgramBlock, ProgramDay } from "@/types/Workout";
-import {
-  DndContext,
-  DragEndEvent,
-  DragOverlay,
-  DragStartEvent,
-  PointerSensor,
-  closestCenter,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import {
-  restrictToVerticalAxis,
-  restrictToWindowEdges,
-} from "@dnd-kit/modifiers";
+import { ProgramDaySelector } from "./ProgramDaySelector";
+
+import { DndContext, closestCenter } from "@dnd-kit/core";
 import {
   SortableContext,
-  arrayMove,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+
+import { Textarea } from "@/components/ui/textarea";
+import { VERTICAL_LIST_MODIFIERS } from "@/features/workout-builder/dnd/constants";
+import { DragOverlayPortal } from "@/features/workout-builder/dnd/overlay";
+import { useSortableSensors } from "@/features/workout-builder/dnd/sensors";
+import { useDragAndDrop } from "@/features/workout-builder/hooks/useDragAndDrop";
+
 import { Edit, GripVertical, Plus, Trash } from "lucide-react";
-import { motion } from "motion/react";
-import { useState } from "react";
-import { ProgramDaySelector } from "./ProgramDaySelector";
-import { cn } from "@/lib/utils";
 
 type Props = {
   blocks: ProgramBlock[];
-  activeIndex: number;
-  activeDayIndex: number;
+  activeIndex: number | null;
+  activeDayIndex: number | null;
   onSelect: (index: number) => void;
   onAddBlock: () => void;
   onRemoveBlock: (index: number) => void;
@@ -50,7 +41,7 @@ type Props = {
   onAddRestDay: () => void;
   onRemoveWorkoutDay: (index: number) => void;
   onDuplicateWorkoutDay: (index: number) => void;
-  onReorderDays: (reordered: ProgramDay[]) => void;
+  onMoveDay: (fromIndex: number, toIndex: number) => void;
   onUpdateBlockDetails: (index: number, updates: Partial<ProgramBlock>) => void;
 };
 
@@ -67,47 +58,25 @@ export function BlockSelector({
   onAddRestDay,
   onRemoveWorkoutDay,
   onDuplicateWorkoutDay,
-  onReorderDays,
+  onMoveDay,
   onUpdateBlockDetails,
 }: Props) {
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
-  );
-  const [isDragging, setIsDragging] = useState(false);
+  const sensors = useSortableSensors();
 
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
-    setIsDragging(true);
-  };
+  const { draggingId, handlers, modifiers } = useDragAndDrop({
+    items: blocks,
+    onReorder: (next) => onReorder(next.map((b, i) => ({ ...b, order: i }))),
+    modifiers: VERTICAL_LIST_MODIFIERS,
+  });
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    setActiveId(null);
-
-    if (!over || active.id === over.id) return;
-
-    const oldIndex = blocks.findIndex((b) => b.id === active.id);
-    const newIndex = blocks.findIndex((b) => b.id === over.id);
-
-    const reordered = arrayMove(blocks, oldIndex, newIndex).map((b, i) => ({
-      ...b,
-      order: i,
-    }));
-
-    onReorder(reordered);
-    setIsDragging(false);
-  };
-
-  const activeBlock = blocks.find((b) => b.id === activeId);
+  const isDragging = !!draggingId;
 
   return (
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      modifiers={[restrictToVerticalAxis, restrictToWindowEdges]}
+      {...handlers}
+      modifiers={modifiers}
     >
       <SortableContext
         items={blocks.map((b) => b.id)}
@@ -149,6 +118,7 @@ export function BlockSelector({
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0"
+                          onClick={(e) => e.stopPropagation()}
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
@@ -232,7 +202,7 @@ export function BlockSelector({
                     onAddRestDay={onAddRestDay}
                     onRemoveWorkoutDay={onRemoveWorkoutDay}
                     onDuplicateWorkoutDay={onDuplicateWorkoutDay}
-                    onReorder={onReorderDays}
+                    onMove={onMoveDay}
                   />
                 )}
               </div>
@@ -249,56 +219,36 @@ export function BlockSelector({
         </div>
       </SortableContext>
 
-      <DragOverlay
-        dropAnimation={{
-          duration: 300,
-          easing: "cubic-bezier(0.18, 0.67, 0.6, 1.22)",
-        }}
-        style={{
-          transformOrigin: "0 0",
-        }}
-      >
-        {activeBlock && (
-          <motion.div
-            initial={{
-              scale: 1,
-              rotate: 0,
-              opacity: 1,
-            }}
-            animate={{
-              scale: 1.03,
-              opacity: 0.95,
-            }}
-            exit={{
-              scale: 0.98,
-              rotate: 0,
-              opacity: 0.8,
-            }}
-            transition={{
-              duration: 0.2,
-              ease: "easeOut",
-            }}
-            className="z-[999] pointer-events-none"
-            style={{
-              filter: "drop-shadow(0 20px 25px rgb(0 0 0 / 0.15))",
-            }}
-          >
-            <div className="relative">
-              <div className="absolute inset-0 bg-primary/20 rounded-lg blur-sm" />
-
-              <div className="relative bg-background border-2 border-primary/50 rounded-lg p-3 shadow-2xl">
-                <div className="flex items-center gap-3">
-                  <GripVertical className="w-4 h-4 text-primary" />
-                  <span>{activeBlock.name || "Training Block"}</span>
+      <DragOverlayPortal
+        draggingId={draggingId}
+        render={(id) => {
+          const block = blocks.find((b) => b.id === id)!;
+          return (
+            <div className="relative bg-background border-2 border-primary/50 rounded-lg p-3 shadow-2xl">
+              <div className="flex items-center gap-3">
+                <GripVertical className="w-4 h-4 text-primary" />
+                <span>{block.name || "Training Block"}</span>
+                <div className="ml-auto flex items-center gap-2">
+                  <Badge
+                    variant="secondary"
+                    className="bg-blue-50 text-blue-700 border-blue-200 text-xs"
+                  >
+                    {block.weeks || 4} Weeks
+                  </Badge>
+                  <Badge
+                    variant="secondary"
+                    className="bg-blue-50 text-blue-700 border-blue-200 text-xs"
+                  >
+                    {block.days.length}{" "}
+                    {block.days.length === 1 ? "Day" : "Days"}
+                  </Badge>
                 </div>
               </div>
-              <motion.div className="absolute -top-2 -right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center shadow-lg">
-                <div className="w-2 h-2 bg-white rounded-full" />
-              </motion.div>
             </div>
-          </motion.div>
-        )}
-      </DragOverlay>
+          );
+        }}
+        withHalo
+      />
     </DndContext>
   );
 }

@@ -24,7 +24,7 @@ export default function AvatarDropdown() {
       <DropdownMenuTrigger>
         <div className="relative cursor-pointer">
           <Avatar className="w-10 h-10">
-            <AvatarImage src={profile?.avatar_url || "/placeholder.svg"} />
+            <AvatarImage src={profile?.avatar_url} />
             <AvatarFallback className="text-xl bg-gradient-to-br from-brand to-brand-foreground text-foreground">
               {profile?.full_name?.[0] ?? "U"}
             </AvatarFallback>
@@ -35,14 +35,14 @@ export default function AvatarDropdown() {
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="w-80 p-0 bg-popover text-popover-foreground"
+        className="w-80 p-0  text-foreground"
         align="end"
         side="bottom"
       >
         <div className="p-6 pb-4">
           <div className="flex items-center gap-4 mb-6">
             <Avatar className="w-16 h-16">
-              <AvatarImage src={profile?.avatar_url || "/placeholder.svg"} />
+              <AvatarImage src={profile?.avatar_url} />
               <AvatarFallback className="text-xl bg-gradient-to-br from-brand to-brand-foreground text-foreground">
                 {profile?.full_name?.[0] ?? "U"}
               </AvatarFallback>

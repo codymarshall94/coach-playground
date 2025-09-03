@@ -2,7 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   BACK_MUSCLES,
   FRONT_MUSCLES,
@@ -13,7 +13,7 @@ import { MuscleVolumeRow } from "@/features/workout-builder/components/insights/
 import { cn } from "@/lib/utils";
 import type { Exercise } from "@/types/Exercise";
 import type { WorkoutExercise, WorkoutExerciseGroup } from "@/types/Workout";
-import { RotateCcw, User, UserCheck } from "lucide-react";
+import { RotateCcw, User } from "lucide-react";
 import { useMemo, useState } from "react";
 import Model, { type Muscle } from "react-body-highlighter";
 
@@ -133,22 +133,15 @@ export default function MuscleHeatmap(props: Props) {
 
   const hasAnyActivation = activatedMuscles.length > 0;
 
+  const entries = Object.entries(props.muscle_volumes!); // effective
+  const maxEffective = Math.max(1, ...entries.map(([, v]) => v));
+  const maxRaw = Math.max(1, ...Object.values(props.muscle_set_counts!));
+  const totalWeighted = entries.reduce((s, [, v]) => s + v, 0);
+
   return (
     <Card className={cn("w-full mx-auto", props.className)}>
       <CardHeader className="pb-3 @container">
         <div className=" flex items-center @md:flex-row flex-col justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
-              <UserCheck className="h-4 w-4 text-primary" />
-            </span>
-            <div>
-              <CardTitle className="text-lg">Muscle Activation</CardTitle>
-              <p className="text-xs text-muted-foreground">
-                Visualize which regions your selection targets, at a glance.
-              </p>
-            </div>
-          </div>
-
           <div
             role="tablist"
             aria-label="Body view"
@@ -282,22 +275,22 @@ export default function MuscleHeatmap(props: Props) {
               Muscle Group Volumes
             </h4>
             <div className="grid gap-2">
-              {Object.entries(props.muscle_volumes!).map(
-                ([muscle, volume], index) => (
-                  <MuscleVolumeRow
-                    key={muscle}
-                    index={index}
-                    muscleId={muscle}
-                    setCount={props.muscle_set_counts![muscle]}
-                    weightedVolume={volume}
-                    maxVolume={props.maxVolume!}
-                    workout={props.workout!.flatMap((g) => g.exercises)}
-                    exercises={
-                      props.mode === "workout" ? props.exercises ?? [] : []
-                    }
-                  />
-                )
-              )}
+              {entries.map(([muscle, volume], index) => (
+                <MuscleVolumeRow
+                  key={muscle}
+                  index={index}
+                  muscleId={muscle}
+                  setCount={props.muscle_set_counts![muscle] ?? 0}
+                  weightedVolume={volume}
+                  maxVolume={maxEffective}
+                  maxRaw={maxRaw}
+                  totalWeighted={totalWeighted}
+                  workout={props.workout!.flatMap((g) => g.exercises)}
+                  exercises={
+                    props.mode === "workout" ? props.exercises ?? [] : []
+                  }
+                />
+              ))}
             </div>
           </section>
         )}

@@ -24,18 +24,21 @@ interface AddToGroupPopoverProps {
   groupIndex: number;
   existingExercises: WorkoutExercise[];
   allExercises: Exercise[];
+  exerciseLibraryOpen: boolean;
+  setExerciseLibraryOpen: (open: boolean) => void;
 }
 
 export function AddToGroupPopover({
   trigger,
   onSelect,
   onAddExerciseToGroup,
+  exerciseLibraryOpen,
+  setExerciseLibraryOpen,
   groupIndex,
   existingExercises,
   allExercises,
 }: AddToGroupPopoverProps) {
   const [open, setOpen] = useState(false);
-  const [openLibrary, setOpenLibrary] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredLibrary = useMemo(() => {
@@ -64,7 +67,6 @@ export function AddToGroupPopover({
             <h3 className="font-semibold text-sm">Add Exercise</h3>
           </div>
 
-          {/* Search Section */}
           <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -98,21 +100,20 @@ export function AddToGroupPopover({
                           handleSelect(
                             {
                               id: ex.exercise_id,
-                              name: ex.name,
+                              name: ex.display_name,
                             } as Exercise,
                             ex
                           )
                         }
                         className="w-full flex items-center justify-between text-left text-sm hover:bg-accent cursor-pointer rounded-md px-3 py-2.5 transition-colors group"
                       >
-                        <span className="font-medium">{ex.name}</span>
+                        <span className="font-medium">{ex.display_name}</span>
                       </button>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Search Results Section */}
               {existingExercises.length > 0 && <Separator />}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
@@ -150,14 +151,12 @@ export function AddToGroupPopover({
           </ScrollArea>
         </div>
 
-        {/* Footer */}
         <div className="border-t bg-muted/20 p-3">
           <ExerciseLibrary
-            open={openLibrary}
-            setOpen={setOpenLibrary}
-            addExercise={handleSelect}
-            groupIndex={groupIndex}
-            addToGroup={(groupIndex, exercise) => {
+            open={exerciseLibraryOpen}
+            setOpen={setExerciseLibraryOpen}
+            exercises={filteredLibrary}
+            onAdd={(exercise) => {
               onAddExerciseToGroup(groupIndex, exercise);
               setOpen(false);
             }}
