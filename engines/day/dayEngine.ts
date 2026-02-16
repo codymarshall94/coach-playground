@@ -12,7 +12,7 @@
  *   DayMetrics (used by Week Engine + UI Session Overview)
  *
  * Gotchas:
- *   - sessionLoad is “soft” normalized here; Week Engine re-normalizes via z-score.
+ *   - sessionLoad is normalized to a 0-10 scale; Week Engine re-normalizes via z-score.
  *   - roleFinal respects user override (intent.role_intent).
  */
 
@@ -81,8 +81,13 @@ export function computeDayMetrics(input: SessionInput): DayMetrics {
   }
 
   const rawLoad = rawLoads.reduce((a, c) => a + c, 0);
-  // Soft cap to 0..100. Week Engine will z-score within week projection.
-  const sessionLoad = Math.min(100, rawLoad * 2);
+
+  // Normalize to 0-10 scale.
+  // A "reference moderate session" has ~5 exercises, each ~3 sets of 10 reps
+  // at RPE 7-8 => rawLoad per set ~= reps * intensityFactor * densityFactor
+  //           ~= 10 * 0.75 * 1.0 = 7.5.  15 sets => rawLoad ~ 112.
+  // We want that to land at ~5 on a 0-10 scale, so divisor ~ 22.
+  const sessionLoad = Math.min(10, rawLoad / 22);
 
   const exCount = Math.max(1, exercises.length);
   const fatigue: FatigueBreakdown = {
@@ -100,7 +105,7 @@ export function computeDayMetrics(input: SessionInput): DayMetrics {
 
   // Provisional role; refined by Week Engine z-score
   let roleComputed: DayRole =
-    sessionLoad >= 70 ? "High" : sessionLoad <= 30 ? "Low" : "Medium";
+    sessionLoad >= 7 ? "High" : sessionLoad <= 3 ? "Low" : "Medium";
   const roleFinal: DayRole = input.intent?.role_intent ?? roleComputed;
 
   const riskFlags: string[] = [];

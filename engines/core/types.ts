@@ -111,7 +111,7 @@ export type FatigueBreakdown = {
 
 /** Output of Day Engine (per-session metrics) */
 export type DayMetrics = {
-  sessionLoad: number; // normalized 0..100 (soft scale)
+  sessionLoad: number; // normalized 0..10 scale
   rawLoad: number; // unbounded scalar (pre-normalization)
   estDurationMin: number;
   roleComputed: DayRole; // from math

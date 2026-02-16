@@ -2,14 +2,11 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { IntensitySystem, Program, ProgramDay, SetInfo } from "@/types/Workout";
-// html2canvas and jsPDF are imported dynamically in `exportToPDF`
-// to avoid referencing `window` during SSR.
 import { Activity, Dumbbell, Eye, Target, Zap } from "lucide-react";
-import { useRef } from "react";
 
 const goalIcons = {
   strength: Zap,
@@ -294,46 +291,25 @@ export default function ProgramPreview({
   open: boolean;
   onOpenChange: (o: boolean) => void;
 }) {
-  const captureRef = useRef<HTMLDivElement>(null);
-
   const exportToPDF = async () => {
-    if (!captureRef.current) return;
-
-    // Dynamically import client-only libs to prevent SSR errors
-    const html2canvas = (await import("html2canvas-pro")).default;
-    const jsPDF = (await import("jspdf")).default;
-
-    const canvas = await html2canvas(captureRef.current, {
-      scale: 2,
-      backgroundColor: "#ffffff",
-      useCORS: true,
+    const res = await fetch("/api/export-pdf", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(program),
     });
 
-    const imgData = canvas.toDataURL("image/jpeg", 1.0);
-    const pdf = new jsPDF("p", "mm", "a4");
-
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-
-    const imgWidth = pageWidth;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    // First page
-    pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    // Additional pages if needed
-    while (heightLeft > 0) {
-      position -= pageHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+    if (!res.ok) {
+      console.error("PDF export failed:", await res.text());
+      return;
     }
 
-    pdf.save(`${program.name}.pdf`);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${program.name}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -346,6 +322,7 @@ export default function ProgramPreview({
       </DialogTrigger>
 
       <DialogContent className="min-w-[800px] w-full px-6 py-8 rounded-2xl shadow-lg bg-white">
+        <DialogTitle className="sr-only">Program preview</DialogTitle>
         <div className="mb-4 flex justify-end">
           <Button onClick={exportToPDF}>Export to PDF</Button>
         </div>
@@ -353,21 +330,6 @@ export default function ProgramPreview({
         <ScrollArea className="h-[calc(100vh-260px)]">
           <ProgramSheet program={program} />
         </ScrollArea>
-
-        <div
-          ref={captureRef}
-          style={{
-            position: "fixed",
-            left: -10000,
-            top: 0,
-            width: "794px",
-            background: "#fff",
-            zIndex: -1,
-          }}
-          aria-hidden
-        >
-          <ProgramSheet program={program} />
-        </div>
       </DialogContent>
     </Dialog>
   );

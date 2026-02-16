@@ -95,6 +95,11 @@ export const WorkoutBuilder = ({
   const [programPreviewOpen, setProgramPreviewOpen] = useState(false);
   const [welcomeModalOpen, setWelcomeModalOpen] = useState(true);
   const [overviewOpen, setOverviewOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const router = useRouter();
   const groupRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -291,8 +296,10 @@ export const WorkoutBuilder = ({
   const mainNode = overviewOpen ? (
     <ProgramOverviewPanel program={program} />
   ) : (
-    <DndContext sensors={sensors} {...handlers} modifiers={modifiers}>
-      <div className="w-full max-w-4xl p-4 mx-auto relative">
+    <div suppressHydrationWarning>
+      {mounted ? (
+        <DndContext sensors={sensors} {...handlers} modifiers={modifiers}>
+          <div className="w-full max-w-4xl p-4 mx-auto relative">
         <DayHeader
           day={currentDays[activeDayIndex ?? 0]}
           dayMetrics={days[activeDayIndex ?? 0]}
@@ -396,9 +403,9 @@ export const WorkoutBuilder = ({
             </div>
           </>
         )}
-      </div>
+          </div>
 
-      <DragOverlayPortal
+          <DragOverlayPortal
         draggingId={draggingId}
         render={(id) => {
           const group = exerciseGroups.find((g) => g.id === id)!;
@@ -431,7 +438,11 @@ export const WorkoutBuilder = ({
         }}
         withHalo
       />
-    </DndContext>
+        </DndContext>
+      ) : (
+        <div className="w-full max-w-4xl p-4 mx-auto relative" />
+      )}
+    </div>
   );
 
   return (

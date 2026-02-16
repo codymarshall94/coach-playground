@@ -33,3 +33,6 @@ PRGRM is a workout-program builder and analyzer for coaches and self-coached ath
 - **No sign-up wall** — building is free; auth gates saving/sharing only.
 - **Engine-driven feedback** — analytics are computed by pure functions, not the server.
 - **Progressive disclosure** — simple defaults first; advanced options (set types, intensity systems) revealed on demand.
+- **Beginner-friendly, power-user deep** — every analytics surface should be instantly understandable by someone who has never programmed a workout, while still exposing the granular data (fatigue breakdown, movement ratios, energy systems) that experienced coaches expect. Hero metrics up front; expandable detail sections for depth.
+- **Glanceable summaries** — key session stats (load score, exercises, sets, duration, focus) should be readable in under 3 seconds without scrolling.
+- **Consistent visual language** — use the design-system color tokens (`load-low / medium / high / max`) and dial/bar patterns so metrics feel familiar across the entire product.

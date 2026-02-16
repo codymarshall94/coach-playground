@@ -19,10 +19,45 @@ function transformGroups(groups: any[]) {
   return (
     groups?.map((g: any) => ({
       ...g,
-      exercises: g.exercises?.map((ex: any) => ({
-        ...ex,
-        sets: transformSets(ex.sets ?? []),
-      })),
+      exercises: g.exercises?.map((ex: any) => {
+        const sets = transformSets(ex.sets ?? []);
+
+        // Ensure each set has a sensible default for the exercise's intensity
+        const normalized = sets.map((s: any) => {
+          const intensity = ex.intensity;
+          if (intensity === "rpe") {
+            return {
+              ...s,
+              rpe: s.rpe ?? 8,
+              rir: s.rir ?? null,
+              one_rep_max_percent: s.one_rep_max_percent ?? null,
+            };
+          }
+          if (intensity === "one_rep_max_percent") {
+            return {
+              ...s,
+              one_rep_max_percent: s.one_rep_max_percent ?? 75,
+              rpe: s.rpe ?? null,
+              rir: s.rir ?? null,
+            };
+          }
+          if (intensity === "rir") {
+            return {
+              ...s,
+              rir: s.rir ?? 2,
+              rpe: s.rpe ?? null,
+              one_rep_max_percent: s.one_rep_max_percent ?? null,
+            };
+          }
+
+          return s;
+        });
+
+        return {
+          ...ex,
+          sets: normalized,
+        };
+      }),
     })) ?? []
   );
 }

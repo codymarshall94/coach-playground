@@ -342,6 +342,8 @@ export function ExpandedExerciseCard({
                         value={set.rest ?? 0}
                         options={[15, 30, 45, 60, 75, 90, 105, 120]}
                         onChange={(val) => handleUpdateSet(i, "rest", val)}
+                        customLabel="Custom rest..."
+                        badgeLabel="Rest"
                       />
                     </div>
 

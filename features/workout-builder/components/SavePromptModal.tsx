@@ -1,5 +1,5 @@
 "use client";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { SignUpWithProfileForm } from "./SignUpWithProfileForm";
 
 export function SavePromptModal({
@@ -14,6 +14,7 @@ export function SavePromptModal({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent>
+        <DialogTitle className="sr-only">Save program</DialogTitle>
         <SignUpWithProfileForm
           onSuccess={() => {
             onClose();

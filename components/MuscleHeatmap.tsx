@@ -1,19 +1,14 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
-  BACK_MUSCLES,
-  FRONT_MUSCLES,
   MUSCLE_DISPLAY_MAP,
   MUSCLE_NAME_MAP,
 } from "@/constants/muscles";
-import { MuscleVolumeRow } from "@/features/workout-builder/components/insights/MuscleVolumeRow";
 import { cn } from "@/lib/utils";
 import type { Exercise } from "@/types/Exercise";
 import type { WorkoutExercise, WorkoutExerciseGroup } from "@/types/Workout";
-import { RotateCcw, User } from "lucide-react";
+import { User } from "lucide-react";
 import { useMemo, useState } from "react";
 import Model, { type Muscle } from "react-body-highlighter";
 
@@ -111,81 +106,52 @@ export default function MuscleHeatmap(props: Props) {
     [highlightData]
   );
 
-  const frontCount = useMemo(
-    () => allMuscles.filter((m) => FRONT_MUSCLES.includes(m)).length,
-    [allMuscles]
-  );
-  const backCount = useMemo(
-    () => allMuscles.filter((m) => BACK_MUSCLES.includes(m)).length,
-    [allMuscles]
-  );
-
   const activatedMuscles = useMemo(
     () => Array.from(new Set(allMuscles)).sort((a, b) => a.localeCompare(b)),
     [allMuscles]
   );
 
   const showVolumes =
-    !!props.muscle_volumes &&
     !!props.muscle_set_counts &&
-    typeof props.maxVolume === "number" &&
-    !!props.workout;
+    Object.keys(props.muscle_set_counts).length > 0;
 
   const hasAnyActivation = activatedMuscles.length > 0;
 
-  const entries = Object.entries(props.muscle_volumes!); // effective
-  const maxEffective = Math.max(1, ...entries.map(([, v]) => v));
-  const maxRaw = Math.max(1, ...Object.values(props.muscle_set_counts!));
-  const totalWeighted = entries.reduce((s, [, v]) => s + v, 0);
+  // Simple sorted set-count entries for the volume list
+  const setEntries = showVolumes
+    ? Object.entries(props.muscle_set_counts!)
+        .sort((a, b) => b[1] - a[1])
+    : [];
+  const maxSets = setEntries.length > 0 ? setEntries[0][1] : 1;
 
   return (
     <Card className={cn("w-full mx-auto", props.className)}>
-      <CardHeader className="pb-3 @container">
-        <div className=" flex items-center @md:flex-row flex-col justify-between gap-3">
-          <div
-            role="tablist"
-            aria-label="Body view"
-            className="flex rounded-lg border bg-muted/50 p-1"
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-center gap-1">
+          <button
+            type="button"
+            onClick={() => setViewType("anterior")}
+            className={cn(
+              "px-3 py-1.5 text-xs font-medium rounded-l-md border transition-colors",
+              viewType === "anterior"
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-muted/50 text-muted-foreground border-border hover:bg-muted"
+            )}
           >
-            <Button
-              role="tab"
-              aria-selected={viewType === "anterior"}
-              variant={viewType === "anterior" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setViewType("anterior")}
-              className="flex items-center gap-2"
-            >
-              <User className="h-4 w-4" />
-              <span className="hidden sm:inline">Front</span>
-              <span
-                className={cn(
-                  "ml-1 text-xs rounded px-1.5 py-0.5 bg-background/60 border",
-                  viewType === "anterior" && "bg-primary/10"
-                )}
-              >
-                {frontCount}
-              </span>
-            </Button>
-            <Button
-              role="tab"
-              aria-selected={viewType === "posterior"}
-              variant={viewType === "posterior" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setViewType("posterior")}
-              className="flex items-center gap-2"
-            >
-              <RotateCcw className="h-4 w-4" />
-              <span className="hidden sm:inline">Back</span>
-              <span
-                className={cn(
-                  "ml-1 text-xs rounded px-1.5 py-0.5 bg-background/60 border",
-                  viewType === "posterior" && "bg-primary/10"
-                )}
-              >
-                {backCount}
-              </span>
-            </Button>
-          </div>
+            Front
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewType("posterior")}
+            className={cn(
+              "px-3 py-1.5 text-xs font-medium rounded-r-md border transition-colors",
+              viewType === "posterior"
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-muted/50 text-muted-foreground border-border hover:bg-muted"
+            )}
+          >
+            Back
+          </button>
         </div>
       </CardHeader>
 
@@ -216,82 +182,40 @@ export default function MuscleHeatmap(props: Props) {
           </div>
         </div>
 
-        {/* Legend + tags */}
-        <section className="mx-auto w-full max-w-[760px] space-y-6">
-          {/* Legend */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>Low</span>
-              <span>High</span>
-            </div>
-            <div className="h-2 w-full rounded-full bg-muted">
-              {/* stepped bar for accessibility (5 buckets) */}
-              <div className="grid grid-cols-5 h-2 gap-[2px]">
-                {[1, 2, 3, 4, 5].map((b) => (
-                  <div
-                    key={b}
-                    className="rounded-full"
-                    style={{ backgroundColor: colorWithBucket(b) }}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Tags */}
-          {hasAnyActivation && (
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium">Targeted Muscle Groups</h3>
-              <div className="flex flex-wrap gap-2">
-                {activatedMuscles.map((m) => {
-                  const pretty =
-                    MUSCLE_DISPLAY_MAP[m as keyof typeof MUSCLE_DISPLAY_MAP] ??
-                    m
-                      .replace("-", " ")
-                      .split(" ")
-                      .map(
-                        (word) => word.charAt(0).toUpperCase() + word.slice(1)
-                      )
-                      .join(" ");
-                  return (
-                    <Badge
-                      key={m}
-                      variant="secondary"
-                      className="rounded-full bg-primary/5 text-foreground border-primary/15"
-                    >
-                      {pretty}
-                    </Badge>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </section>
-
-        {/* Volumes (optional) */}
+        {/* Sets per muscle — simple & glanceable */}
         {showVolumes && (
-          <section className="mx-auto w-full max-w-[760px] space-y-3">
-            <h4 className="text-sm font-semibold text-muted-foreground">
-              Muscle Group Volumes
+          <section className="mx-auto w-full max-w-[760px] space-y-2">
+            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Sets per Muscle
             </h4>
-            <div className="grid gap-2">
-              {entries.map(([muscle, volume], index) => (
-                <MuscleVolumeRow
-                  key={muscle}
-                  index={index}
-                  muscleId={muscle}
-                  setCount={props.muscle_set_counts![muscle] ?? 0}
-                  weightedVolume={volume}
-                  maxVolume={maxEffective}
-                  maxRaw={maxRaw}
-                  totalWeighted={totalWeighted}
-                  workout={props.workout!.flatMap((g) => g.exercises)}
-                  exercises={
-                    props.mode === "workout" ? props.exercises ?? [] : []
-                  }
-                />
-              ))}
-            </div>
+            <ul className="space-y-1.5">
+              {setEntries.map(([muscleId, sets]) => {
+                const name =
+                  MUSCLE_DISPLAY_MAP[
+                    muscleId as keyof typeof MUSCLE_DISPLAY_MAP
+                  ] ??
+                  muscleId
+                    .replace(/[_-]/g, " ")
+                    .replace(/\b\w/g, (c) => c.toUpperCase());
+                const pct = Math.max(4, Math.round((sets / maxSets) * 100));
+                return (
+                  <li key={muscleId} className="flex items-center gap-3">
+                    <span className="w-24 shrink-0 text-sm text-foreground truncate">
+                      {name}
+                    </span>
+                    <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-primary/60"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <span className="w-8 text-right text-xs tabular-nums text-muted-foreground">
+                      {sets}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
           </section>
         )}
       </CardContent>

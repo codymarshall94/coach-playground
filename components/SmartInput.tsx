@@ -27,6 +27,8 @@ interface SmartInputProps {
   step?: number;
   allowClear?: boolean;
   defaultValue?: number;
+  customLabel?: string;
+  badgeLabel?: string;
 }
 
 export function SmartInput({
@@ -41,6 +43,8 @@ export function SmartInput({
   step = 1,
   allowClear = true,
   defaultValue,
+  customLabel = "Custom value...",
+  badgeLabel = "Custom",
 }: SmartInputProps) {
   const [mode, setMode] = useState<"select" | "custom">("select");
   const [inputValue, setInputValue] = useState(String(value));
@@ -166,7 +170,7 @@ export function SmartInput({
                 <SelectItem value="custom" className="text-blue-600">
                   <div className="flex items-center gap-2">
                     <Edit3 className="w-3 h-3" />
-                    Custom value...
+                    {customLabel}
                   </div>
                 </SelectItem>
               </SelectContent>
@@ -177,7 +181,7 @@ export function SmartInput({
                 variant="secondary"
                 className="absolute -top-2 -right-2 text-xs px-1.5 py-0.5 bg-blue-100 text-blue-700 border-blue-200"
               >
-                Custom
+                {badgeLabel}
               </Badge>
             )}
           </div>
