@@ -8,7 +8,7 @@ import { deleteProgram } from "@/services/programs/deleteProgram";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 export default function MyProgramsPage() {
   const { data: programs, isLoading, error } = usePrograms();

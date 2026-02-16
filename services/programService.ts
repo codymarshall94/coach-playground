@@ -14,6 +14,7 @@ import {
   WorkoutExercise,
 } from "@/types/Workout";
 import { createClient } from "@/utils/supabase/client";
+import { transformProgramFromSupabase } from "@/utils/program/transformProgram";
 
 /* ----------------------------------------------------------------------------
  * Supabase client (single instance per module import)
@@ -144,18 +145,31 @@ export async function insertExerciseSetsBulk(
   items: Array<{ workoutExerciseId: string; sets: SetInfo[] }>
 ) {
   const payload = items.flatMap(({ workoutExerciseId, sets }) =>
-    sets.map((set, index) => ({
-      workout_exercise_id: workoutExerciseId,
-      set_index: index,
-      set_type: set.set_type ?? "standard",
-      reps: set.reps,
-      rest: set.rest,
-      rpe: set.rpe ?? null,
-      rir: set.rir ?? null,
-      one_rep_max_percent: set.one_rep_max_percent ?? null,
-      notes: set.notes ?? null,
-      params: {}, // optional JSON blob for advanced set params
-    }))
+    sets.map((set, index) => {
+      // Pack advanced set-type fields into the params JSONB column
+      const params: Record<string, unknown> = {};
+      if (set.drop_percent != null) params.drop_percent = set.drop_percent;
+      if (set.drop_sets != null) params.drop_sets = set.drop_sets;
+      if (set.cluster_reps != null) params.cluster_reps = set.cluster_reps;
+      if (set.intra_rest != null) params.intra_rest = set.intra_rest;
+      if (set.activation_set_reps != null) params.activation_set_reps = set.activation_set_reps;
+      if (set.mini_sets != null) params.mini_sets = set.mini_sets;
+      if (set.initial_reps != null) params.initial_reps = set.initial_reps;
+      if (set.pause_duration != null) params.pause_duration = set.pause_duration;
+
+      return {
+        workout_exercise_id: workoutExerciseId,
+        set_index: index,
+        set_type: set.set_type ?? "standard",
+        reps: set.reps,
+        rest: set.rest,
+        rpe: set.rpe ?? null,
+        rir: set.rir ?? null,
+        one_rep_max_percent: set.one_rep_max_percent ?? null,
+        notes: set.notes ?? null,
+        params: Object.keys(params).length > 0 ? params : null,
+      };
+    })
   );
 
   if (payload.length === 0) return;
@@ -498,5 +512,5 @@ export async function getProgramById(id: string): Promise<Program | null> {
     throw error;
   }
 
-  return data as Program;
+  return transformProgramFromSupabase(data);
 }

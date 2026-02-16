@@ -74,7 +74,7 @@ export async function fetchExerciseById(id: string) {
     .single();
 
   // PGRST116 = no rows found (404)
-  if (error && (error as any).code !== "PGRST116") {
+  if (error && "code" in error && error.code !== "PGRST116") {
     console.error("[fetchExerciseById] supabase error:", error);
     throw new Error(error.message);
   }

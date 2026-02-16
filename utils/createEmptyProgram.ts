@@ -11,13 +11,7 @@ export const createEmptyProgram = (
     order_num: 0,
     type: "workout",
     description: "",
-    workout: [
-      {
-        created_at: new Date(),
-        updated_at: new Date(),
-        exercise_groups: [],
-      },
-    ],
+    groups: [],
   };
 
   return {

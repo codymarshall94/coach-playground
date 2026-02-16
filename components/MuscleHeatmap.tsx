@@ -85,7 +85,7 @@ export default function MuscleHeatmap(props: Props) {
         const ex = exercises.find((e) => e.id === w.exercise_id);
         const ems = ex?.exercise_muscles ?? [];
         return {
-          name: w.name,
+          name: w.display_name,
           muscles: mapJoinedToMuscles(ems),
           // for workout view you're already using set count as intensity
           color: colorWithBucket(Math.max(1, Math.min(5, w.sets.length))),

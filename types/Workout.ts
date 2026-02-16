@@ -26,7 +26,8 @@ export type WorkoutTypes =
   | "hypertrophy"
   | "endurance"
   | "power"
-  | "balance";
+  | "balance"
+  | "other";
 
 // -----------------------------------------------------------------------------
 // CORE STRUCTURES

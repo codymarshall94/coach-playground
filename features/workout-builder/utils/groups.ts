@@ -113,7 +113,7 @@ export function moveExerciseByIdToGroup(
   exerciseId: string,
   targetGroupIndex: number
 ): WorkoutExerciseGroup[] {
-  let moved: WorkoutExercise | null = null; // empty object is valid
+  let moved: WorkoutExercise | undefined;
   const next = groups
     .map((g) => {
       const idx = g.exercises.findIndex((e) => e.id === exerciseId);

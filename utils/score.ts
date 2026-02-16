@@ -6,7 +6,6 @@ import type {
   Program,
   ProgramDay,
   ProgramGoal,
-  Workout,
   WorkoutExercise,
   WorkoutExerciseGroup,
 } from "@/types/Workout";
@@ -219,7 +218,7 @@ export type WorkoutScore = {
 };
 
 export function scoreWorkout(
-  workout: Workout,
+  workout: { exercise_groups: WorkoutExerciseGroup[] },
   goal: ProgramGoal,
   lookup: ExerciseLookup
 ): WorkoutScore {
@@ -392,13 +391,8 @@ export function scoreProgram(
 
   // Aggregate day-level workout scores (averaged if multiple workouts in a day)
   const dayScores = days.map((d) => {
-    const ws = d.workout.map(
-      (w) => scoreWorkout(w, program.goal, lookup).score
-    );
-    const avg = ws.length
-      ? Math.round(ws.reduce((a, b) => a + b, 0) / ws.length)
-      : 0;
-    return { dayId: d.id, workoutScore: avg };
+    const ws = scoreWorkout({ exercise_groups: d.groups ?? [] }, program.goal, lookup).score;
+    return { dayId: d.id, workoutScore: ws };
   });
 
   // Weekly muscle volume and recovery overlap
@@ -410,7 +404,7 @@ export function scoreProgram(
   }> = [];
 
   days.forEach((day, idx) => {
-    const exs = day.workout.flatMap((w) => flattenExercises(w.exercise_groups));
+    const exs = flattenExercises(day.groups ?? []);
     const stamps: Array<{ muscleId: string; sets: number; recovery: number }> =
       [];
 
@@ -436,10 +430,8 @@ export function scoreProgram(
       for (const s of stamps) {
         // naive window: look back 1 day
         const prevDay = idx - 1;
-        const prevExs = days[prevDay].workout.flatMap((w) =>
-          flattenExercises(w.exercise_groups)
-        );
-        const prevSetsForMuscle = prevExs.reduce((acc, wePrev) => {
+        const prevExs = flattenExercises(days[prevDay].groups ?? []);
+        const prevSetsForMuscle = prevExs.reduce((acc: number, wePrev: WorkoutExercise) => {
           const exPrev = lookup(wePrev.exercise_id);
           if (!exPrev) return acc;
           const distPrev = distributeSetToMuscles(exPrev.exercise_muscles);
@@ -477,13 +469,11 @@ export function scoreProgram(
   // Program-level balance via push/pull/legs sets
   const totalsByGroup = { push: 0, pull: 0, legs: 0, other: 0 };
   days.forEach((day) => {
-    day.workout.forEach((w) => {
-      flattenExercises(w.exercise_groups).forEach((we) => {
-        const ex = lookup(we.exercise_id);
-        if (!ex) return;
-        const g = getMajorGroup(ex.category);
-        totalsByGroup[g] += countSets(we);
-      });
+    flattenExercises(day.groups ?? []).forEach((we) => {
+      const ex = lookup(we.exercise_id);
+      if (!ex) return;
+      const g = getMajorGroup(ex.category);
+      totalsByGroup[g] += countSets(we);
     });
   });
   const balance =

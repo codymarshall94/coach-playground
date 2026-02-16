@@ -48,7 +48,7 @@ function DayButton({
   isDragOverlay?: boolean;
 }) {
   const totalExercises =
-    day.workout?.[0]?.exercise_groups?.flatMap((g) => g.exercises).length ?? 0;
+    day.groups?.flatMap((g: any) => g.exercises).length ?? 0;
 
   return (
     <div className="flex items-center justify-between gap-3 w-full">

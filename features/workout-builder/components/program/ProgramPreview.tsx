@@ -6,8 +6,8 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { IntensitySystem, Program, ProgramDay, SetInfo } from "@/types/Workout";
-import html2canvas from "html2canvas-pro";
-import jsPDF from "jspdf";
+// html2canvas and jsPDF are imported dynamically in `exportToPDF`
+// to avoid referencing `window` during SSR.
 import { Activity, Dumbbell, Eye, Target, Zap } from "lucide-react";
 import { useRef } from "react";
 
@@ -127,8 +127,7 @@ function WorkoutDayTable({ day }: { day: ProgramDay }) {
             </tr>
           </thead>
           <tbody>
-            {day.workout.map((workout) =>
-              workout.exercise_groups.map((group, groupIndex) => {
+            {day.groups.map((group, groupIndex) => {
                 const groupRow = (
                   <tr
                     key={`group-${groupIndex}`}
@@ -174,7 +173,7 @@ function WorkoutDayTable({ day }: { day: ProgramDay }) {
                           rowSpan={rowSpan}
                           className="px-3 py-2 font-semibold align-top"
                         >
-                          {exercise.name}
+                          {exercise.display_name}
                         </td>
                       )}
 
@@ -203,8 +202,7 @@ function WorkoutDayTable({ day }: { day: ProgramDay }) {
                 });
 
                 return [groupRow, ...exerciseRows];
-              })
-            )}
+              })}
           </tbody>
         </table>
       </div>
@@ -300,6 +298,10 @@ export default function ProgramPreview({
 
   const exportToPDF = async () => {
     if (!captureRef.current) return;
+
+    // Dynamically import client-only libs to prevent SSR errors
+    const html2canvas = (await import("html2canvas-pro")).default;
+    const jsPDF = (await import("jspdf")).default;
 
     const canvas = await html2canvas(captureRef.current, {
       scale: 2,
