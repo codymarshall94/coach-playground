@@ -24,33 +24,35 @@ function transformGroups(groups: any[]) {
 
         // Ensure each set has a sensible default for the exercise's intensity
         const normalized = sets.map((s: any) => {
+          // Default rest to 60s when null/undefined/0 (0 is not a valid option)
+          const withRest = { ...s, rest: s.rest || 60 };
           const intensity = ex.intensity;
           if (intensity === "rpe") {
             return {
-              ...s,
-              rpe: s.rpe ?? 8,
-              rir: s.rir ?? null,
-              one_rep_max_percent: s.one_rep_max_percent ?? null,
+              ...withRest,
+              rpe: withRest.rpe ?? 8,
+              rir: withRest.rir ?? null,
+              one_rep_max_percent: withRest.one_rep_max_percent ?? null,
             };
           }
           if (intensity === "one_rep_max_percent") {
             return {
-              ...s,
-              one_rep_max_percent: s.one_rep_max_percent ?? 75,
-              rpe: s.rpe ?? null,
-              rir: s.rir ?? null,
+              ...withRest,
+              one_rep_max_percent: withRest.one_rep_max_percent ?? 75,
+              rpe: withRest.rpe ?? null,
+              rir: withRest.rir ?? null,
             };
           }
           if (intensity === "rir") {
             return {
-              ...s,
-              rir: s.rir ?? 2,
-              rpe: s.rpe ?? null,
-              one_rep_max_percent: s.one_rep_max_percent ?? null,
+              ...withRest,
+              rir: withRest.rir ?? 2,
+              rpe: withRest.rpe ?? null,
+              one_rep_max_percent: withRest.one_rep_max_percent ?? null,
             };
           }
 
-          return s;
+          return withRest;
         });
 
         return {

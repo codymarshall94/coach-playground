@@ -235,9 +235,15 @@ export function ProgramOverviewPanel({ program }: { program: Program }) {
     <div className="space-y-4">
       <Card className="rounded-2xl border bg-card/80 backdrop-blur">
         <CardContent className="p-5 grid gap-6 md:grid-cols-[auto_1fr]">
-          <ScoreDial
-            value={programMetrics?.goalFitScore ?? week.projectedWeeklyScore}
-          />
+          <div className="flex flex-col items-center gap-1">
+            <ScoreDial
+              value={programMetrics?.goalFitScore ?? week.projectedWeeklyScore}
+              size={72}
+              thickness={6}
+              ariaLabel="Program fit score"
+            />
+            <span className="text-[11px] text-muted-foreground">Goal Fit</span>
+          </div>
 
           <div className="grid sm:grid-cols-3 gap-4">
             <div className="rounded-xl border p-3">

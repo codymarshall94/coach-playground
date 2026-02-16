@@ -1,5 +1,8 @@
 // score.ts
-// Scoring + hints for Workouts and Programs (days/blocks).
+// ⚠️  DEPRECATED — this file is not imported anywhere.
+// The active scoring system lives in engines/program/scoring.ts
+// Keeping for reference only. Do not import from this file.
+//
 // All scores are 0–100. Return shaped data + brief hints for UI.
 
 import type {
@@ -66,7 +69,11 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
 function scoreFromRange(val: number, min: number, max: number) {
   if (val <= min) return clamp01(val / min);
-  if (val >= max) return clamp01(1 - (val - max) / (max || 1));
+  if (val >= max) {
+    // Falloff: score reaches 0 when val exceeds max by half of (max-min)
+    const falloff = (max - min) / 2 || max * 0.5 || 1;
+    return clamp01(1 - (val - max) / falloff);
+  }
   // bell-ish shape centered in [min,max]
   const mid = (min + max) / 2;
   const half = (max - min) / 2;

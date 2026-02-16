@@ -1,4 +1,5 @@
 import { createClient } from "@/utils/supabase/client";
+import { transformProgramFromSupabase } from "@/utils/program/transformProgram";
 
 /**
  * Lightweight list for template picker cards.
@@ -69,5 +70,5 @@ export const getTemplateByIdFull = async (id: string) => {
     .single();
 
   if (error) throw new Error(error.message || "Failed to load template");
-  return data;
+  return transformProgramFromSupabase(data);
 };

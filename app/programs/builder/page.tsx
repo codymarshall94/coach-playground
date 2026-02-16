@@ -59,11 +59,8 @@ export default async function BuilderPage({
   const params = (await searchParams) ?? {};
   const supabase = await createClient();
 
-  // Check server-side session; avoid calling RPC that relies on auth.uid() when unauthenticated
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user;
+  // Authenticate user via Supabase Auth server (don't rely on local session storage)
+  const { data: { user } } = await supabase.auth.getUser();
 
   let initialProgram: Program | undefined = undefined;
 

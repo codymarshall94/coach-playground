@@ -21,6 +21,31 @@ import { avg, clamp01 } from "../core/utils/math";
 
 const loadFromRole = { High: 85, Medium: 55, Low: 25 };
 
+/** Default empty result returned when there are no exercises to score. */
+function emptyScoreResult(spec: ProgramSpec) {
+  const [recMin, recMax] =
+    RECOMMENDED_MINUTES_BAND[
+      spec.goal as keyof typeof RECOMMENDED_MINUTES_BAND
+    ];
+  return {
+    goalFitScore: 0,
+    coverageHeatmap: {} as Record<string, number>,
+    insights: ["Add exercises to see your program score."],
+    recommendedMinutesBand: [recMin, recMax] as [number, number],
+    avgWeeklyMinutes: 0,
+    minutesFit: 0,
+    sessionsPerWeek: 0,
+    avgSessionMinutes: 0,
+    monotony: 0,
+    strain: 0,
+    intensityMix: { high: 0, moderate: 0, low: 0 },
+    balanceAvg: { pushPull: 0, quadHam: 0, upperLower: 0 },
+    priorityMusclesAuto: [] as string[],
+    topMuscles: [] as [string, number][],
+    lowAttentionMuscles: [] as string[],
+  };
+}
+
 export function scoreProgram(spec: ProgramSpec, blocks: BlockMetrics[]) {
   // ---- Aggregate per-week coverage across the whole program ----
   const coverageHeatmap: Record<string, number> = {};
@@ -29,6 +54,10 @@ export function scoreProgram(spec: ProgramSpec, blocks: BlockMetrics[]) {
   for (const w of allWeeks)
     for (const [m, v] of Object.entries(w.volumeByMuscle))
       coverageHeatmap[m] = (coverageHeatmap[m] ?? 0) + v;
+
+  // No exercises anywhere → score is 0 (don't let baseline formulas inflate it)
+  const hasMuscleVolume = Object.keys(coverageHeatmap).length > 0;
+  if (!hasMuscleVolume) return emptyScoreResult(spec);
 
   // Build weekly averages we can show in the UI (more interpretable than totals)
   const weeksCount = Math.max(1, allWeeks.length);

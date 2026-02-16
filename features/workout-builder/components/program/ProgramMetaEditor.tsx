@@ -9,10 +9,10 @@ import { ProgramNotesModal } from "./ProgramNotesModal";
 import { ProgramSettingsModal } from "./ProgramSettingsModal";
 
 function tierForScore(score: number) {
-  if (score >= 85) return { label: "Excellent", tone: "text-emerald-500" };
-  if (score >= 70) return { label: "Good", tone: "text-blue-500" };
-  if (score >= 50) return { label: "Okay", tone: "text-amber-600" };
-  return { label: "Needs work", tone: "text-destructive" };
+  if (score >= 80) return { label: "Great", color: "text-positive" };
+  if (score >= 60) return { label: "Good", color: "text-load-medium" };
+  if (score >= 40) return { label: "Fair", color: "text-load-high" };
+  return { label: "Needs work", color: "text-destructive" };
 }
 
 export function ScoreHero({
@@ -30,28 +30,30 @@ export function ScoreHero({
   return (
     <Card
       className={cn(
-        "rounded-xl transition-colors",
+        "rounded-xl cursor-pointer transition-colors",
         overviewOpen ? "bg-primary/10" : "hover:bg-muted/50"
       )}
       onClick={openOverview}
     >
       <CardContent className="p-3 flex items-center gap-3">
-        <ScoreDial value={v} size={48} thickness={4} />
-        <div className="flex-1">
-          <div
-            className={cn("text-meta", overviewOpen && "text-foreground/80")}
-          >
-            Program Score
+        <ScoreDial value={v} size={44} thickness={4} />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-foreground">
+              Program Fit
+            </span>
+            <span className={cn("text-xs font-medium", tier.color)}>
+              {tier.label}
+            </span>
           </div>
-          <div className={cn("text-meta font-medium", tier.tone)}>
-            {tier.label}
-          </div>
+          <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
+            How well this program matches your goal
+          </p>
         </div>
         <ChevronRight
           className={cn(
-            "w-4 h-4 transition-transform",
-            !overviewOpen && "group-hover:translate-x-1",
-            overviewOpen && "text-foreground/80"
+            "w-4 h-4 shrink-0 text-muted-foreground transition-transform",
+            overviewOpen && "rotate-90"
           )}
         />
       </CardContent>

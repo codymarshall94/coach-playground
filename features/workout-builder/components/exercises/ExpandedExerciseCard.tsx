@@ -339,7 +339,7 @@ export function ExpandedExerciseCard({
 
                     <div className="space-y-2">
                       <SmartInput
-                        value={set.rest ?? 0}
+                        value={set.rest || 60}
                         options={[15, 30, 45, 60, 75, 90, 105, 120]}
                         onChange={(val) => handleUpdateSet(i, "rest", val)}
                         customLabel="Custom rest..."

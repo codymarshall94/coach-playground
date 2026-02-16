@@ -162,7 +162,7 @@ export async function insertExerciseSetsBulk(
         set_index: index,
         set_type: set.set_type ?? "standard",
         reps: set.reps,
-        rest: set.rest,
+        rest: set.rest || 60,
         rpe: set.rpe ?? null,
         rir: set.rir ?? null,
         one_rep_max_percent: set.one_rep_max_percent ?? null,
@@ -211,10 +211,8 @@ export async function doesProgramExist(programId: string) {
 }
 
 export async function ensureProgramRecord(program: Program): Promise<string> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user;
+  // Authenticate user via Supabase Auth server (do not trust local session storage)
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
   const isNew = !(await doesProgramExist(program.id));

@@ -110,13 +110,16 @@ export function DayHeader({
             />
           </div>
 
-          <div className="flex items-center gap-3 text-meta">
-            <ETLDisplay normalizedETL={dayMetrics.sessionLoad} />
-            <div className="flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              <span className="type-num">{durationMin}</span> min
+          {/* Only show ETL / duration for workout days */}
+          {isWorkoutDay && (
+            <div className="flex items-center gap-3 text-meta">
+              <ETLDisplay normalizedETL={dayMetrics.sessionLoad} />
+              <div className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                <span className="type-num">{durationMin}</span> min
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="flex items-center gap-2">
             {isWorkoutDay && exerciseGroups.length > 0 && (
@@ -127,18 +130,21 @@ export function DayHeader({
                 setOpen={setAnalyticsOpen}
               />
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCollapsedIndex(isCollapsed ? null : -1)}
-              className="flex items-center gap-1 type-secondary"
-            >
-              {isCollapsed ? (
-                <ChevronDown className="w-4 h-4" />
-              ) : (
-                <ChevronUp className="w-4 h-4" />
-              )}
-            </Button>
+            {/* Hide collapse control for rest days */}
+            {isWorkoutDay && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCollapsedIndex(isCollapsed ? null : -1)}
+                className="flex items-center gap-1 type-secondary"
+              >
+                {isCollapsed ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronUp className="w-4 h-4" />
+                )}
+              </Button>
+            )}
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

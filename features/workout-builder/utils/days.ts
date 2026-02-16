@@ -12,7 +12,7 @@ export const createWorkoutDay = (order = 0): ProgramDay => ({
 
 export const createRestDay = (order: number): ProgramDay => ({
   id: crypto.randomUUID(),
-  name: `Day ${order + 1}`,
+  name: `Rest Day`,
   type: "rest",
   order_num: order,
   description: "",
