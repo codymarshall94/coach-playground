@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { IntensitySystem, Program, ProgramDay, SetInfo } from "@/types/Workout";
+import DOMPurify from "dompurify";
+import { IntensitySystem, Program, ProgramDay, RepSchemeType, SetInfo } from "@/types/Workout";
 import { Activity, Dumbbell, Eye, Target, Zap } from "lucide-react";
 
 const goalIcons = {
@@ -63,15 +64,48 @@ function formatAdvancedSetInfo(set: SetInfo): string {
   }
 }
 
+/** Render the "Rx" cell: handles rep ranges, time, distance, per-side, AMRAP */
+function formatPrescription(
+  set: SetInfo,
+  exerciseRepScheme?: RepSchemeType
+): string {
+  const scheme = set.rep_scheme ?? exerciseRepScheme ?? "fixed";
+  switch (scheme) {
+    case "time":
+      return set.duration ? formatRestTime(set.duration) : `${set.reps}`;
+    case "range":
+      return set.reps_max ? `${set.reps}–${set.reps_max}` : `${set.reps}`;
+    case "each_side":
+      return `${set.reps}/side`;
+    case "amrap":
+      return "AMRAP";
+    case "distance":
+      return set.distance != null ? `${set.distance}m` : `${set.reps}`;
+    case "fixed":
+    default: {
+      let text = `${set.reps}`;
+      if (set.per_side) text += "/side";
+      return text;
+    }
+  }
+}
+
 type SetGroup = { startIndex: number; count: number; set: SetInfo };
 
 function setGroupingSignature(set: SetInfo, system: IntensitySystem) {
-  // Only include fields that actually show up in the table
+  // Include every field that affects any visible cell so different sets
+  // are never incorrectly collapsed into one row.
   return [
     set.set_type,
     set.reps,
-    formatIntensity(set, system), // RPE/RIR/%1RM as displayed
-    // advanced-set fields that affect the "Type" cell text
+    set.reps_max,
+    set.rep_scheme,
+    set.duration,
+    set.distance,
+    set.per_side,
+    set.rest,
+    formatIntensity(set, system),
+    // advanced-set fields
     set.drop_percent,
     set.drop_sets,
     set.cluster_reps,
@@ -118,7 +152,8 @@ function WorkoutDayTable({ day }: { day: ProgramDay }) {
               <th className="px-3 py-2">Exercise</th>
               <th className="px-3 py-2 text-center">Set</th>
               <th className="px-3 py-2">Type</th>
-              <th className="px-3 py-2 text-center">Reps</th>
+              <th className="px-3 py-2 text-center">Rx</th>
+              <th className="px-3 py-2 text-center">Rest</th>
               <th className="px-3 py-2 text-center">Intensity</th>
               <th className="px-3 py-2">Notes</th>
             </tr>
@@ -130,7 +165,7 @@ function WorkoutDayTable({ day }: { day: ProgramDay }) {
                     key={`group-${groupIndex}`}
                     className="bg-gray-50 font-medium border-t border-gray-300"
                   >
-                    <td colSpan={6} className="px-3 py-2">
+                    <td colSpan={7} className="px-3 py-2">
                       {group.type !== "standard" && (
                         <span className="capitalize font-semibold">
                           {group.type.replace("_", " ")}
@@ -181,7 +216,12 @@ function WorkoutDayTable({ day }: { day: ProgramDay }) {
                       <td className="px-3 py-2 whitespace-pre-line">
                         {formatAdvancedSetInfo(g.set)}
                       </td>
-                      <td className="px-3 py-2 text-center">{g.set.reps}</td>
+                      <td className="px-3 py-2 text-center">
+                        {formatPrescription(g.set, exercise.rep_scheme)}
+                      </td>
+                      <td className="px-3 py-2 text-center text-xs text-gray-500">
+                        {g.set.rest ? formatRestTime(g.set.rest) : "—"}
+                      </td>
                       <td className="px-3 py-2 text-center">
                         {formatIntensity(g.set, exercise.intensity) || "—"}
                       </td>
@@ -230,7 +270,7 @@ function ProgramSheet({ program }: { program: Program }) {
       <Separator className="my-4" />
       {program.description && (
         <div className="w-full mt-2 text-sm  space-y-2 prose">
-          <div dangerouslySetInnerHTML={{ __html: program.description }} />
+          <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(program.description) }} />
         </div>
       )}
 
@@ -315,7 +355,7 @@ export default function ProgramPreview({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="outline">
+        <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
           <Eye className="w-4 h-4" />
           Preview
         </Button>

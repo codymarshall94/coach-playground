@@ -149,7 +149,7 @@ export const WorkoutAnalyticsPanel = ({
     return (
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
-          <Button variant="outline" size="sm" className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
             <BarChart2 className="w-4 h-4" />
             Summary
           </Button>
@@ -219,7 +219,7 @@ export const WorkoutAnalyticsPanel = ({
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="sm" className="flex items-center gap-2">
+        <Button variant="ghost" size="sm" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
           <BarChart2 className="w-4 h-4" />
           Summary
         </Button>

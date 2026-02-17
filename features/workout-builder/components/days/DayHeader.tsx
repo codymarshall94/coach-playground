@@ -133,10 +133,10 @@ export function DayHeader({
             {/* Hide collapse control for rest days */}
             {isWorkoutDay && (
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={() => setCollapsedIndex(isCollapsed ? null : -1)}
-                className="flex items-center gap-1 type-secondary"
+                className="w-8 h-8 p-0 text-muted-foreground hover:text-foreground"
               >
                 {isCollapsed ? (
                   <ChevronDown className="w-4 h-4" />

@@ -82,7 +82,7 @@ export function BlockSelector({
         items={blocks.map((b) => b.id)}
         strategy={verticalListSortingStrategy}
       >
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2">
           {blocks.map((block, i) => (
             <SortableItem
               key={block.id}
@@ -90,26 +90,25 @@ export function BlockSelector({
               className={cn(isDragging && "opacity-50")}
             >
               <div
-                className="border rounded-lg p-4 space-y-4 shadow-sm bg-card"
+                className="border rounded-lg p-2.5 space-y-2.5 shadow-sm bg-card"
                 onClick={() => onSelect(i)}
               >
-                <div className="flex justify-between items-center">
-                  <Button variant={i === activeIndex ? "default" : "outline"}>
+                <div className="flex items-center justify-between gap-2">
+                  <Button size="sm" variant={i === activeIndex ? "default" : "outline"} className="text-xs h-7 truncate">
                     {block.name || `Block ${i + 1}`}
                   </Button>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 flex-shrink-0">
                     <Badge
                       variant="secondary"
-                      className="bg-blue-50 text-blue-700 border-blue-200 text-xs"
+                      className="bg-blue-50 text-blue-700 border-blue-200 text-[11px] px-1.5 py-0 whitespace-nowrap"
                     >
-                      {block.weeks || 4} Weeks
+                      {block.weeks || 4}w
                     </Badge>
                     <Badge
                       variant="secondary"
-                      className="bg-blue-50 text-blue-700 border-blue-200 text-xs"
+                      className="bg-blue-50 text-blue-700 border-blue-200 text-[11px] px-1.5 py-0 whitespace-nowrap"
                     >
-                      {block.days.length}{" "}
-                      {block.days.length === 1 ? "Day" : "Days"}
+                      {block.days.length}d
                     </Badge>
 
                     <Popover>
@@ -123,9 +122,9 @@ export function BlockSelector({
                           <Edit className="w-4 h-4" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-80" align="end">
-                        <div className="space-y-4">
-                          <h4 className="font-medium">Edit Block</h4>
+                      <PopoverContent className="w-72" align="end">
+                        <div className="space-y-3">
+                          <h4 className="font-medium text-sm">Edit Block</h4>
 
                           <div className="space-y-2">
                             <Label className="text-sm font-medium">Name</Label>
@@ -212,9 +211,10 @@ export function BlockSelector({
           <Button
             onClick={onAddBlock}
             variant="secondary"
-            className="w-full mt-4 border border-dashed"
+            size="sm"
+            className="w-full mt-2 border border-dashed text-xs h-8"
           >
-            <Plus className="w-4 h-4 mr-2" /> Add Block
+            <Plus className="w-3.5 h-3.5 mr-1.5" /> Add Block
           </Button>
         </div>
       </SortableContext>

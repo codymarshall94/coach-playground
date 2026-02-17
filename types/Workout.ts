@@ -29,18 +29,38 @@ export type WorkoutTypes =
   | "balance"
   | "other";
 
+export type RepSchemeType =
+  | "fixed"
+  | "range"
+  | "time"
+  | "each_side"
+  | "amrap"
+  | "distance";
+
 // -----------------------------------------------------------------------------
 // CORE STRUCTURES
 // -----------------------------------------------------------------------------
 
 export type SetInfo = {
   reps: number;
+  /** Upper bound for rep ranges (e.g. reps=8, reps_max=12 → "8-12") */
+  reps_max?: number;
   rest: number;
   rpe: number | null;
   rir: number | null;
   one_rep_max_percent: number | null;
 
   set_type: SetType;
+
+  /** Duration in seconds — used when tracking_type is "time" */
+  duration?: number;
+  /** Whether this set is per-side (e.g., 12 reps each leg) */
+  per_side?: boolean;
+  /** Distance in meters — used when tracking_type is "distance" */
+  distance?: number;
+
+  /** Per-set rep scheme (fixed, time, each_side, amrap) */
+  rep_scheme?: RepSchemeType;
 
   // Optional dynamic fields for special set types
   drop_percent?: number;
@@ -67,6 +87,8 @@ export type WorkoutExercise = {
   sets: SetInfo[];
   notes?: string;
   intensity: IntensitySystem;
+  /** How the "reps" column is interpreted for this exercise */
+  rep_scheme?: RepSchemeType;
 };
 
 export type WorkoutExerciseGroup = {

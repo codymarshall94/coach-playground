@@ -22,6 +22,7 @@ export interface Exercise {
   base_calorie_cost: number; // kcals per hard set (est.)
   energy_system: EnergySystem;
   volume_per_set: { strength: number; hypertrophy: number }; // kg-reps
+  tracking_type: TrackingType[];
   cues: string[];
   // variations: ExerciseVariation[];
   contra_indications: string[];
@@ -30,17 +31,23 @@ export interface Exercise {
   exercise_muscles: ExerciseMuscleJoined[] | null;
 }
 
-export type MuscleRole = "prime" | "synergist" | "stabilizer" | null;
+export type MuscleRole = "prime" | "synergist" | "stabilizer";
+
+export type MuscleRegion = "upper" | "lower" | "core";
+
+export type MuscleMovementType = "push" | "pull" | "neutral" | "abduction";
 
 export type MuscleRow = {
   id: string;
   display_name: string;
   group_name: string | null;
+  region: MuscleRegion;
+  movement_type: MuscleMovementType;
 };
 
 export type ExerciseMuscleJoined = {
   role: MuscleRole;
-  contribution: number | null;
+  contribution: number;
   muscles: MuscleRow;
 };
 
@@ -60,6 +67,8 @@ export type ForceCurve = "ascending" | "descending" | "bell" | "flat";
 export type RomRating = "short" | "medium" | "long";
 
 export type EnergySystem = "ATP-CP" | "Glycolytic" | "Oxidative";
+
+export type TrackingType = "reps" | "time" | "distance";
 
 export type Equipment =
   | "barbell"
@@ -93,5 +102,7 @@ export type ExerciseCategory =
   | "hinge_horizontal"
   | "carry"
   | "jump"
+  | "sprint"
+  | "throw"
   | "brace"
   | "other";

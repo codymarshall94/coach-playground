@@ -16,17 +16,17 @@ const variants = {
 };
 
 const sizeText: Record<Size, string> = {
-  sm: "text-base",
-  md: "text-lg",
-  lg: "text-xl",
+  sm: "text-sm",
+  md: "text-base",
+  lg: "text-lg",
 };
 
 const weightText = "font-bold";
 
 const sizeInput: Record<Size, string> = {
-  sm: "text-base",
-  md: "text-lg",
-  lg: "text-xl",
+  sm: "text-sm",
+  md: "text-base",
+  lg: "text-lg",
 };
 
 export interface InlineNameEditorProps {

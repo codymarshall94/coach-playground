@@ -2,6 +2,7 @@ import {
   IntensitySystem,
   Program,
   ProgramDay,
+  RepSchemeType,
   SetInfo,
   WorkoutExerciseGroup,
 } from "@/types/Workout";
@@ -48,6 +49,32 @@ function formatAdvancedSetInfo(set: SetInfo): string {
   }
 }
 
+/** Render the "Rx" cell: handles rep ranges, time, distance, per-side, AMRAP */
+function formatPrescription(
+  set: SetInfo,
+  exerciseRepScheme?: RepSchemeType
+): string {
+  const scheme = set.rep_scheme ?? exerciseRepScheme ?? "fixed";
+  switch (scheme) {
+    case "time":
+      return set.duration ? formatRestTime(set.duration) : `${set.reps}`;
+    case "range":
+      return set.reps_max ? `${set.reps}–${set.reps_max}` : `${set.reps}`;
+    case "each_side":
+      return `${set.reps}/side`;
+    case "amrap":
+      return "AMRAP";
+    case "distance":
+      return set.distance != null ? `${set.distance}m` : `${set.reps}`;
+    case "fixed":
+    default: {
+      let text = `${set.reps}`;
+      if (set.per_side) text += "/side";
+      return text;
+    }
+  }
+}
+
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, "").trim();
 }
@@ -66,6 +93,12 @@ function setGroupingSignature(set: SetInfo, system: IntensitySystem) {
   return [
     set.set_type,
     set.reps,
+    set.reps_max,
+    set.rep_scheme,
+    set.duration,
+    set.distance,
+    set.per_side,
+    set.rest,
     formatIntensity(set, system),
     set.drop_percent,
     set.drop_sets,
@@ -232,16 +265,16 @@ const s = StyleSheet.create({
   },
 });
 
-// Column widths as percentages (Exercise | Set | Type | Reps | Intensity | Notes)
-const COL = [28, 8, 18, 8, 14, 24];
+// Column widths as percentages (Exercise | Set | Type | Rx | Rest | Intensity | Notes)
+const COL = [24, 7, 16, 10, 8, 12, 23];
 
 /* ------------------------------------------------------------------
    Table sub-components
    ------------------------------------------------------------------ */
 
 function TableHeader() {
-  const labels = ["Exercise", "Set", "Type", "Reps", "Intensity", "Notes"];
-  const centered = new Set([1, 3, 4]);
+  const labels = ["Exercise", "Set", "Type", "Rx", "Rest", "Intensity", "Notes"];
+  const centered = new Set([1, 3, 4, 5]);
   return (
     <View style={{ flexDirection: "row" }}>
       {labels.map((label, i) => (
@@ -312,18 +345,23 @@ function ExerciseRows({
               {formatAdvancedSetInfo(g.set)}
             </Text>
 
-            {/* Reps */}
+            {/* Reps / Prescription */}
             <Text style={[s.cellCenter, { width: `${COL[3]}%` }]}>
-              {g.set.reps}
+              {formatPrescription(g.set, exercise.rep_scheme)}
+            </Text>
+
+            {/* Rest */}
+            <Text style={[s.cellCenter, { width: `${COL[4]}%` }]}>
+              {g.set.rest ? formatRestTime(g.set.rest) : "—"}
             </Text>
 
             {/* Intensity */}
-            <Text style={[s.cellCenter, { width: `${COL[4]}%` }]}>
+            <Text style={[s.cellCenter, { width: `${COL[5]}%` }]}>
               {formatIntensity(g.set, exercise.intensity) || "—"}
             </Text>
 
             {/* Notes — only on first set group row */}
-            <Text style={[s.cellNotes, { width: `${COL[5]}%` }]}>
+            <Text style={[s.cellNotes, { width: `${COL[6]}%` }]}>
               {gi === 0 ? exercise.notes || "—" : ""}
             </Text>
           </View>

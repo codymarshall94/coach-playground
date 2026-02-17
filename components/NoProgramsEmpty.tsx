@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { EmptyState } from "./EmptyState";
 import { Button } from "@/components/ui/button";
 

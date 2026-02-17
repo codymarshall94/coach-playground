@@ -119,7 +119,7 @@ export function ExerciseLibrary({ open, setOpen, exercises, onAdd }: Props) {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" onClick={() => setOpen(true)}>
+        <Button variant="ghost" className="text-muted-foreground hover:text-foreground" onClick={() => setOpen(true)}>
           Exercise Library
         </Button>
       </SheetTrigger>

@@ -1,4 +1,9 @@
 import { MuscleType } from "react-body-highlighter";
+import type {
+  MuscleRegion,
+  MuscleMovementType,
+  MuscleRole,
+} from "@/types/Exercise";
 
 export type MuscleGroup =
   | "quads"
@@ -18,13 +23,13 @@ export type MuscleGroup =
 
 export type Muscle = keyof typeof MUSCLE_DISPLAY_MAP;
 
-export type MuscleRole = "prime" | "synergist" | "stabilizer";
+export { MuscleRole };
 
 export interface MuscleInfo {
   id: Muscle;
   displayName: string;
-  region: "upper" | "lower" | "core";
-  movementType: "push" | "pull" | "neutral" | "abduction";
+  region: MuscleRegion;
+  movementType: MuscleMovementType;
   role?: MuscleRole;
   group?: MuscleGroup;
 }

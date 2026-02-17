@@ -39,6 +39,7 @@ import { DayHeader } from "./components/days/DayHeader";
 import { NoExercisesEmpty } from "./components/empty-states/NoExercisesEmpty";
 import { RestDayEmpty } from "./components/empty-states/RestDayEmpty";
 import { ExerciseGroupCard } from "./components/exercises/ExerciseGroupCard";
+import { QuickAddSuggestions } from "./components/exercises/QuickAddSuggestions";
 import { BlockSelector } from "./components/program/BlockSelector";
 import { ProgramDaySelector } from "./components/program/ProgramDaySelector";
 import { ProgramMetaEditor } from "./components/program/ProgramMetaEditor";
@@ -206,7 +207,7 @@ export const WorkoutBuilder = ({
   );
 
   const sidebarNode = (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-3">
       <ProgramMetaEditor
         program={program}
         programScore={programMetrics?.goalFitScore ?? 0}
@@ -392,7 +393,12 @@ export const WorkoutBuilder = ({
 
         {isWorkoutDay && exerciseGroups.length > 0 && (
           <>
-            <div className="mt-8 flex justify-center">
+            <div className="mt-8 flex flex-col items-center gap-4">
+              <QuickAddSuggestions
+                exerciseGroups={exerciseGroups}
+                allExercises={exercises ?? []}
+                onAdd={addExercise}
+              />
               <Button
                 onClick={() => setExerciseLibraryOpen(true)}
                 variant="outline"

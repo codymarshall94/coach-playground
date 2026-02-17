@@ -48,11 +48,11 @@ export function computeDayMetrics(input: SessionInput): DayMetrics {
     const cat = se.exercise.category;
     patternExposure[cat] = (patternExposure[cat] ?? 0) + 1;
 
-    // translate sets into “effective sets” per muscle using activation_map
+    // translate sets into "effective sets" per muscle using exercise_muscles
     const setCount = se.sets.length;
     for (const em of se.exercise.exercise_muscles ?? []) {
       const mId = em.muscles?.id;
-      const contrib = em.contribution ?? 0;
+      const contrib = em.contribution;
       if (!mId || contrib <= 0) continue;
 
       // raw (each set counts fully)

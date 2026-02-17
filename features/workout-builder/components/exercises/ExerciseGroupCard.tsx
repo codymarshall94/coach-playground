@@ -83,7 +83,7 @@ export function ExerciseGroupCard({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "border rounded-lg p-4 space-y-4 bg-card shadow-sm transition",
+        "border rounded-lg p-4  bg-card shadow-sm transition",
         {
           "border-indigo-700 bg-indigo-700/10": group.type === "superset",
           "border-emerald-500 bg-emerald-500/10": group.type === "circuit",

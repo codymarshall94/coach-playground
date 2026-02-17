@@ -37,12 +37,6 @@ export function toSessionInput(
   const exercises: SessionExercise[] = groups.map((g, gi) => {
     const first = g.exercises[0];
     const meta = allExercises.find((e) => e.id === first?.exercise_id);
-    // activation_map from your exercise_muscles metadata
-    const activation_map: Record<string, number> = {};
-    (meta?.exercise_muscles ?? []).forEach((m) => {
-      if (!m?.muscles?.id) return;
-      activation_map[m.muscles.id] = m.contribution ?? 0.5;
-    });
 
     const sets: SetInfo[] = (first?.sets ?? []).map((s) => ({
       reps: s.reps ?? 0,
@@ -84,6 +78,7 @@ export function toSessionInput(
         cues: meta?.cues ?? [],
         contra_indications: meta?.contra_indications ?? [],
         external_links: meta?.external_links ?? [],
+        tracking_type: meta?.tracking_type ?? ["reps"],
       },
       sets,
       order: gi + 1,

@@ -51,11 +51,11 @@ function DayButton({
     day.groups?.flatMap((g: any) => g.exercises).length ?? 0;
 
   return (
-    <div className="flex items-center justify-between gap-3 w-full">
-      <div className="flex items-center gap-3">
+    <div className="flex items-center justify-between gap-2 w-full">
+      <div className="flex items-center gap-2">
         <span
           className={cn(
-            "text-body",
+            "text-xs",
             isActive && "text-primary-foreground font-semibold"
           )}
         >
@@ -63,7 +63,7 @@ function DayButton({
         </span>
         <span
           className={cn(
-            "text-title",
+            "text-sm font-medium",
             isActive && "text-primary-foreground font-semibold"
           )}
         >
@@ -72,14 +72,14 @@ function DayButton({
         {day.type === "rest" ? (
           <Bed
             className={cn(
-              "w-4 h-4 ml-2 flex-shrink-0 text-muted-foreground",
+              "w-3.5 h-3.5 flex-shrink-0 text-muted-foreground",
               isActive && "text-primary-foreground"
             )}
           />
         ) : (
           <Dumbbell
             className={cn(
-              "w-4 h-4 ml-2 flex-shrink-0 text-muted-foreground",
+              "w-3.5 h-3.5 flex-shrink-0 text-muted-foreground",
               isActive && "text-primary-foreground"
             )}
           />
@@ -89,7 +89,7 @@ function DayButton({
       {day.type === "workout" && totalExercises > 0 && (
         <div
           className={cn(
-            "ml-auto rounded-full min-w-[24px] h-6 px-2 grid place-items-center text-xs font-medium bg-foreground/5 text-foreground/80 shadow-sm",
+            "ml-auto rounded-full min-w-[20px] h-5 px-1.5 grid place-items-center text-[11px] font-medium bg-foreground/5 text-foreground/80 shadow-sm",
             isActive && "bg-primary/10 text-primary-foreground"
           )}
         >
@@ -100,7 +100,7 @@ function DayButton({
       {!isDragOverlay && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
               <MoreVertical
                 className={cn(
                   "w-4 h-4 text-muted-foreground",
@@ -164,13 +164,13 @@ export function ProgramDaySelector({
         items={days.map((d) => d.id)}
         strategy={verticalListSortingStrategy}
       >
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-1.5">
           {days.map((day, i) => (
             <SortableItem
               key={day.id}
               id={day.id}
               className={cn(
-                "px-3 py-2.5 rounded-xl min-h-[44px] cursor-pointer transition-colors ",
+                "px-2.5 py-1.5 rounded-lg min-h-[36px] cursor-pointer transition-colors ",
                 i === activeIndex
                   ? "bg-primary text-primary-foreground ring-1 ring-inset ring-primary/20"
                   : "hover:bg-foreground/5 "
@@ -190,22 +190,24 @@ export function ProgramDaySelector({
             </SortableItem>
           ))}
 
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 mt-1">
             <Button
               onClick={onAddWorkoutDay}
               variant="outline"
-              className="flex-1 cursor-pointer"
+              size="sm"
+              className="flex-1 cursor-pointer text-xs h-8"
             >
-              <Dumbbell className="w-4 h-4 mr-2" />
-              Add Workout Day
+              <Dumbbell className="w-3.5 h-3.5 mr-1.5" />
+              Add Workout
             </Button>
             <Button
               onClick={onAddRestDay}
               variant="ghost"
-              className="flex-1 cursor-pointer"
+              size="sm"
+              className="flex-1 cursor-pointer text-xs h-8"
             >
-              <Bed className="w-4 h-4 mr-2" />
-              Add Rest Day
+              <Bed className="w-3.5 h-3.5 mr-1.5" />
+              Add Rest
             </Button>
           </div>
         </div>
@@ -216,7 +218,7 @@ export function ProgramDaySelector({
         render={(id) => {
           const day = days.find((d) => d.id === id)!;
           return (
-            <div className="px-3 py-2.5 rounded-xl min-h-[44px] bg-background ring-2 ring-primary/30 shadow-lg">
+            <div className="px-2.5 py-1.5 rounded-lg min-h-[36px] bg-background ring-2 ring-primary/30 shadow-lg">
               <DayButton
                 day={day}
                 index={activeDraggedIndex ?? 0}

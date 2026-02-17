@@ -75,7 +75,7 @@ export const ETLDisplay = ({
             {label}:{" "}
             <Badge
               className={cn(
-                `font-medium text-xs ${category.textColor}`,
+                `font-medium text-[10px] px-1.5 py-0 ${category.textColor}`,
                 category.bgColor
               )}
             >

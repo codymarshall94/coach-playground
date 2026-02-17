@@ -2,7 +2,7 @@
 import { createClient } from "@/utils/supabase/client";
 
 type FetchAllExercisesOptions = {
-  limit?: number; // default 50
+  limit?: number; // default 1000 (fetch all)
   offset?: number; // for pagination
   withMusclesOnly?: boolean; // inner join vs left join
   orderBy?: "name" | "category" | "id"; // valid columns in your table
@@ -10,7 +10,7 @@ type FetchAllExercisesOptions = {
 
 export async function fetchAllExercises(opts: FetchAllExercisesOptions = {}) {
   const {
-    limit = 50,
+    limit = 1000,
     offset = 0,
     withMusclesOnly = false,
     orderBy = "name",
@@ -22,17 +22,16 @@ export async function fetchAllExercises(opts: FetchAllExercisesOptions = {}) {
     .from("exercises")
     .select(
       `
-      id,
-      name,
-      category,
-      equipment,
-      image_url,
+      *,
       exercise_muscles${withMusclesOnly ? "!inner" : ""}(
+        role,
         contribution,
         muscles(
           id,
           display_name,
-          group_name
+          group_name,
+          region,
+          movement_type
         )
       )
     `
@@ -61,11 +60,14 @@ export async function fetchExerciseById(id: string) {
       equipment,
       image_url,
       exercise_muscles(
+        role,
         contribution,
         muscles(
           id,
           display_name,
-          group_name
+          group_name,
+          region,
+          movement_type
         )
       )
     `

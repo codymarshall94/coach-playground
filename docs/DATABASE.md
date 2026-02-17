@@ -74,6 +74,7 @@ profiles                    (user profiles, FK → auth.users)
 | display_name | text | |
 | order_num | int | |
 | intensity | enum `intensity_system` | rpe, rir, one_rep_max_percent, none |
+| rep_scheme | text | fixed, range, time, each_side, amrap (default: fixed) |
 | notes | text | nullable |
 
 ### `exercise_sets`
@@ -90,15 +91,35 @@ profiles                    (user profiles, FK → auth.users)
 | one_rep_max_percent | numeric | nullable |
 | notes | text | nullable |
 | params | jsonb | advanced set type params |
+| per_side | bool | default false — reps counted per side |
+| duration | int | seconds, nullable — for time-based sets |
+| distance | numeric | nullable — metres / yards for sprint-type sets |
 
 ### `exercises`
-Reference table with rich metadata. Key columns: `id` (text PK), `name`, `category`, `equipment[]`, `activation_map` (jsonb), `compound`, `unilateral`, `cns_demand`, `fatigue_index`, `joint_stress`, `metabolic_demand`, `energy_system`, `ideal_rep_range[]`, `volume_per_set` (jsonb).
+Reference table with rich metadata. Key columns: `id` (text PK), `name`, `category`, `equipment[]`, `compound`, `unilateral`, `cns_demand`, `fatigue_index`, `joint_stress`, `metabolic_demand`, `energy_system`, `ideal_rep_range[]`, `volume_per_set` (jsonb), `tracking_type[]`.
+
+`tracking_type` (text[], default `{"reps"}`) lists the metrics an exercise can be measured by: `reps`, `time`, or `distance`. An exercise may support multiple tracking modes — e.g. A-Skips can be tracked by reps or distance (`{"reps","distance"}`). The RepSchemePopover unions the allowed scheme sets for all tracking types.
+
+> **Note:** The legacy `activation_map` (jsonb) column has been removed. Muscle activation data lives exclusively in the `exercise_muscles` join table.
 
 ### `muscles`
-Lookup: `id` (text PK), `display_name`, `group_name`.
+| Column | Type | Notes |
+|--------|------|-------|
+| id | text PK | e.g. `anterior_deltoid` |
+| display_name | text | e.g. "Anterior Deltoid" |
+| group_name | text | e.g. "shoulders", "back" |
+| region | enum `muscle_region` | upper, lower, core |
+| movement_type | enum `muscle_movement_type` | push, pull, neutral, abduction |
+| created_at, updated_at | timestamptz | auto |
 
 ### `exercise_muscles`
-Join table: `exercise_id` FK → exercises, `muscle_id` FK → muscles, `contribution` (numeric).
+| Column | Type | Notes |
+|--------|------|-------|
+| exercise_id | text FK → exercises | composite PK with muscle_id |
+| muscle_id | text FK → muscles | composite PK with exercise_id |
+| role | enum `muscle_role` | prime, synergist, stabilizer (default: synergist) |
+| contribution | numeric NOT NULL | 0–1 activation weight (default: 0.5) |
+| created_at, updated_at | timestamptz | auto |
 
 ### `profiles`
 | Column | Type | Notes |
@@ -116,3 +137,31 @@ Join table: `exercise_id` FK → exercises, `muscle_id` FK → muscles, `contrib
 - `exercises`, `muscles`, `exercise_muscles` — RLS disabled (public read).
 - `profiles` — RLS enabled.
 - The `clone_program_from_template` RPC is `SECURITY DEFINER` and uses `auth.uid()` to set the cloned program's `user_id`.
+
+## Enums
+
+| Enum | Values |
+|------|--------|
+| `day_type` | workout, rest, active_rest, other |
+| `group_type` | standard, superset, giant_set, circuit |
+| `intensity_system` | rpe, one_rep_max_percent, rir, none |
+| `muscle_movement_type` | push, pull, neutral, abduction |
+| `muscle_region` | upper, lower, core |
+| `muscle_role` | prime, synergist, stabilizer |
+| `program_goal` | strength, hypertrophy, endurance, power |
+| `program_mode` | days, blocks |
+| `set_type` | warmup, standard, amrap, drop, cluster, myo_reps, rest_pause, top_set, backoff, other |
+
+## Design decisions
+
+### Single source of truth for muscle metadata
+
+The `muscles` table is the authoritative source for muscle definitions, including `region` and `movement_type`. The client-side `constants/muscles.ts` file mirrors this data for offline use and body-highlighter mapping, but all analytics and volume calculations should derive from the database values embedded in `exercise_muscles → muscles` joins.
+
+### `exercise_muscles.contribution` is NOT NULL
+
+`contribution` defaults to `0.5` and is always present. Code should never need a fallback — this eliminates inconsistencies where different code paths used different defaults (`0` vs `0.5`).
+
+### `exercise_muscles.role` classifies muscle involvement
+
+Each exercise–muscle relationship has a `role` (prime, synergist, stabilizer) enabling finer-grained analysis than contribution alone. For example, filtering exercises by primary mover vs stabilizer load.

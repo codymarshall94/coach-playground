@@ -35,18 +35,18 @@ export function ScoreHero({
       )}
       onClick={openOverview}
     >
-      <CardContent className="p-3 flex items-center gap-3">
-        <ScoreDial value={v} size={44} thickness={4} />
+      <CardContent className="p-2.5 flex items-center gap-2.5">
+        <ScoreDial value={v} size={36} thickness={3.5} />
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-foreground">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-medium text-foreground">
               Program Fit
             </span>
-            <span className={cn("text-xs font-medium", tier.color)}>
+            <span className={cn("text-[11px] font-medium", tier.color)}>
               {tier.label}
             </span>
           </div>
-          <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
+          <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
             How well this program matches your goal
           </p>
         </div>
@@ -93,8 +93,8 @@ export const ProgramMetaEditor = ({
   };
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5">
         <InlineNameEditor
           name={editedName}
           onSave={handleSave}

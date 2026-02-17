@@ -8,11 +8,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { SetType } from "@/types/Workout";
 import {
-  Check,
   Clock,
   Layers,
   Repeat,
@@ -113,11 +111,14 @@ export const SET_TYPE_CONFIG: Record<
 interface SetTypeSelectorProps {
   setType: SetType;
   onSetTypeChange: (setType: SetType) => void;
+  /** Render as a flat table cell — fills entire cell, no rounded edges */
+  cellMode?: boolean;
 }
 
 export function SetTypeSelector({
   setType,
   onSetTypeChange,
+  cellMode = false,
 }: SetTypeSelectorProps) {
   const [open, setOpen] = useState(false);
 
@@ -147,105 +148,64 @@ export function SetTypeSelector({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Badge
-          variant="outline"
-          className={cn(
-            "w-8 h-8 text-xs font-bold flex items-center justify-center cursor-pointer",
-            SET_TYPE_CONFIG[setType].colorClass
-          )}
-        >
-          {SET_TYPE_CONFIG[setType].short}
-        </Badge>
+        {cellMode ? (
+          <button
+            className={cn(
+              "w-full h-full px-1.5 py-0.5 text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-colors hover:bg-muted/40",
+              SET_TYPE_CONFIG[setType].colorClass
+            )}
+          >
+            <span className="font-bold">{SET_TYPE_CONFIG[setType].short}</span>
+            <span className="truncate">{SET_TYPE_CONFIG[setType].label}</span>
+          </button>
+        ) : (
+          <Badge
+            variant="outline"
+            className={cn(
+              "w-8 h-8 text-xs font-bold flex items-center justify-center cursor-pointer",
+              SET_TYPE_CONFIG[setType].colorClass
+            )}
+          >
+            {SET_TYPE_CONFIG[setType].short}
+          </Badge>
+        )}
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="start">
-        <div className="max-h-96 overflow-y-auto">
-          {Object.keys(groupedSetTypes).length === 0 ? (
-            <div className="p-4 text-center text-sm text-muted-foreground">
-              No set types found
+      <PopoverContent className="w-72 p-0" align="start">
+        <div className="max-h-[400px] overflow-y-auto divide-y divide-border">
+          {Object.entries(groupedSetTypes).map(([category, setTypes]) => (
+            <div key={category}>
+              {setTypes.map(([key, config]) => {
+                const isSelected = key === setType;
+
+                return (
+                  <button
+                    key={key}
+                    className={cn(
+                      "w-full text-left px-4 py-3 cursor-pointer transition-colors",
+                      "hover:bg-muted/40 focus:bg-muted/40 focus:outline-none",
+                      isSelected && "bg-muted/30"
+                    )}
+                    onClick={() => handleSelect(key as SetType)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handleSelect(key as SetType);
+                      }
+                    }}
+                    role="option"
+                    aria-selected={isSelected}
+                  >
+                    <div className="font-semibold text-sm text-foreground">
+                      {config.label}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {config.description}
+                    </p>
+                  </button>
+                );
+              })}
             </div>
-          ) : (
-            Object.entries(groupedSetTypes).map(([category, setTypes]) => (
-              <div key={category}>
-                <div className="px-3 py-2 text-xs font-semibold text-muted-foreground bg-muted/30">
-                  {category}
-                </div>
-                <div className="p-1">
-                  {setTypes.map(([key, config]) => {
-                    const Icon = config.icon;
-                    const isSelected = key === setType;
-
-                    return (
-                      <div
-                        key={key}
-                        className={`
-                          relative flex items-start gap-3 p-3 rounded-md cursor-pointer transition-all
-                          hover:bg-muted/50 focus:bg-muted/50 focus:outline-none
-                          ${
-                            isSelected
-                              ? "bg-primary/5 border border-primary/20"
-                              : ""
-                          }
-                        `}
-                        onClick={() => handleSelect(key as SetType)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            handleSelect(key as SetType);
-                          }
-                        }}
-                        tabIndex={0}
-                        role="option"
-                        aria-selected={isSelected}
-                      >
-                        <div
-                          className={`
-                          flex items-center justify-center w-8 h-8 rounded-full
-                          ${
-                            isSelected
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted text-muted-foreground"
-                          }
-                        `}
-                        >
-                          <Icon className="w-4 h-4" />
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span
-                              className={`font-medium text-sm ${
-                                isSelected ? "text-primary" : "text-foreground"
-                              }`}
-                            >
-                              {config.label}
-                            </span>
-                          </div>
-                          <p className="text-xs text-muted-foreground leading-relaxed">
-                            {config.description}
-                          </p>
-                        </div>
-
-                        {isSelected && (
-                          <Check className="w-4 h-4 text-primary flex-shrink-0 mt-1" />
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-                {Object.keys(groupedSetTypes).indexOf(category) <
-                  Object.keys(groupedSetTypes).length - 1 && (
-                  <Separator className="my-1" />
-                )}
-              </div>
-            ))
-          )}
-        </div>
-
-        <div className="p-3 border-t bg-muted/20">
-          <div className="text-xs text-muted-foreground">
-            <strong>Current:</strong> {currentConfig?.label} •{" "}
-            {currentConfig?.category}
-          </div>
+          ))}
         </div>
       </PopoverContent>
     </Popover>

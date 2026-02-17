@@ -125,6 +125,7 @@ export async function insertWorkoutExercises(
     intensity: ex.intensity,
     notes: ex.notes ?? "",
     order_num: index,
+    rep_scheme: ex.rep_scheme ?? "fixed",
   }));
 
   const { data, error } = await supabase
@@ -162,10 +163,15 @@ export async function insertExerciseSetsBulk(
         set_index: index,
         set_type: set.set_type ?? "standard",
         reps: set.reps,
+        reps_max: set.reps_max ?? null,
         rest: set.rest || 60,
         rpe: set.rpe ?? null,
         rir: set.rir ?? null,
         one_rep_max_percent: set.one_rep_max_percent ?? null,
+        duration: set.duration ?? null,
+        per_side: set.per_side ?? false,
+        distance: set.distance ?? null,
+        rep_scheme: set.rep_scheme ?? "fixed",
         notes: set.notes ?? null,
         params: Object.keys(params).length > 0 ? params : null,
       };

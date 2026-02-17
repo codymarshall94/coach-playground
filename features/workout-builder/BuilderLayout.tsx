@@ -19,7 +19,7 @@ export function BuilderLayout({
 
       <div className="flex flex-1 overflow-hidden">
         {sidebar ? (
-          <aside className="w-full max-w-96 border-r border-border bg-muted/20 p-4 overflow-y-auto">
+          <aside className="w-full max-w-88 border-r border-border bg-muted/20 p-3 overflow-y-auto">
             {sidebar}
           </aside>
         ) : null}

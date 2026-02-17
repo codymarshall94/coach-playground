@@ -16,24 +16,27 @@ export type Database = {
     Tables: {
       exercise_muscles: {
         Row: {
-          contribution: number | null
+          contribution: number
           created_at: string
           exercise_id: string
           muscle_id: string
+          role: Database["public"]["Enums"]["muscle_role"]
           updated_at: string
         }
         Insert: {
-          contribution?: number | null
+          contribution?: number
           created_at?: string
           exercise_id: string
           muscle_id: string
+          role?: Database["public"]["Enums"]["muscle_role"]
           updated_at?: string
         }
         Update: {
-          contribution?: number | null
+          contribution?: number
           created_at?: string
           exercise_id?: string
           muscle_id?: string
+          role?: Database["public"]["Enums"]["muscle_role"]
           updated_at?: string
         }
         Relationships: [
@@ -56,11 +59,16 @@ export type Database = {
       exercise_sets: {
         Row: {
           created_at: string
+          distance: number | null
+          duration: number | null
           id: string
           notes: string | null
           one_rep_max_percent: number | null
           params: Json | null
+          per_side: boolean
+          rep_scheme: string
           reps: number | null
+          reps_max: number | null
           rest: number | null
           rir: number | null
           rpe: number | null
@@ -71,11 +79,16 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          distance?: number | null
+          duration?: number | null
           id?: string
           notes?: string | null
           one_rep_max_percent?: number | null
           params?: Json | null
+          per_side?: boolean
+          rep_scheme?: string
           reps?: number | null
+          reps_max?: number | null
           rest?: number | null
           rir?: number | null
           rpe?: number | null
@@ -86,11 +99,16 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          distance?: number | null
+          duration?: number | null
           id?: string
           notes?: string | null
           one_rep_max_percent?: number | null
           params?: Json | null
+          per_side?: boolean
+          rep_scheme?: string
           reps?: number | null
+          reps_max?: number | null
           rest?: number | null
           rir?: number | null
           rpe?: number | null
@@ -111,7 +129,6 @@ export type Database = {
       }
       exercises: {
         Row: {
-          activation_map: Json | null
           aliases: string[] | null
           ballistic: boolean | null
           base_calorie_cost: number | null
@@ -138,13 +155,13 @@ export type Database = {
           recovery_days: number | null
           rom_rating: string | null
           skill_requirement: string | null
+          tracking_type: string[]
           unilateral: boolean | null
           updated_at: string
           variations: string[] | null
           volume_per_set: Json | null
         }
         Insert: {
-          activation_map?: Json | null
           aliases?: string[] | null
           ballistic?: boolean | null
           base_calorie_cost?: number | null
@@ -171,13 +188,13 @@ export type Database = {
           recovery_days?: number | null
           rom_rating?: string | null
           skill_requirement?: string | null
+          tracking_type?: string[]
           unilateral?: boolean | null
           updated_at?: string
           variations?: string[] | null
           volume_per_set?: Json | null
         }
         Update: {
-          activation_map?: Json | null
           aliases?: string[] | null
           ballistic?: boolean | null
           base_calorie_cost?: number | null
@@ -204,6 +221,7 @@ export type Database = {
           recovery_days?: number | null
           rom_rating?: string | null
           skill_requirement?: string | null
+          tracking_type?: string[]
           unilateral?: boolean | null
           updated_at?: string
           variations?: string[] | null
@@ -217,6 +235,8 @@ export type Database = {
           display_name: string
           group_name: string
           id: string
+          movement_type: Database["public"]["Enums"]["muscle_movement_type"]
+          region: Database["public"]["Enums"]["muscle_region"]
           updated_at: string
         }
         Insert: {
@@ -224,6 +244,8 @@ export type Database = {
           display_name: string
           group_name: string
           id: string
+          movement_type?: Database["public"]["Enums"]["muscle_movement_type"]
+          region?: Database["public"]["Enums"]["muscle_region"]
           updated_at?: string
         }
         Update: {
@@ -231,6 +253,8 @@ export type Database = {
           display_name?: string
           group_name?: string
           id?: string
+          movement_type?: Database["public"]["Enums"]["muscle_movement_type"]
+          region?: Database["public"]["Enums"]["muscle_region"]
           updated_at?: string
         }
         Relationships: []
@@ -454,6 +478,7 @@ export type Database = {
           intensity: Database["public"]["Enums"]["intensity_system"]
           notes: string | null
           order_num: number
+          rep_scheme: string
           updated_at: string
           workout_group_id: string
         }
@@ -465,6 +490,7 @@ export type Database = {
           intensity?: Database["public"]["Enums"]["intensity_system"]
           notes?: string | null
           order_num: number
+          rep_scheme?: string
           updated_at?: string
           workout_group_id: string
         }
@@ -476,6 +502,7 @@ export type Database = {
           intensity?: Database["public"]["Enums"]["intensity_system"]
           notes?: string | null
           order_num?: number
+          rep_scheme?: string
           updated_at?: string
           workout_group_id?: string
         }
@@ -517,6 +544,9 @@ export type Database = {
       day_type: "workout" | "rest" | "active_rest" | "other"
       group_type: "standard" | "superset" | "giant_set" | "circuit"
       intensity_system: "rpe" | "one_rep_max_percent" | "rir" | "none"
+      muscle_movement_type: "push" | "pull" | "neutral" | "abduction"
+      muscle_region: "upper" | "lower" | "core"
+      muscle_role: "prime" | "synergist" | "stabilizer"
       program_goal: "strength" | "hypertrophy" | "endurance" | "power"
       program_mode: "days" | "blocks"
       set_type:
@@ -660,6 +690,9 @@ export const Constants = {
       day_type: ["workout", "rest", "active_rest", "other"],
       group_type: ["standard", "superset", "giant_set", "circuit"],
       intensity_system: ["rpe", "one_rep_max_percent", "rir", "none"],
+      muscle_movement_type: ["push", "pull", "neutral", "abduction"],
+      muscle_region: ["upper", "lower", "core"],
+      muscle_role: ["prime", "synergist", "stabilizer"],
       program_goal: ["strength", "hypertrophy", "endurance", "power"],
       program_mode: ["days", "blocks"],
       set_type: [
