@@ -22,25 +22,32 @@ export interface Exercise {
   base_calorie_cost: number; // kcals per hard set (est.)
   energy_system: EnergySystem;
   volume_per_set: { strength: number; hypertrophy: number }; // kg-reps
+  tracking_type: TrackingType[];
   cues: string[];
-  variations: ExerciseVariation[];
+  // variations: ExerciseVariation[];
   contra_indications: string[];
   external_links: { label: string; url: string }[];
   image_url: string;
   exercise_muscles: ExerciseMuscleJoined[] | null;
 }
 
-export type MuscleRole = "prime" | "synergist" | "stabilizer" | null;
+export type MuscleRole = "prime" | "synergist" | "stabilizer";
+
+export type MuscleRegion = "upper" | "lower" | "core";
+
+export type MuscleMovementType = "push" | "pull" | "neutral" | "abduction";
 
 export type MuscleRow = {
   id: string;
   display_name: string;
   group_name: string | null;
+  region: MuscleRegion;
+  movement_type: MuscleMovementType;
 };
 
 export type ExerciseMuscleJoined = {
   role: MuscleRole;
-  contribution: number | null;
+  contribution: number;
   muscles: MuscleRow;
 };
 
@@ -60,6 +67,8 @@ export type ForceCurve = "ascending" | "descending" | "bell" | "flat";
 export type RomRating = "short" | "medium" | "long";
 
 export type EnergySystem = "ATP-CP" | "Glycolytic" | "Oxidative";
+
+export type TrackingType = "reps" | "time" | "distance";
 
 export type Equipment =
   | "barbell"
@@ -93,70 +102,7 @@ export type ExerciseCategory =
   | "hinge_horizontal"
   | "carry"
   | "jump"
+  | "sprint"
+  | "throw"
   | "brace"
   | "other";
-
-export type ExerciseVariation =
-  | "high-bar"
-  | "low-bar"
-  | "paused"
-  | "tempo"
-  | "box"
-  | "close-grip"
-  | "diamond"
-  | "band-resisted"
-  | "depth jump"
-  | "single-leg"
-  | "low box"
-  | "seated"
-  | "push-press"
-  | "tempo eccentric"
-  | "deficit"
-  | "incline"
-  | "decline"
-  | "pendlay"
-  | "underhand"
-  | "safety bar"
-  | "half-kneeling"
-  | "standing"
-  | "1-arm"
-  | "single-leg"
-  | "pause reps"
-  | "banded"
-  | "half-kneeling"
-  | "standing"
-  | "1-arm"
-  | "depth jump"
-  | "single-leg"
-  | "low box"
-  | "seated"
-  | "push-press"
-  | "tempo eccentric"
-  | "deficit"
-  | "side plank"
-  | "plank with reach"
-  | "elevated feet"
-  | "weighted"
-  | "with reach"
-  | "elevated feet"
-  | "hands on hips"
-  | "with arm swing"
-  | "with reach"
-  | "elevated feet"
-  | "weighted"
-  | "with reach"
-  | "in-place"
-  | "single-arm"
-  | "neutral"
-  | "alternating"
-  | "hammer curl"
-  | "preacher curl"
-  | "rope"
-  | "straight bar"
-  | "reverse grip"
-  | "alternating"
-  | "box to box"
-  | "with hurdle"
-  | "in place"
-  | "depth-tuck"
-  | "rebound series";

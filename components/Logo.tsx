@@ -13,6 +13,7 @@ export function Logo({
       alt="Logo"
       width={width}
       height={height}
+      priority
     />
   );
 }

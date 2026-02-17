@@ -1,130 +1,131 @@
-"use client";
-
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import ScoreDial from "@/components/ScoreDial";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import type { Program, ProgramGoal } from "@/types/Workout";
-import { AnimatePresence, motion } from "framer-motion";
-import { Check, Edit3 } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useState } from "react";
+import InlineNameEditor from "../InlineNameEditor";
 import { ProgramNotesModal } from "./ProgramNotesModal";
 import { ProgramSettingsModal } from "./ProgramSettingsModal";
 
+function tierForScore(score: number) {
+  if (score >= 80) return { label: "Great", color: "text-positive" };
+  if (score >= 60) return { label: "Good", color: "text-load-medium" };
+  if (score >= 40) return { label: "Fair", color: "text-load-high" };
+  return { label: "Needs work", color: "text-destructive" };
+}
+
+export function ScoreHero({
+  score,
+  openOverview,
+  overviewOpen,
+}: {
+  score: number;
+  openOverview?: () => void;
+  overviewOpen: boolean;
+}) {
+  const v = Math.max(0, Math.min(100, Math.round(score)));
+  const tier = tierForScore(v);
+
+  return (
+    <Card
+      className={cn(
+        "rounded-xl cursor-pointer transition-colors",
+        overviewOpen ? "bg-primary/10" : "hover:bg-muted/50"
+      )}
+      onClick={openOverview}
+    >
+      <CardContent className="p-2.5 flex items-center gap-2.5">
+        <ScoreDial value={v} size={36} thickness={3.5} />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-medium text-foreground">
+              Program Fit
+            </span>
+            <span className={cn("text-[11px] font-medium", tier.color)}>
+              {tier.label}
+            </span>
+          </div>
+          <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+            How well this program matches your goal
+          </p>
+        </div>
+        <ChevronRight
+          className={cn(
+            "w-4 h-4 shrink-0 text-muted-foreground transition-transform",
+            overviewOpen && "rotate-90"
+          )}
+        />
+      </CardContent>
+    </Card>
+  );
+}
+
 interface ProgramMetaEditorProps {
   program: Program;
+  programScore: number;
   onChange: (
     fields: Partial<{ name: string; description: string; goal: ProgramGoal }>
   ) => void;
   onSwitchMode: (updated: Program) => void;
+  onOpenOverview?: () => void;
+  overviewOpen: boolean;
 }
 
 export const ProgramMetaEditor = ({
   program,
+  programScore,
   onChange,
   onSwitchMode,
+  onOpenOverview,
+  overviewOpen,
 }: ProgramMetaEditorProps) => {
+  const [editedName, setEditedName] = useState(program.name || "");
   const [isEditingName, setIsEditingName] = useState(false);
-  const [tempName, setTempName] = useState(program.name);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
 
-  const handleSave = () => {
-    const trimmed = tempName.trim();
-    if (trimmed) {
-      onChange({ name: trimmed });
-    }
+  const handleSave = (next: string) => {
+    const trimmed = next.trim();
+    if (trimmed) onChange({ name: trimmed });
+    setEditedName(trimmed);
     setIsEditingName(false);
   };
 
-  const handleKeyDown = (
-    e: React.KeyboardEvent,
-    submit: () => void,
-    cancel: () => void
-  ) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      submit();
-    } else if (e.key === "Escape") {
-      cancel();
-    }
-  };
-
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-2">
-      <AnimatePresence mode="wait" initial={false}>
-        {isEditingName ? (
-          <motion.div
-            key="editing"
-            initial={{ opacity: 0, x: -4 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -4 }}
-            transition={{ duration: 0.15 }}
-            className="flex items-center gap-2"
-          >
-            <Input
-              value={tempName}
-              onChange={(e) => setTempName(e.target.value)}
-              onBlur={handleSave}
-              onKeyDown={(e) =>
-                handleKeyDown(e, handleSave, () => {
-                  setTempName(program.name);
-                  setIsEditingName(false);
-                })
-              }
-              className="text-xl font-bold border-none bg-transparent shadow-none h-auto focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0"
-              placeholder="Program Name"
-              autoFocus
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleSave}
-              className="text-brand hover:text-brand/90"
-            >
-              <Check className="w-4 h-4" />
-            </Button>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="display"
-            initial={{ opacity: 0, x: -4 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -4 }}
-            transition={{ duration: 0.15 }}
-            className="flex items-center gap-2"
-          >
-            <h1
-              className="text-xl font-bold cursor-pointer hover:text-muted-foreground transition-colors"
-              onClick={() => setIsEditingName(true)}
-            >
-              {program.name || "Untitled Program"}
-            </h1>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground hover:text-foreground"
-              onClick={() => setIsEditingName(true)}
-            >
-              <Edit3 className="h-4 w-4" />
-            </Button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5">
+        <InlineNameEditor
+          name={editedName}
+          onSave={handleSave}
+          onEditingChange={setIsEditingName}
+          isEditing={isEditingName}
+          placeholder="Program name"
+          size="lg"
+        />
 
-      <div className="flex items-center gap-2">
-        <ProgramNotesModal
-          open={notesOpen}
-          onOpenChange={setNotesOpen}
-          value={program.description}
-          onChange={(desc) => onChange({ ...program, description: desc })}
-        />
-        <ProgramSettingsModal
-          open={settingsOpen}
-          onOpenChange={setSettingsOpen}
-          program={program}
-          onChange={onChange}
-          onSwitchMode={onSwitchMode}
-        />
+        <div className="flex items-center gap-2">
+          <ProgramNotesModal
+            open={notesOpen}
+            onOpenChange={setNotesOpen}
+            value={program.description}
+            onChange={(desc) => onChange({ ...program, description: desc })}
+          />
+          <ProgramSettingsModal
+            open={settingsOpen}
+            onOpenChange={setSettingsOpen}
+            program={program}
+            onChange={onChange}
+            onSwitchMode={onSwitchMode}
+          />
+        </div>
       </div>
+
+      <ScoreHero
+        score={programScore}
+        openOverview={onOpenOverview}
+        overviewOpen={overviewOpen}
+      />
     </div>
   );
 };

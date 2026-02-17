@@ -1,31 +1,28 @@
 import { SetInfo } from "@/types/Workout";
 import { createClient } from "@/utils/supabase/client";
 
+/**
+ * Insert all sets for ONE exercise in a single call.
+ * Returns nothing (fast path). If you truly need rows back, switch to .select().
+ */
 export async function insertExerciseSets(
   workoutExerciseId: string,
   sets: SetInfo[]
 ) {
-  const supabase = createClient();
+  if (!sets?.length) return;
 
   const payload = sets.map((set, index) => ({
     workout_exercise_id: workoutExerciseId,
-    reps: set.reps,
+    set_index: index,
+    set_type: set.set_type ?? "standard",
     rest: set.rest,
     rpe: set.rpe ?? null,
     rir: set.rir ?? null,
     one_rep_max_percent: set.one_rep_max_percent ?? null,
-    set_index: index,
+    notes: set.notes ?? null,
   }));
 
-  const { data, error } = await supabase
-    .from("exercise_sets")
-    .insert(payload)
-    .select();
+  const { error } = await createClient().from("exercise_sets").insert(payload);
 
-  if (error) {
-    console.error("❌ insertExerciseSets error", error.message);
-    return null;
-  }
-
-  return data;
+  if (error) throw new Error(`insertExerciseSets: ${error.message}`);
 }

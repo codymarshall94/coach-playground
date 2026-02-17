@@ -20,7 +20,7 @@ export const EQUIPMENT_DISPLAY_MAP: Record<Equipment, string> = {
   rack: "Rack",
   bench: "Bench",
   box: "Box",
-  pause: "Paused",
+  pause: "Pause",
   bar: "Bar",
   kettlebell: "Kettlebell",
   cable: "Cable",

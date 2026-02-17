@@ -46,7 +46,9 @@ export function CollapsedExerciseCard({
         </div>
 
         <div className="flex flex-col">
-          <h4 className="font-medium text-foreground">{exercise.name}</h4>
+          <h4 className="font-medium text-foreground">
+            {exercise.display_name}
+          </h4>
           <p className="text-xs text-muted-foreground">
             {exercise.sets.length} sets • {totalReps} reps • Est. {durationMin}{" "}
             min

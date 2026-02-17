@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import DOMPurify from "dompurify";
 
 type Props = {
   html: string;
@@ -24,7 +25,7 @@ export const RichTextRenderer = ({
         truncate && "line-clamp-3",
         className
       )}
-      dangerouslySetInnerHTML={{ __html: html }}
+      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }}
     />
   );
 };

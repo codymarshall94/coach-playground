@@ -1,4 +1,3 @@
-import { Muscle, MUSCLES } from "@/constants/muscles";
 import { EnergySystem, Exercise, ExerciseCategory } from "@/types/Exercise";
 import { WorkoutExerciseGroup, WorkoutTypes } from "@/types/Workout";
 import { WorkoutSummaryStats } from "@/types/WorkoutSummary";
@@ -16,8 +15,8 @@ export interface WorkoutAnalyticsSummary extends WorkoutSummaryStats {
   total_sets: number;
   total_fatigue: number;
   top_muscles: [string, number][];
-  muscle_volumes: Record<Muscle, number>;
-  muscle_set_counts: Record<Muscle, number>;
+  muscle_volumes: Record<string, number>;
+  muscle_set_counts: Record<string, number>;
   category_counts: Record<ExerciseCategory, number>;
   energy_system_counts: Record<EnergySystem, number>;
   workout_type: WorkoutTypes;
@@ -81,7 +80,7 @@ export function analyzeWorkoutDay(
   const categoryCounts: Record<string, number> = {};
   const energySystemCounts: Record<string, number> = {};
   const regionCount = { upper: 0, lower: 0, core: 0 };
-  const movementCount = { push: 0, pull: 0, neutral: 0 };
+  const movementCount = { push: 0, pull: 0, neutral: 0, abduction: 0 };
   const activationTotals: Record<string, number> = {};
 
   let setCount = 0;
@@ -112,17 +111,14 @@ export function analyzeWorkoutDay(
 
       for (const muscle of baseEx.exercise_muscles ?? []) {
         const muscleId = muscle.muscles.id;
-        const activation = muscle.contribution ?? 0;
+        const activation = muscle.contribution;
 
         increment(muscleVolumes, muscleId, activation);
         increment(muscleSetCounts, muscleId);
         increment(activationTotals, muscleId, activation);
 
-        const muscleMeta = MUSCLES.find((m) => m.id === muscleId);
-        if (!muscleMeta) continue;
-
-        increment(regionCount, muscleMeta.region, activation);
-        increment(movementCount, muscleMeta.movementType, activation);
+        increment(regionCount, muscle.muscles.region, activation);
+        increment(movementCount, muscle.muscles.movement_type, activation);
       }
     }
   }

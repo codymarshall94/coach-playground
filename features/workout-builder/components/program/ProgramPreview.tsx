@@ -1,20 +1,13 @@
 "use client";
 
-import { useRef } from "react";
-import html2canvas from "html2canvas-pro";
-import jsPDF from "jspdf";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import DOMPurify from "dompurify";
+import { IntensitySystem, Program, ProgramDay, RepSchemeType, SetInfo } from "@/types/Workout";
 import { Activity, Dumbbell, Eye, Target, Zap } from "lucide-react";
-import { IntensitySystem, Program, ProgramDay, SetInfo } from "@/types/Workout";
 
 const goalIcons = {
   strength: Zap,
@@ -71,6 +64,76 @@ function formatAdvancedSetInfo(set: SetInfo): string {
   }
 }
 
+/** Render the "Rx" cell: handles rep ranges, time, distance, per-side, AMRAP */
+function formatPrescription(
+  set: SetInfo,
+  exerciseRepScheme?: RepSchemeType
+): string {
+  const scheme = set.rep_scheme ?? exerciseRepScheme ?? "fixed";
+  switch (scheme) {
+    case "time":
+      return set.duration ? formatRestTime(set.duration) : `${set.reps}`;
+    case "range":
+      return set.reps_max ? `${set.reps}–${set.reps_max}` : `${set.reps}`;
+    case "each_side":
+      return `${set.reps}/side`;
+    case "amrap":
+      return "AMRAP";
+    case "distance":
+      return set.distance != null ? `${set.distance}m` : `${set.reps}`;
+    case "fixed":
+    default: {
+      let text = `${set.reps}`;
+      if (set.per_side) text += "/side";
+      return text;
+    }
+  }
+}
+
+type SetGroup = { startIndex: number; count: number; set: SetInfo };
+
+function setGroupingSignature(set: SetInfo, system: IntensitySystem) {
+  // Include every field that affects any visible cell so different sets
+  // are never incorrectly collapsed into one row.
+  return [
+    set.set_type,
+    set.reps,
+    set.reps_max,
+    set.rep_scheme,
+    set.duration,
+    set.distance,
+    set.per_side,
+    set.rest,
+    formatIntensity(set, system),
+    // advanced-set fields
+    set.drop_percent,
+    set.drop_sets,
+    set.cluster_reps,
+    set.intra_rest,
+    set.activation_set_reps,
+    set.mini_sets,
+    set.initial_reps,
+    set.pause_duration,
+  ].join("|");
+}
+
+function groupConsecutiveSets(
+  sets: SetInfo[],
+  system: IntensitySystem
+): SetGroup[] {
+  const groups: SetGroup[] = [];
+  let i = 0;
+  while (i < sets.length) {
+    const sig = setGroupingSignature(sets[i], system);
+    let j = i + 1;
+    while (j < sets.length && setGroupingSignature(sets[j], system) === sig)
+      j++;
+    groups.push({ startIndex: i, count: j - i, set: sets[i] });
+    i = j;
+  }
+  return groups;
+}
+
 function WorkoutDayTable({ day }: { day: ProgramDay }) {
   if (day.type !== "workout") return null;
   return (
@@ -89,20 +152,20 @@ function WorkoutDayTable({ day }: { day: ProgramDay }) {
               <th className="px-3 py-2">Exercise</th>
               <th className="px-3 py-2 text-center">Set</th>
               <th className="px-3 py-2">Type</th>
-              <th className="px-3 py-2 text-center">Reps</th>
+              <th className="px-3 py-2 text-center">Rx</th>
+              <th className="px-3 py-2 text-center">Rest</th>
               <th className="px-3 py-2 text-center">Intensity</th>
               <th className="px-3 py-2">Notes</th>
             </tr>
           </thead>
           <tbody>
-            {day.workout.map((workout) =>
-              workout.exercise_groups.map((group, groupIndex) => {
+            {day.groups.map((group, groupIndex) => {
                 const groupRow = (
                   <tr
                     key={`group-${groupIndex}`}
                     className="bg-gray-50 font-medium border-t border-gray-300"
                   >
-                    <td colSpan={6} className="px-3 py-2">
+                    <td colSpan={7} className="px-3 py-2">
                       {group.type !== "standard" && (
                         <span className="capitalize font-semibold">
                           {group.type.replace("_", " ")}
@@ -123,34 +186,49 @@ function WorkoutDayTable({ day }: { day: ProgramDay }) {
                   </tr>
                 );
 
-                const exerciseRows = group.exercises.map((exercise) => {
-                  const setCount = exercise.sets.length;
-                  return exercise.sets.map((set, setIndex) => (
+                const exerciseRows = group.exercises.flatMap((exercise) => {
+                  const groups = groupConsecutiveSets(
+                    exercise.sets,
+                    exercise.intensity
+                  );
+                  const rowSpan = groups.length;
+
+                  return groups.map((g, gi) => (
                     <tr
-                      key={`${exercise.id}-set-${setIndex}`}
+                      key={`${exercise.id}-grp-${g.startIndex}`}
                       className={`${
-                        setIndex % 2 ? "bg-gray-50" : "bg-white"
+                        gi % 2 ? "bg-gray-50" : "bg-white"
                       } border-t border-gray-200`}
                     >
-                      {setIndex === 0 && (
+                      {gi === 0 && (
                         <td
-                          rowSpan={setCount}
+                          rowSpan={rowSpan}
                           className="px-3 py-2 font-semibold align-top"
                         >
-                          {exercise.name}
+                          {exercise.display_name}
                         </td>
                       )}
-                      <td className="px-3 py-2 text-center">{setIndex + 1}</td>
-                      <td className="px-3 py-2 whitespace-pre-line">
-                        {formatAdvancedSetInfo(set)}
-                      </td>
-                      <td className="px-3 py-2 text-center">{set.reps}</td>
+
                       <td className="px-3 py-2 text-center">
-                        {formatIntensity(set, exercise.intensity) || "—"}
+                        {g.count > 1 ? `×${g.count}` : `${g.startIndex + 1}`}
                       </td>
-                      {setIndex === 0 && (
+
+                      <td className="px-3 py-2 whitespace-pre-line">
+                        {formatAdvancedSetInfo(g.set)}
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        {formatPrescription(g.set, exercise.rep_scheme)}
+                      </td>
+                      <td className="px-3 py-2 text-center text-xs text-gray-500">
+                        {g.set.rest ? formatRestTime(g.set.rest) : "—"}
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        {formatIntensity(g.set, exercise.intensity) || "—"}
+                      </td>
+
+                      {gi === 0 && (
                         <td
-                          rowSpan={setCount}
+                          rowSpan={rowSpan}
                           className="px-3 py-2 text-xs text-gray-600 italic align-top"
                         >
                           {exercise.notes || "—"}
@@ -161,8 +239,7 @@ function WorkoutDayTable({ day }: { day: ProgramDay }) {
                 });
 
                 return [groupRow, ...exerciseRows];
-              })
-            )}
+              })}
           </tbody>
         </table>
       </div>
@@ -193,7 +270,7 @@ function ProgramSheet({ program }: { program: Program }) {
       <Separator className="my-4" />
       {program.description && (
         <div className="w-full mt-2 text-sm  space-y-2 prose">
-          <div dangerouslySetInnerHTML={{ __html: program.description }} />
+          <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(program.description) }} />
         </div>
       )}
 
@@ -254,80 +331,45 @@ export default function ProgramPreview({
   open: boolean;
   onOpenChange: (o: boolean) => void;
 }) {
-  const captureRef = useRef<HTMLDivElement>(null);
-
   const exportToPDF = async () => {
-    if (!captureRef.current) return;
-
-    const canvas = await html2canvas(captureRef.current, {
-      scale: 2,
-      backgroundColor: "#ffffff",
-      useCORS: true,
+    const res = await fetch("/api/export-pdf", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(program),
     });
 
-    const imgData = canvas.toDataURL("image/jpeg", 1.0);
-    const pdf = new jsPDF("p", "mm", "a4");
-
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-
-    const imgWidth = pageWidth;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    // First page
-    pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    // Additional pages if needed
-    while (heightLeft > 0) {
-      position -= pageHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+    if (!res.ok) {
+      console.error("PDF export failed:", await res.text());
+      return;
     }
 
-    pdf.save(`${program.name}.pdf`);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${program.name}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="outline">
+        <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
           <Eye className="w-4 h-4" />
           Preview
         </Button>
       </DialogTrigger>
 
       <DialogContent className="min-w-[800px] w-full px-6 py-8 rounded-2xl shadow-lg bg-white">
-        {/* Export button (NOT inside capture area) */}
+        <DialogTitle className="sr-only">Program preview</DialogTitle>
         <div className="mb-4 flex justify-end">
           <Button onClick={exportToPDF}>Export to PDF</Button>
         </div>
 
-        {/* Visible on-screen preview (clipped for UX) */}
         <ScrollArea className="h-[calc(100vh-260px)]">
           <ProgramSheet program={program} />
         </ScrollArea>
-
-        {/* Off-screen, un-clipped copy for high-fidelity capture */}
-        <div
-          ref={captureRef}
-          // keep it rendered but off-screen; don't use display: none
-          style={{
-            position: "fixed",
-            left: -10000,
-            top: 0,
-            width: "794px",
-            background: "#fff",
-            zIndex: -1,
-          }}
-          aria-hidden
-        >
-          <ProgramSheet program={program} />
-        </div>
       </DialogContent>
     </Dialog>
   );

@@ -1,4 +1,3 @@
-// hooks/useKeyboardShortcuts.ts
 import { useEffect } from "react";
 
 interface ShortcutsOptions {
@@ -28,14 +27,12 @@ export function useKeyboardShortcuts({
     const handleKeyDown = (e: KeyboardEvent) => {
       const key = e.key.toLowerCase();
 
-      // Show help: Shift + ?
       if (e.shiftKey && key === "?") {
         e.preventDefault();
         onOpenHelpModal?.();
         return;
       }
 
-      // Save Draft: Ctrl + S / Cmd + S
       if ((e.ctrlKey || e.metaKey) && key === "s") {
         e.preventDefault();
         onSaveDraft?.();

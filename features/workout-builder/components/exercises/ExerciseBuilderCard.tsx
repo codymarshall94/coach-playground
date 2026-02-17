@@ -71,6 +71,7 @@ export const ExerciseBuilderCard = ({
         order={order}
         onlyExercise={onlyExercise}
         exercise={exercise}
+        trackingTypes={exerciseMeta?.tracking_type ?? ["reps"]}
         isDraggingAny={isDraggingAny}
         onRemove={onRemove}
         onUpdateSets={onUpdateSets}

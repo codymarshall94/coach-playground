@@ -14,46 +14,46 @@ type Props = {
 };
 
 function getETLCategory(normalizedETL: number) {
-  if (normalizedETL < 100)
+  if (normalizedETL < 1.5)
     return {
       label: "Recovery",
       textColor: "text-foreground",
       bgColor: "bg-load-low/30",
-      desc: "Very low stress. Good for rest days or active recovery.",
+      desc: "Very low stress. Good for warmups, deloads, or active recovery.",
     };
-  if (normalizedETL < 125)
+  if (normalizedETL < 3)
     return {
-      label: "Easy",
+      label: "Light",
+      textColor: "text-foreground",
+      bgColor: "bg-load-low/30",
+      desc: "Low effort. Suitable for easy accessories or deload sessions.",
+    };
+  if (normalizedETL < 4.5)
+    return {
+      label: "Moderate",
       textColor: "text-foreground",
       bgColor: "bg-load-medium/30",
-      desc: "Light training. Great for deloads or low-impact movement.",
+      desc: "Solid work. Typical for accessories or moderate compound lifts.",
     };
-  if (normalizedETL < 135)
+  if (normalizedETL < 6)
     return {
       label: "Challenging",
       textColor: "text-foreground",
       bgColor: "bg-load-max/30",
-      desc: "Moderate effort. Solid training session without overdoing it.",
+      desc: "Pushing hard. High effort compound work or heavy isolation.",
     };
-  if (normalizedETL < 145)
+  if (normalizedETL < 8)
     return {
       label: "Hard",
       textColor: "text-foreground",
       bgColor: "bg-load-max/30",
-      desc: "High effort. Pushes your limits but still manageable.",
-    };
-  if (normalizedETL < 155)
-    return {
-      label: "Heavy",
-      textColor: "text-foreground",
-      bgColor: "bg-load-max/30",
-      desc: "Very demanding. Be mindful of fatigue and recovery.",
+      desc: "Very demanding. Heavy compounds near failure. Manage recovery.",
     };
   return {
-    label: "Max Load",
+    label: "Max Effort",
     textColor: "text-foreground",
     bgColor: "bg-destructive/50",
-    desc: "Extreme training load. Used for peak efforts or testing.",
+    desc: "Extreme training load. Peak efforts or testing. Use sparingly.",
   };
 }
 
@@ -75,7 +75,7 @@ export const ETLDisplay = ({
             {label}:{" "}
             <Badge
               className={cn(
-                `font-medium text-xs ${category.textColor}`,
+                `font-medium text-[10px] px-1.5 py-0 ${category.textColor}`,
                 category.bgColor
               )}
             >
@@ -88,21 +88,22 @@ export const ETLDisplay = ({
       <TooltipContent className="max-w-[280px] text-xs bg-background text-foreground border border-border">
         <p className="font-medium mb-1">What is ETL?</p>
         <p className="mb-2">
-          ETL (Estimated Training Load) is a rough measure of how much stress a
-          workout puts on your body. It factors in reps, intensity, fatigue, and
-          total volume.
+          ETL (Estimated Training Load) measures how much stress an exercise or
+          workout puts on your body. It factors in reps, intensity (RPE), set
+          types, and exercise difficulty.
         </p>
         <div className="h-1 rounded-full overflow-hidden bg-muted">
           <div
             className={category.bgColor}
-            style={{ width: `${Math.min((normalizedETL / 200) * 100, 100)}%` }}
+            style={{ width: `${Math.min((normalizedETL / 10) * 100, 100)}%` }}
           />
         </div>
 
         <p className="mt-1 text-xs text-muted-foreground">{category.desc}</p>
         <p className="mt-2 text-xs text-gray-400">
-          Raw ETL Score:{" "}
+          ETL Score:{" "}
           <span className="font-mono">{normalizedETL.toFixed(1)}</span>
+          <span className="text-gray-500"> / 10</span>
         </p>
       </TooltipContent>
     </Tooltip>

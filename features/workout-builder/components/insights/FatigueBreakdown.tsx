@@ -12,41 +12,37 @@ export function FatigueBreakdown({
   avgMet,
   avgJoint,
 }: FatigueBreakdownProps) {
-  const metrics = [
+  const clamp = (x: number) =>
+    Math.max(0, Math.min(100, Number.isFinite(x) ? x : 0));
+
+  const items = [
     {
       label: "CNS Demand",
-      value: avgCNS * 10,
-      icon: Brain,
+      value: clamp(avgCNS),
+      Icon: Brain,
       color: "purple",
       description: "Neural fatigue from heavy loads or complex lifts.",
     },
     {
       label: "Metabolic",
-      value: avgMet * 10,
-      icon: Heart,
+      value: clamp(avgMet),
+      Icon: Heart,
       color: "red",
       description: "Energy system stress from higher rep or explosive work.",
     },
     {
       label: "Joint Stress",
-      value: avgJoint * 10,
-      icon: Bone,
+      value: clamp(avgJoint),
+      Icon: Bone,
       color: "orange",
       description: "Structural strain from compressive or shearing forces.",
     },
   ];
 
-  const getLabelColor = (value: number) => {
-    if (value < 4) return "text-load-low";
-    if (value < 7) return "text-load-medium";
-    return "text-load-high";
-  };
-
-  const getBarColor = (value: number) => {
-    if (value < 4) return "bg-load-low";
-    if (value < 7) return "bg-load-medium";
-    return "bg-load-high";
-  };
+  const labelColor = (v: number) =>
+    v < 40 ? "text-load-low" : v < 70 ? "text-load-medium" : "text-load-high";
+  const barColor = (v: number) =>
+    v < 40 ? "bg-load-low" : v < 70 ? "bg-load-medium" : "bg-load-high";
 
   return (
     <Card>
@@ -57,24 +53,24 @@ export function FatigueBreakdown({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {metrics.map(({ label, icon: Icon, value, description }) => (
+        {items.map(({ label, Icon, value, description }) => (
           <div key={label} className="space-y-1">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Icon className="w-4 h-4" />
                 <span className="font-medium">{label}</span>
               </div>
-              <span className={`text-sm font-semibold ${getLabelColor(value)}`}>
-                {value.toFixed(1)}/10
+              <span className={`text-sm font-semibold ${labelColor(value)}`}>
+                {(value / 10).toFixed(1)}/10
               </span>
             </div>
 
             <div className="relative h-2 bg-muted rounded-full overflow-hidden">
               <div
-                className={`absolute h-full transition-all duration-500 ${getBarColor(
+                className={`absolute h-full transition-all duration-500 ${barColor(
                   value
                 )}`}
-                style={{ width: `${value * 10}%` }}
+                style={{ width: `${value}%` }}
               />
             </div>
 

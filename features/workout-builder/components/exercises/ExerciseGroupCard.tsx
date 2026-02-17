@@ -30,17 +30,15 @@ interface Props {
     exerciseIndex: number,
     intensity: any
   ) => void;
-  onUpdateNotes: (
-    groupIndex: number,
-    exerciseIndex: number,
-    notes: string
-  ) => void;
+  onUpdateNotes: (groupIndex: number, notes: string) => void;
   onUpdateGroupType: (
     groupIndex: number,
     type: WorkoutExerciseGroup["type"]
   ) => void;
   onAddExerciseToGroup: (groupIndex: number, exercise: Exercise) => void;
   onMoveExerciseByIdToGroup: (exerciseId: string, toGroupIndex: number) => void;
+  exerciseLibraryOpen: boolean;
+  setExerciseLibraryOpen: (open: boolean) => void;
 }
 
 export function ExerciseGroupCard({
@@ -59,6 +57,8 @@ export function ExerciseGroupCard({
   onUpdateGroupType,
   onAddExerciseToGroup,
   onMoveExerciseByIdToGroup,
+  exerciseLibraryOpen,
+  setExerciseLibraryOpen,
 }: Props) {
   const isCollapsed = collapsedIndex !== null && collapsedIndex !== groupIndex;
 
@@ -83,7 +83,7 @@ export function ExerciseGroupCard({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "border rounded-lg p-4 space-y-4 bg-card shadow-sm transition",
+        "border rounded-lg p-4  bg-card shadow-sm transition",
         {
           "border-indigo-700 bg-indigo-700/10": group.type === "superset",
           "border-emerald-500 bg-emerald-500/10": group.type === "circuit",
@@ -114,10 +114,18 @@ export function ExerciseGroupCard({
                     + Add Exercise
                   </Button>
                 }
-                onSelect={(exercise) =>
-                  onMoveExerciseByIdToGroup(exercise.id, groupIndex)
-                }
+                onSelect={(exercise, cloneFrom) => {
+                  if (cloneFrom) {
+                    // Move the *existing instance* using its instance id
+                    onMoveExerciseByIdToGroup(cloneFrom.id, groupIndex);
+                  } else {
+                    // Add a brand-new instance from library
+                    onAddExerciseToGroup(groupIndex, exercise);
+                  }
+                }}
                 onAddExerciseToGroup={onAddExerciseToGroup}
+                exerciseLibraryOpen={exerciseLibraryOpen}
+                setExerciseLibraryOpen={setExerciseLibraryOpen}
                 groupIndex={groupIndex}
                 existingExercises={exerciseGroups
                   .flatMap((g) => g.exercises)
@@ -154,9 +162,7 @@ export function ExerciseGroupCard({
               onUpdateIntensity={(intensity) =>
                 onUpdateIntensity(groupIndex, exerciseIndex, intensity)
               }
-              onUpdateNotes={(notes) =>
-                onUpdateNotes(groupIndex, exerciseIndex, notes)
-              }
+              onUpdateNotes={(notes) => onUpdateNotes(groupIndex, notes)}
             />
           );
         })}

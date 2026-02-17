@@ -9,6 +9,8 @@ export const CATEGORY_DISPLAY_MAP: Record<string, string> = {
   hinge_horizontal: "Hip Thrust / Hinge (Horizontal)",
   carry: "Carry",
   jump: "Jump",
+  sprint: "Sprint",
+  throw: "Throw",
   brace: "Brace/Core",
   other: "Other",
 };

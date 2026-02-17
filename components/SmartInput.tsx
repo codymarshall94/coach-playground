@@ -2,6 +2,8 @@
 
 import type React from "react";
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -10,10 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { RotateCcw, Edit3, Check, AlertCircle } from "lucide-react";
-import { useId, useState, useRef, useEffect } from "react";
+import { AlertCircle, Check, Edit3, RotateCcw } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
 
 interface SmartInputProps {
   label?: string;
@@ -27,6 +27,10 @@ interface SmartInputProps {
   step?: number;
   allowClear?: boolean;
   defaultValue?: number;
+  customLabel?: string;
+  badgeLabel?: string;
+  /** Render as a flat table cell — no border, no shadow, transparent bg */
+  cellMode?: boolean;
 }
 
 export function SmartInput({
@@ -41,12 +45,16 @@ export function SmartInput({
   step = 1,
   allowClear = true,
   defaultValue,
+  customLabel = "Custom value...",
+  badgeLabel = "Custom",
+  cellMode = false,
 }: SmartInputProps) {
   const [mode, setMode] = useState<"select" | "custom">("select");
   const [inputValue, setInputValue] = useState(String(value));
   const [isValid, setIsValid] = useState(true);
   const [showTransition, setShowTransition] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputId = useId();
 
   const parsedValue = Number(value);
@@ -116,10 +124,21 @@ export function SmartInput({
   };
 
   const handleInputBlur = () => {
-    if (isEmpty || !isValid) {
-      handleReset();
-    } else if (options.includes(parsedValue)) {
-      setMode("select");
+    // Delay blur handling so that button clicks (confirm/reset) can fire first.
+    // Without this, onBlur unmounts the buttons before onClick registers.
+    blurTimeoutRef.current = setTimeout(() => {
+      if (isEmpty || !isValid) {
+        handleReset();
+      } else if (options.includes(parsedValue)) {
+        setMode("select");
+      }
+    }, 150);
+  };
+
+  const cancelBlur = () => {
+    if (blurTimeoutRef.current) {
+      clearTimeout(blurTimeoutRef.current);
+      blurTimeoutRef.current = null;
     }
   };
 
@@ -137,10 +156,7 @@ export function SmartInput({
   return (
     <div className="space-y-1 w-full">
       {label && (
-        <label
-          htmlFor={inputId}
-          className="text-xs font-medium text-muted-foreground block"
-        >
+        <label htmlFor={inputId} className="text-meta block">
           {label}
         </label>
       )}
@@ -157,7 +173,13 @@ export function SmartInput({
               value={isCustomValue ? "custom" : String(value)}
               disabled={disabled}
             >
-              <SelectTrigger className="h-9 text-center font-medium w-full">
+              <SelectTrigger
+                className={`flex items-center justify-center tabular-nums w-full ${
+                  cellMode
+                    ? "h-6 text-xs border-0 shadow-none bg-transparent rounded-none focus:ring-0 focus:ring-offset-0 px-1"
+                    : "h-9"
+                }`}
+              >
                 <SelectValue placeholder={placeholder || "Select value"} />
               </SelectTrigger>
               <SelectContent>
@@ -169,18 +191,18 @@ export function SmartInput({
                 <SelectItem value="custom" className="text-blue-600">
                   <div className="flex items-center gap-2">
                     <Edit3 className="w-3 h-3" />
-                    Custom value...
+                    {customLabel}
                   </div>
                 </SelectItem>
               </SelectContent>
             </Select>
 
-            {isCustomValue && (
+            {isCustomValue && !cellMode && (
               <Badge
                 variant="secondary"
                 className="absolute -top-2 -right-2 text-xs px-1.5 py-0.5 bg-blue-100 text-blue-700 border-blue-200"
               >
-                Custom
+                {badgeLabel}
               </Badge>
             )}
           </div>
@@ -200,7 +222,11 @@ export function SmartInput({
                   handleReset();
                 }
               }}
-              className={`h-9 text-center font-medium pr-16 transition-colors ${
+              className={`text-center font-medium transition-colors text-meta ${
+                cellMode
+                  ? "h-6 text-xs border-0 shadow-none bg-transparent rounded-none focus:ring-0 px-1 pr-12"
+                  : "h-9 pr-16"
+              } ${
                 !isValid
                   ? "border-red-300 focus:border-red-500 focus:ring-red-200"
                   : ""
@@ -218,13 +244,21 @@ export function SmartInput({
               }`}
             />
 
-            <div className="absolute top-1 right-1 flex gap-1">
+            <div
+              className={`absolute flex gap-0.5 ${
+                cellMode
+                  ? "top-0 right-0"
+                  : "top-1 right-1"
+              }`}
+            >
               {!isValid && (
                 <div
-                  className="flex items-center justify-center h-7 w-7 text-red-500"
+                  className={`flex items-center justify-center text-red-500 ${
+                    cellMode ? "h-6 w-6" : "h-7 w-7"
+                  }`}
                   title={getValidationMessage()}
                 >
-                  <AlertCircle className="w-4 h-4" />
+                  <AlertCircle className={cellMode ? "w-3 h-3" : "w-4 h-4"} />
                 </div>
               )}
 
@@ -232,11 +266,17 @@ export function SmartInput({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => setMode("select")}
-                  className="h-7 w-7 text-green-600 hover:bg-green-50"
+                  onMouseDown={cancelBlur}
+                  onClick={() => {
+                    cancelBlur();
+                    setMode("select");
+                  }}
+                  className={`text-green-600 hover:bg-green-50 ${
+                    cellMode ? "h-6 w-6 p-0" : "h-7 w-7"
+                  }`}
                   title="Confirm value"
                 >
-                  <Check className="w-4 h-4" />
+                  <Check className={cellMode ? "w-3 h-3" : "w-4 h-4"} />
                 </Button>
               )}
 
@@ -244,11 +284,17 @@ export function SmartInput({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={handleReset}
-                  className="h-7 w-7 text-muted-foreground hover:bg-muted"
+                  onMouseDown={cancelBlur}
+                  onClick={() => {
+                    cancelBlur();
+                    handleReset();
+                  }}
+                  className={`text-muted-foreground hover:bg-muted ${
+                    cellMode ? "h-6 w-6 p-0" : "h-7 w-7"
+                  }`}
                   title="Reset to default"
                 >
-                  <RotateCcw className="w-4 h-4" />
+                  <RotateCcw className={cellMode ? "w-3 h-3" : "w-4 h-4"} />
                 </Button>
               )}
             </div>

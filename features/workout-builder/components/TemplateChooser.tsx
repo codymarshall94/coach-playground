@@ -4,40 +4,68 @@ import { RichTextRenderer } from "@/components/RichTextEditor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { templateConfigs } from "@/config/templateConfigs";
+import useTemplates from "@/hooks/useTemplates";
 import { motion } from "framer-motion";
 import { ArrowLeft, Bolt, Dumbbell, Flame, HeartPulse } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { JSX } from "react";
 
-const goalSections = {
+const goalSections: Record<
+  "hypertrophy" | "strength" | "power" | "endurance",
+  { label: string; icon: JSX.Element }
+> = {
   hypertrophy: {
     label: "Hypertrophy Programs",
     icon: <Dumbbell className="text-pink-500 w-5 h-5" />,
-    badgeStyle: "bg-pink-100 text-pink-700",
-    accent: "from-pink-400 to-pink-600",
   },
   strength: {
     label: "Strength Programs",
     icon: <Flame className="text-blue-500 w-5 h-5" />,
-    badgeStyle: "bg-blue-100 text-blue-700",
-    accent: "from-blue-400 to-blue-600",
   },
   power: {
     label: "Athletic Power Programs",
     icon: <Bolt className="text-orange-500 w-5 h-5" />,
-    badgeStyle: "bg-orange-100 text-orange-700",
-    accent: "from-orange-400 to-orange-600",
   },
   endurance: {
     label: "Conditioning & Endurance",
     icon: <HeartPulse className="text-green-500 w-5 h-5" />,
-    badgeStyle: "bg-green-100 text-green-700",
-    accent: "from-green-400 to-green-600",
   },
 };
 
 export default function TemplateChooserPage() {
   const router = useRouter();
+  const { templates, isLoading, error } = useTemplates();
+
+  if (isLoading) {
+    return (
+      <div className="p-8 max-w-7xl mx-auto">
+        <div className="space-y-3">
+          <div className="h-10 w-64 bg-muted animate-pulse rounded" />
+          <div className="h-5 w-96 bg-muted animate-pulse rounded" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-40 bg-muted/60 animate-pulse rounded-2xl"
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8 max-w-7xl mx-auto">
+        <p className="text-destructive">Failed to load templates.</p>
+      </div>
+    );
+  }
+
+  // Group templates by goal
+  const byGoal = (goal: string) =>
+    (templates ?? []).filter((t: any) => t.goal === goal);
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
@@ -67,76 +95,76 @@ export default function TemplateChooserPage() {
         program later.
       </motion.p>
 
-      {Object.entries(goalSections).map(([goalKey, meta], sectionIndex) => {
-        const templates = templateConfigs.filter((t) => t.goal === goalKey);
-        if (!templates.length) return null;
+      {(Object.keys(goalSections) as Array<keyof typeof goalSections>).map(
+        (goalKey, sectionIndex) => {
+          const sectionTemplates = byGoal(goalKey);
+          if (!sectionTemplates.length) return null;
 
-        return (
-          <motion.section
-            key={goalKey}
-            className="mb-16"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: sectionIndex * 0.2 }}
-          >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 rounded-full bg-muted">{meta.icon}</div>
-              <h2 className="text-2xl font-semibold text-foreground tracking-tight">
-                {meta.label}
-              </h2>
-            </div>
+          const meta = goalSections[goalKey];
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {templates.map((template, index) => (
-                <motion.div
-                  key={template.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <Card
-                    onClick={() =>
-                      router.push(`/programs/builder?template=${template.id}`)
-                    }
-                    className="cursor-pointer group border border-border bg-background/70 backdrop-blur-lg rounded-2xl transition-all hover:shadow-xl hover:-translate-y-1 relative overflow-hidden"
+          return (
+            <motion.section
+              key={goalKey}
+              className="mb-16"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: sectionIndex * 0.2 }}
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <h2 className="text-display text-foreground">{meta.label}</h2>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {sectionTemplates.map((template: any, index: number) => (
+                  <motion.div
+                    key={template.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
                   >
-                    {/* Accent bar */}
-                    <div
-                      className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r ${meta.accent}`}
-                    />
+                    <Card
+                      onClick={
+                        () =>
+                          router.push(
+                            `/programs/builder?template=${template.id}`
+                          ) // UUID from DB
+                      }
+                      className="cursor-pointer group border border-border bg-background/70 backdrop-blur-lg rounded-2xl transition-all hover:shadow-xl hover:-translate-y-1 relative overflow-hidden"
+                    >
+                      <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r bg-brand" />
 
-                    <CardHeader className="relative z-10">
-                      <CardTitle className="text-lg font-bold group-hover:text-foreground">
-                        {template.name}
-                      </CardTitle>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        <Badge className={meta.badgeStyle}>{meta.label}</Badge>
-                        <Badge variant="secondary">
-                          {template.mode === "blocks" ? "Blocks" : "Days"}
-                        </Badge>
-                        <Badge variant="outline">
-                          {template.mode === "blocks"
-                            ? `${template.blocks?.[0]?.days.length ?? 0} Days`
-                            : `${template.days?.length ?? 0} Days`}
-                        </Badge>
+                      <CardHeader className="relative z-10">
+                        <CardTitle className="text-title group-hover:text-foreground">
+                          {template.name}
+                        </CardTitle>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          <Badge variant="secondary" className="text-meta">
+                            {template.mode === "blocks" ? "Blocks" : "Days"}
+                          </Badge>
+                          <Badge variant="outline" className="text-meta">
+                            {`${template.daysCount ?? 0} Days`}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+
+                      <CardContent className="text-sm text-muted-foreground z-10 relative px-6 pb-6 min-h-[72px]">
+                        <RichTextRenderer
+                          html={template.description}
+                          truncate
+                        />
+                      </CardContent>
+
+                      <div className="absolute bottom-2 right-2 opacity-10 group-hover:opacity-20 transition-opacity z-0">
+                        {meta.icon}
                       </div>
-                    </CardHeader>
-
-                    <CardContent className="text-sm text-muted-foreground z-10 relative px-6 pb-6 min-h-[72px]">
-                      <RichTextRenderer html={template.description} truncate />
-                    </CardContent>
-
-                    {/* Optional icon watermark */}
-                    <div className="absolute bottom-2 right-2 opacity-10 group-hover:opacity-20 transition-opacity z-0">
-                      {meta.icon}
-                    </div>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </motion.section>
-        );
-      })}
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.section>
+          );
+        }
+      )}
     </div>
   );
 }

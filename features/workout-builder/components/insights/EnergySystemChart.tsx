@@ -1,84 +1,79 @@
 "use client";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { EnergySystem } from "@/types/Exercise";
+import type { EnergySystem } from "@/engines/main";
 import { Flame, Heart, Zap } from "lucide-react";
 
-interface EnergySystemChartProps {
+type Props = {
+  /** Can be fractions (0..1), percents (0..100), or counts */
   systemBreakdown: Record<EnergySystem, number>;
-  totalExercises: number;
-}
+};
 
-export function EnergySystemChart({
-  systemBreakdown,
-  totalExercises,
-}: EnergySystemChartProps) {
-  const getSystemIcon = (system: EnergySystem) => {
-    switch (system.toLowerCase()) {
-      case "atp-cp":
-        return <Heart className="w-4 h-4 text-load-low" />;
-      case "glycolytic":
-        return <Zap className="w-4 h-4 text-load-medium" />;
-      case "oxidative":
-        return <Flame className="w-4 h-4 text-load-high" />;
-      default:
-        return <Flame className="w-4 h-4 text-load-high" />;
-    }
-  };
+const ICON: Record<string, React.ReactNode> = {
+  ATP_CP: <Heart className="w-4 h-4 text-load-low" />,
+  Glycolytic: <Zap className="w-4 h-4 text-load-medium" />,
+  Oxidative: <Flame className="w-4 h-4 text-load-high" />,
+};
 
-  const getSystemBar = (system: EnergySystem) => {
-    switch (system.toLowerCase()) {
-      case "atp-cp":
-        return "bg-load-low";
-      case "glycolytic":
-        return "bg-load-medium";
-      case "oxidative":
-        return "bg-load-high";
-      default:
-        return "bg-muted-foreground";
-    }
-  };
+const BAR: Record<string, string> = {
+  ATP_CP: "bg-load-low",
+  Glycolytic: "bg-load-medium",
+  Oxidative: "bg-load-high",
+};
+
+export function EnergySystemChart({ systemBreakdown }: Props) {
+  const entries = Object.entries(systemBreakdown ?? {});
+  const total = entries.reduce((s, [, v]) => s + (v ?? 0), 0) || 1;
+
+  // Convert to percents that sum to 100
+  const parts = entries.map(([k, v]) => ({
+    key: k,
+    percent: Math.max(0, Math.min(100, (v / total) * 100)),
+    raw: v,
+  }));
+
+  // For legend: show percent; show raw only if it looks like an integer count
+  const showRaw = parts.every(
+    (p) => p.raw >= 1 && Math.abs(Math.round(p.raw) - p.raw) < 1e-6
+  );
 
   return (
     <Card className="space-y-2">
       <CardHeader>
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Flame className="w-5 h-5 text-orange-600" />
-            <span className="text-lg font-semibold">Energy System Focus</span>
-          </div>
+        <div className="flex items-center gap-2">
+          <Flame className="w-5 h-5 text-orange-600" />
+          <span className="text-lg font-semibold">Energy System Focus</span>
         </div>
       </CardHeader>
       <CardContent>
+        {/* Stacked bar that always fills 100% */}
         <div className="relative h-3 rounded-full overflow-hidden flex bg-muted">
-          {Object.entries(systemBreakdown).map(([system, count]) => {
-            const percent = (count / totalExercises) * 100;
-            return (
-              <div
-                key={system}
-                className={`${getSystemBar(system as EnergySystem)} h-full`}
-                style={{ width: `${percent}%` }}
-              />
-            );
-          })}
+          {parts.map((p) => (
+            <div
+              key={p.key}
+              className={`${BAR[p.key] ?? "bg-muted-foreground"} h-full`}
+              style={{ width: `${p.percent}%` }}
+              title={`${p.key}: ${p.percent.toFixed(0)}%`}
+            />
+          ))}
         </div>
 
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm pt-1">
-          {Object.entries(systemBreakdown).map(([system, count]) => {
-            const percent = (count / totalExercises) * 100;
-            return (
-              <div
-                key={system}
-                className="flex items-center gap-2 text-muted-foreground"
-              >
-                {getSystemIcon(system as EnergySystem)}
-                <span className="capitalize font-medium">{system}</span>
-                <span className="text-xs">
-                  ({count}x, {percent.toFixed(0)}%)
-                </span>
-              </div>
-            );
-          })}
+          {parts.map((p) => (
+            <div
+              key={p.key}
+              className="flex items-center gap-2 text-muted-foreground"
+            >
+              {ICON[p.key] ?? <Flame className="w-4 h-4" />}
+              <span className="font-medium">
+                {p.key === "ATP_CP" ? "ATP-CP" : p.key}
+              </span>
+              <span className="text-xs">
+                {showRaw ? `${Math.round(p.raw)}x, ` : ""}
+                {p.percent.toFixed(0)}%
+              </span>
+            </div>
+          ))}
         </div>
       </CardContent>
     </Card>
