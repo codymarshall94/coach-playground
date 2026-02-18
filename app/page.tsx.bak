@@ -1,0 +1,151 @@
+"use client";
+
+import HighlightedText from "@/components/HighlightedText";
+import { Logo } from "@/components/Logo";
+import { Separator } from "@/components/ui/separator";
+import { ArrowRight } from "lucide-react";
+import Link from "next/link";
+
+export default function Page() {
+  return (
+    <main className="min-h-screen bg-white text-black space-y-10 py-10">
+      {/* NAV */}
+      <nav className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
+        <div className="flex items-center gap-3">
+          <Logo width={100} height={100} />
+        </div>
+        <div className="flex items-center gap-3 text-sm">
+          <Link
+            href="/login"
+            className="rounded-full bg-black px-4 py-2 text-white font-semibold"
+          >
+            Sign In
+          </Link>
+        </div>
+      </nav>
+
+      {/* HERO */}
+      <section className="mx-auto mt-6 flex w-full max-w-6xl flex-col items-start gap-6 px-6 h-screen pt-10 md:pt-16">
+        <div className="flex flex-col gap-6">
+          <h1 className="relative text-4xl font-extrabold leading-[1.05] tracking-[-0.02em] md:text-7xl">
+            <span className="block">
+              Build{" "}
+              <HighlightedText color="emerald" skew={1}>
+                Smarter.
+              </HighlightedText>
+            </span>
+            <span className="relative mt-2 block ">
+              Train{" "}
+              <HighlightedText color="emerald" skew={1}>
+                Intelligently
+              </HighlightedText>
+            </span>
+          </h1>
+          <p className="max-w-3xl text-lg text-neutral-700 md:text-xl">
+            Design and structure advanced training programs with clarity, speed,
+            and precision plus built‑in metrics and export tools.
+          </p>
+          <div className="flex flex-wrap items-center gap-4">
+            <Link
+              href="/programs/new"
+              className="group inline-flex items-center rounded-full bg-black px-5 py-3 text-white"
+            >
+              Start Building
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+            <span className="text-sm text-neutral-500">
+              No login required — just start creating.
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* ENGINE — THINKS WHILE YOU BUILD */}
+      <section id="engine" className="mx-auto w-full max-w-6xl px-6 py-24">
+        <h2 className="mb-4 text-4xl font-extrabold tracking-[-0.02em] md:text-5xl">
+          It thinks while you build.
+        </h2>
+        <ul className="grid gap-4 text-neutral-700 md:grid-cols-2">
+          <li>
+            📊 Total Estimated Workout Volume — auto‑calculated and visualized
+          </li>
+          <li>🔥 Muscles Targeted per Day — heatmaps and tag lists</li>
+          <li>⚖ Weekly Muscle Balance Overview — avoid training imbalances</li>
+          <li>
+            ⏱ Workout Duration Estimates — per day, block, and total program
+          </li>
+          <li>
+            📈 Volume Over Time & Intensity Distribution — trends and histograms
+          </li>
+          <li>🗂 Program Duration & Structure — blocks, weeks, days/week</li>
+          <li>📝 Custom Notes & Cues — per day or per exercise</li>
+          <li>🔁 Superset / Cluster Set support</li>
+          <li>🚨 Recovery Gaps or Overlap Warnings</li>
+          <li>🧭 Exercise Category Coverage — e.g., “No vertical pulls yet”</li>
+          <li>📄 Export to PDF / Notion / CSV for easy sharing</li>
+        </ul>
+      </section>
+
+      <Separator className="my-10" />
+
+      {/* INSIGHTS SECTION */}
+      <section id="insights" className="mx-auto w-full max-w-6xl px-6 py-24">
+        <h2 className="mb-8 text-4xl font-extrabold tracking-[-0.02em] md:text-5xl">
+          Deep Insights, Zero Guesswork
+        </h2>
+
+        <p className="mb-6 max-w-3xl text-neutral-700">
+          PRGRM doesn’t just store your workouts — it analyzes them. Get clear
+          visuals on total volume, intensity balance, weekly muscle frequency,
+          recovery timelines, and more.
+        </p>
+        <div className="grid gap-6 md:grid-cols-3">
+          <div className="rounded-2xl border p-6">
+            <h3 className="mb-2 text-xl font-semibold">Muscle Heatmaps</h3>
+            <p className="text-sm text-neutral-600">
+              See which muscles are hit and how often each week.
+            </p>
+          </div>
+          <div className="rounded-2xl border p-6">
+            <h3 className="mb-2 text-xl font-semibold">Recovery Timeline</h3>
+            <p className="text-sm text-neutral-600">
+              e.g., “Quads hit 3× this week. Recovery suggested.”
+            </p>
+          </div>
+          <div className="rounded-2xl border p-6">
+            <h3 className="mb-2 text-xl font-semibold">
+              Compare Weeks / Blocks
+            </h3>
+            <p className="text-sm text-neutral-600">
+              See changes in volume, intensity, and structure across phases.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section id="cta" className="mx-auto w-full max-w-6xl px-6 ">
+        <div className="rounded-3xl bg-neutral-100 p-10 text-center py-24 ">
+          <h2 className="mb-4 text-4xl font-extrabold tracking-[-0.02em] md:text-5xl mb-10">
+            Build Better Programs, Faster
+          </h2>
+          <div className="mb-10 flex flex-wrap items-center justify-center gap-6 text-sm text-neutral-600">
+            <span>✓ Create Advanced Programs</span>
+            <span>✓ Save & Reuse Templates</span>
+            <span>✓ Export to PDF / CSV</span>
+          </div>
+          <Link
+            href="/programs/new"
+            className="inline-flex items-center rounded-full bg-black px-6 py-3 text-white"
+          >
+            Create Your First Program
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
+          <p className="mt-3 text-xs text-neutral-500">
+            It’s free, quick and simple
+          </p>
+        </div>
+      </section>
+    </main>
+  );
+}

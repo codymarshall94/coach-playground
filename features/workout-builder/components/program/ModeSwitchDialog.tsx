@@ -38,11 +38,13 @@ export function ModeSwitchDialog({ currentProgram, onSwitchMode }: Props) {
     }
 
     if (targetMode === "blocks" && prev.days) {
+      const days = prev.days.map((day, i) => ({ ...day, order_num: i }));
       const block: ProgramBlock = {
         id: crypto.randomUUID(),
         name: "Block 1",
         order_num: 0,
-        days: prev.days.map((day, i) => ({ ...day, order_num: i })),
+        days,
+        weeks: [{ id: crypto.randomUUID(), weekNumber: 1, label: "Week 1", days }],
       };
 
       onSwitchMode({

@@ -17,5 +17,6 @@ export * from "../block/blockEngine";
 export * from "../program/programEngine";
 export * from "../program/profiles";
 export * from "../coach/coachNudges";
+export * from "../coach/improvementPlan";
 
 export * from "./orchestrator";

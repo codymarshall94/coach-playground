@@ -6,7 +6,7 @@ import { ChevronRight } from "lucide-react";
 import { useState } from "react";
 import InlineNameEditor from "../InlineNameEditor";
 import { ProgramNotesModal } from "./ProgramNotesModal";
-import { ProgramSettingsModal } from "./ProgramSettingsModal";
+import { ProgramSettingsSheet } from "./ProgramSettingsSheet";
 
 function tierForScore(score: number) {
   if (score >= 80) return { label: "Great", color: "text-positive" };
@@ -37,18 +37,13 @@ export function ScoreHero({
     >
       <CardContent className="p-2.5 flex items-center gap-2.5">
         <ScoreDial value={v} size={36} thickness={3.5} />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs font-medium text-foreground">
-              Program Fit
-            </span>
-            <span className={cn("text-[11px] font-medium", tier.color)}>
-              {tier.label}
-            </span>
-          </div>
-          <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
-            How well this program matches your goal
-          </p>
+        <div className="flex-1 min-w-0 flex items-center gap-1.5">
+          <span className="text-xs font-medium text-foreground">
+            Program Score
+          </span>
+          <span className={cn("text-[11px] font-medium", tier.color)}>
+            {tier.label}
+          </span>
         </div>
         <ChevronRight
           className={cn(
@@ -111,7 +106,7 @@ export const ProgramMetaEditor = ({
             value={program.description}
             onChange={(desc) => onChange({ ...program, description: desc })}
           />
-          <ProgramSettingsModal
+          <ProgramSettingsSheet
             open={settingsOpen}
             onOpenChange={setSettingsOpen}
             program={program}

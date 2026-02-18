@@ -29,6 +29,15 @@ function emptyScoreResult(spec: ProgramSpec) {
     ];
   return {
     goalFitScore: 0,
+    subScores: {
+      specificity: 0,
+      progression: 0,
+      stressPatterning: 0,
+      volumeFit: 0,
+      intensityFit: 0,
+      balanceHealth: 0,
+      feasibility: 0,
+    },
     coverageHeatmap: {} as Record<string, number>,
     insights: ["Add exercises to see your program score."],
     recommendedMinutesBand: [recMin, recMax] as [number, number],
@@ -225,6 +234,15 @@ export function scoreProgram(spec: ProgramSpec, blocks: BlockMetrics[]) {
 
   return {
     goalFitScore,
+    subScores: {
+      specificity,
+      progression,
+      stressPatterning,
+      volumeFit,
+      intensityFit,
+      balanceHealth,
+      feasibility: minutesFit,
+    },
     coverageHeatmap: weeklyAvgByMuscle, // now normalized to per-week averages
     insights,
 

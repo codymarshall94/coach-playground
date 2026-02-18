@@ -50,7 +50,7 @@ export async function insertProgramBlocks(
     name: b.name,
     description: b.description,
     order_num: index,
-    weeks: b.weeks ?? 4, // defensive default
+    weeks: Array.isArray(b.weeks) ? b.weeks.length : (b.weekCount ?? 1),
   }));
 
   const { data, error } = await supabase
@@ -230,6 +230,7 @@ export async function ensureProgramRecord(program: Program): Promise<string> {
       description: program.description,
       goal: program.goal,
       mode: program.mode,
+      cover_image: program.cover_image,
     });
     if (error || !data) {
       console.error("❌ insertProgram:", error?.message);
@@ -291,12 +292,19 @@ export async function insertProgramStructure(
       const insertedBlock = blocksByOrd.get(bIndex);
       if (!insertedBlock) continue;
 
+      // Save all weeks' days (flattened). For now, we save days from each week.
+      // The DB doesn't yet have a week_number column, so we save week 0's days
+      // (the primary/template week) and the block.weeks count goes in the blocks table.
+      const primaryDays = Array.isArray(block.weeks) && block.weeks.length > 0
+        ? block.weeks[0].days
+        : block.days;
+
       const daysInserted = await insertProgramDays(
         programId,
-        block.days,
+        primaryDays,
         insertedBlock.id
       );
-      await insertDaysWithGroups(daysInserted, block.days);
+      await insertDaysWithGroups(daysInserted, primaryDays);
     }
   }
 }
@@ -404,16 +412,18 @@ export async function insertProgram({
   description,
   goal,
   mode,
+  cover_image,
 }: {
   user_id: string;
   name: string;
   description: string;
   goal: string;
   mode: "days" | "blocks";
+  cover_image?: string | null;
 }) {
   return supabase
     .from("programs")
-    .insert({ user_id, name, description, goal, mode })
+    .insert({ user_id, name, description, goal, mode, cover_image })
     .select("id")
     .single();
 }
@@ -426,6 +436,7 @@ export async function updateProgram(program: Program) {
       description: program.description,
       goal: program.goal,
       mode: program.mode,
+      cover_image: program.cover_image ?? null,
       updated_at: nowIso(),
     })
     .eq("id", program.id);
@@ -441,6 +452,7 @@ type ProgramIndex = {
   description: string;
   goal: Program["goal"];
   mode: Program["mode"];
+  cover_image: string | null;
   created_at: string | null;
   updated_at: string | null;
   blocks: Array<{ id: string; days: Array<{ id: string }> }>;
@@ -452,7 +464,7 @@ export async function getAllProgramsForUser(): Promise<Program[]> {
     .from("programs")
     .select(
       `
-      id, name, description, goal, mode, created_at, updated_at,
+      id, name, description, goal, mode, cover_image, created_at, updated_at,
       blocks:program_blocks (
         id,
         days:program_days ( id )

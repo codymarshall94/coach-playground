@@ -166,10 +166,22 @@ export type ProgramSpec = {
   constraints?: ProgramConstraints;
 };
 
+/** Individual 0-1 sub-scores that compose the goalFitScore */
+export interface SubScores {
+  specificity: number;
+  progression: number;
+  stressPatterning: number;
+  volumeFit: number;
+  intensityFit: number;
+  balanceHealth: number;
+  feasibility: number;
+}
+
 /** Output of Program Engine (global fit + coverage) */
 export type ProgramMetrics = {
   blocks: BlockMetrics[];
   goalFitScore: number; // 0..100
+  subScores: SubScores;
   coverageHeatmap: Record<string, number>;
   globalInsights: string[];
   recommendedMinutesBand: [number, number];
@@ -179,8 +191,8 @@ export type ProgramMetrics = {
   avgSessionMinutes: number;
   monotony: number;
   strain: number;
-  intensityMix: number;
-  balanceAvg: number;
+  intensityMix: { high: number; moderate: number; low: number };
+  balanceAvg: { pushPull: number; quadHam: number; upperLower: number };
   priorityMusclesAuto: string[];
   topMuscles: string[];
   lowAttentionMuscles: string[];

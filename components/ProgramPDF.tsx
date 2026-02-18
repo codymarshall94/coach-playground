@@ -439,9 +439,9 @@ export function ProgramPDF({ program }: { program: Program }) {
                     }}
                   >
                     <Text style={s.blockBadge}>{block.name}</Text>
-                    {block.weeks ? (
+                    {Array.isArray(block.weeks) && block.weeks.length > 0 ? (
                       <Text style={s.weeksBadge}>
-                        {block.weeks} {block.weeks === 1 ? "week" : "weeks"}
+                        {block.weeks.length} {block.weeks.length === 1 ? "week" : "weeks"}
                       </Text>
                     ) : null}
                   </View>

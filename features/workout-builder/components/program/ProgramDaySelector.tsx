@@ -192,19 +192,29 @@ export function ProgramDaySelector({
 
           <div className="flex gap-1.5 mt-1">
             <Button
-              onClick={onAddWorkoutDay}
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddWorkoutDay();
+              }}
               variant="outline"
               size="sm"
               className="flex-1 cursor-pointer text-xs h-8"
+              disabled={days.length >= 7}
+              title={days.length >= 7 ? "A week can have at most 7 days" : undefined}
             >
               <Dumbbell className="w-3.5 h-3.5 mr-1.5" />
               Add Workout
             </Button>
             <Button
-              onClick={onAddRestDay}
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddRestDay();
+              }}
               variant="ghost"
               size="sm"
               className="flex-1 cursor-pointer text-xs h-8"
+              disabled={days.length >= 7}
+              title={days.length >= 7 ? "A week can have at most 7 days" : undefined}
             >
               <Bed className="w-3.5 h-3.5 mr-1.5" />
               Add Rest

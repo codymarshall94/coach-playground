@@ -1,4 +1,5 @@
 import { Program, ProgramDay, WorkoutExerciseGroup } from "@/types/Workout";
+import { getBlockWeekDays, normalizeBlock, setBlockWeekDays } from "@/utils/program/weekHelpers";
 
 // ---------- Creation ----------
 export const createWorkoutDay = (order = 0): ProgramDay => ({
@@ -102,23 +103,30 @@ export function moveDayWithinList(
 export function getDaysFromProgram(
   program: Program,
   usingBlocks: boolean,
-  blockIndex: number
+  blockIndex: number,
+  weekIndex: number = 0
 ): ProgramDay[] {
-  return usingBlocks
-    ? program.blocks?.[blockIndex]?.days ?? []
-    : program.days ?? [];
+  if (usingBlocks) {
+    const block = program.blocks?.[blockIndex];
+    if (!block) return [];
+    return getBlockWeekDays(block, weekIndex);
+  }
+  return program.days ?? [];
 }
 
 export function setDaysInProgram(
   program: Program,
   usingBlocks: boolean,
   blockIndex: number,
-  days: ProgramDay[]
+  days: ProgramDay[],
+  weekIndex: number = 0
 ): Program {
   if (usingBlocks) {
     const blocks = [...(program.blocks ?? [])];
     if (!blocks[blockIndex]) return program;
-    blocks[blockIndex] = { ...blocks[blockIndex], days };
+    const block = normalizeBlock(blocks[blockIndex]);
+    const updated = setBlockWeekDays(block, weekIndex, days);
+    blocks[blockIndex] = updated;
     return { ...program, blocks };
   }
   return { ...program, days };
@@ -129,11 +137,12 @@ export function removeDayFromProgram(
   usingBlocks: boolean,
   blockIndex: number,
   dayIndex: number,
-  opts?: { autoRenameDefault?: boolean }
+  opts?: { autoRenameDefault?: boolean },
+  weekIndex: number = 0
 ): Program {
-  const days = getDaysFromProgram(program, usingBlocks, blockIndex);
+  const days = getDaysFromProgram(program, usingBlocks, blockIndex, weekIndex);
   const nextDays = removeDayAt(days, dayIndex, opts);
-  return setDaysInProgram(program, usingBlocks, blockIndex, nextDays);
+  return setDaysInProgram(program, usingBlocks, blockIndex, nextDays, weekIndex);
 }
 
 export function moveDayInProgram(
@@ -142,11 +151,12 @@ export function moveDayInProgram(
   blockIndex: number,
   fromIndex: number,
   toIndex: number,
-  opts?: { autoRenameDefault?: boolean }
+  opts?: { autoRenameDefault?: boolean },
+  weekIndex: number = 0
 ): Program {
-  const days = getDaysFromProgram(program, usingBlocks, blockIndex);
+  const days = getDaysFromProgram(program, usingBlocks, blockIndex, weekIndex);
   const nextDays = moveDayWithinList(days, fromIndex, toIndex, opts);
-  return setDaysInProgram(program, usingBlocks, blockIndex, nextDays);
+  return setDaysInProgram(program, usingBlocks, blockIndex, nextDays, weekIndex);
 }
 
 export function toggleDayType(

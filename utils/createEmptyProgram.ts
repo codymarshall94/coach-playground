@@ -1,4 +1,4 @@
-import { ProgramDay } from "@/types/Workout";
+import { ProgramDay, ProgramWeek } from "@/types/Workout";
 
 import { Program } from "@/types/Workout";
 
@@ -12,6 +12,13 @@ export const createEmptyProgram = (
     type: "workout",
     description: "",
     groups: [],
+  };
+
+  const defaultWeek: ProgramWeek = {
+    id: crypto.randomUUID(),
+    weekNumber: 1,
+    label: "Week 1",
+    days: [defaultWorkoutDay],
   };
 
   return {
@@ -30,7 +37,7 @@ export const createEmptyProgram = (
               name: "Block 1",
               order_num: 0,
               days: [defaultWorkoutDay],
-              weeks: 4,
+              weeks: [defaultWeek],
             },
           ],
         }

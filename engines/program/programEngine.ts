@@ -15,6 +15,7 @@ export function computeProgramMetrics(
   return {
     blocks,
     goalFitScore: s.goalFitScore,
+    subScores: s.subScores,
     coverageHeatmap: s.coverageHeatmap,
     globalInsights: s.insights,
     recommendedMinutesBand: s.recommendedMinutesBand,
@@ -24,10 +25,8 @@ export function computeProgramMetrics(
     avgSessionMinutes: s.avgSessionMinutes,
     monotony: s.monotony,
     strain: s.strain,
-    intensityMix:
-      s.intensityMix.high + s.intensityMix.moderate + s.intensityMix.low,
-    balanceAvg:
-      s.balanceAvg.pushPull + s.balanceAvg.quadHam + s.balanceAvg.upperLower,
+    intensityMix: s.intensityMix,
+    balanceAvg: s.balanceAvg,
     priorityMusclesAuto: s.priorityMusclesAuto,
     topMuscles: s.topMuscles.map(([muscle, _]) => muscle),
     lowAttentionMuscles: s.lowAttentionMuscles,

@@ -14,6 +14,7 @@ import type {
 } from "@/types/Workout";
 
 import { createEmptyProgram } from "@/utils/createEmptyProgram";
+import { addWeekToBlock, removeWeekFromBlock, duplicateWeekInBlock } from "@/utils/program/weekHelpers";
 
 // Block utils
 import {
@@ -21,6 +22,7 @@ import {
   reorderBlocks as _reorderBlocks,
   updateBlock as _updateBlock,
   addBlock,
+  duplicateBlock as _duplicateBlock,
 } from "@/features/workout-builder/utils/blocks";
 
 // Group utils
@@ -75,6 +77,7 @@ export function useWorkoutBuilder(initialProgram?: Program) {
 
   const usingBlocks = program.mode === "blocks";
   const [activeBlockIndex, setActiveBlockIndex] = useState(0);
+  const [activeWeekIndex, setActiveWeekIndex] = useState(0);
   const [activeDayIndex, setActiveDayIndex] = useState<number | null>(0);
   const [targetGroupIndex, setTargetGroupIndex] = useState<number | null>(null);
   const [lastAddedIndex, setLastAddedIndex] = useState<number | null>(null);
@@ -85,7 +88,8 @@ export function useWorkoutBuilder(initialProgram?: Program) {
     program,
     usingBlocks,
     activeBlockIndex,
-    activeDayIndex
+    activeDayIndex,
+    activeWeekIndex
   );
   const isWorkoutDay = activeDay?.type === "workout";
 
@@ -98,8 +102,8 @@ export function useWorkoutBuilder(initialProgram?: Program) {
 
   // ---------- Program + Day helpers ----------
   const getCurrentDays = useCallback(
-    (): ProgramDay[] => _getCurrentDays(program, usingBlocks, activeBlockIndex),
-    [program, usingBlocks, activeBlockIndex]
+    (): ProgramDay[] => _getCurrentDays(program, usingBlocks, activeBlockIndex, activeWeekIndex),
+    [program, usingBlocks, activeBlockIndex, activeWeekIndex]
   );
 
   const getActiveDaySafe = useCallback((): ProgramDay | null => {
@@ -118,7 +122,8 @@ export function useWorkoutBuilder(initialProgram?: Program) {
           prev,
           usingBlocks,
           activeBlockIndex,
-          activeDayIndex
+          activeDayIndex,
+          activeWeekIndex
         );
         if (!ref) return prev;
         const updated = mutator({ ...ref, groups: ref.groups ?? [] });
@@ -127,11 +132,12 @@ export function useWorkoutBuilder(initialProgram?: Program) {
           usingBlocks,
           activeBlockIndex,
           activeDayIndex,
-          updated
+          updated,
+          activeWeekIndex
         );
       });
     },
-    [updateProgram, usingBlocks, activeBlockIndex, activeDayIndex]
+    [updateProgram, usingBlocks, activeBlockIndex, activeDayIndex, activeWeekIndex]
   );
 
   // ---------- Group + Exercise mutations ----------
@@ -304,8 +310,17 @@ export function useWorkoutBuilder(initialProgram?: Program) {
   const handleAddDay = useCallback(
     (type: "workout" | "rest") => {
       const nextOrder = usingBlocks
-        ? program.blocks?.[activeBlockIndex]?.days.length ?? 0
+        ? _getCurrentDays(program, usingBlocks, activeBlockIndex, activeWeekIndex).length
         : program.days?.length ?? 0;
+
+      // Enforce max 7 days per week when using blocks
+      if (usingBlocks && nextOrder >= 7) {
+        // client-side hook — show a simple alert to the user
+        if (typeof window !== "undefined") {
+          window.alert("A week can have at most 7 days.");
+        }
+        return;
+      }
 
       const newDay = createDay(type, nextOrder);
 
@@ -314,8 +329,13 @@ export function useWorkoutBuilder(initialProgram?: Program) {
           const blocks = [...(prev.blocks ?? [])];
           const blk = blocks[activeBlockIndex];
           if (!blk) return prev;
-          const days = [...blk.days, newDay];
-          blocks[activeBlockIndex] = { ...blk, days };
+          // Add day to the active week
+          const weeks = [...(blk.weeks ?? [])];
+          if (weeks[activeWeekIndex]) {
+            const weekDays = [...weeks[activeWeekIndex].days, newDay];
+            weeks[activeWeekIndex] = { ...weeks[activeWeekIndex], days: weekDays };
+          }
+          blocks[activeBlockIndex] = { ...blk, weeks, days: weeks[0]?.days ?? blk.days };
           return { ...prev, blocks };
         } else {
           const days = [...(prev.days ?? []), newDay];
@@ -325,13 +345,13 @@ export function useWorkoutBuilder(initialProgram?: Program) {
 
       setActiveDayIndex((i) => (i === null ? 0 : nextOrder));
     },
-    [usingBlocks, program, activeBlockIndex, updateProgram]
+    [usingBlocks, program, activeBlockIndex, activeWeekIndex, updateProgram]
   );
 
   const handleRemoveWorkoutDay = useCallback(
     (index: number) => {
       const current = usingBlocks
-        ? program.blocks?.[activeBlockIndex]?.days ?? []
+        ? _getCurrentDays(program, usingBlocks, activeBlockIndex, activeWeekIndex)
         : program.days ?? [];
 
       const newLength = Math.max(0, current.length - 1);
@@ -344,20 +364,29 @@ export function useWorkoutBuilder(initialProgram?: Program) {
       updateProgram((prev) =>
         removeDayFromProgram(prev, usingBlocks, activeBlockIndex, index, {
           autoRenameDefault: true,
-        })
+        }, activeWeekIndex)
       );
       setActiveDayIndex(nextActive);
     },
-    [program, usingBlocks, activeBlockIndex, activeDayIndex, updateProgram]
+    [program, usingBlocks, activeBlockIndex, activeWeekIndex, activeDayIndex, updateProgram]
   );
 
   const handleDuplicateWorkoutDay = useCallback(
     (index: number) => {
+      // Prevent duplicating if the active week already has 7 days
+      const currentDays = _getCurrentDays(program, usingBlocks, activeBlockIndex, activeWeekIndex);
+      if (usingBlocks && currentDays.length >= 7) {
+        if (typeof window !== "undefined") {
+          window.alert("A week can have at most 7 days.");
+        }
+        return;
+      }
+
       updateProgram((prev) => {
         const isBlock = prev.mode === "blocks";
         const blocks = [...(prev.blocks ?? [])];
         const days = isBlock
-          ? [...(blocks[activeBlockIndex]?.days ?? [])]
+          ? [..._getCurrentDays(prev, true, activeBlockIndex, activeWeekIndex)]
           : [...(prev.days ?? [])];
 
         const src = days[index];
@@ -367,9 +396,16 @@ export function useWorkoutBuilder(initialProgram?: Program) {
         const updatedDays = [...days, dup];
 
         if (isBlock) {
+          const block = blocks[activeBlockIndex];
+          if (!block) return prev;
+          const normalized = block.weeks?.length > 0 ? block : { ...block, weeks: [{ id: crypto.randomUUID(), weekNumber: 1, label: "Week 1", days: block.days }] };
+          const updatedWeeks = normalized.weeks.map((w: any, i: number) =>
+            i === activeWeekIndex ? { ...w, days: updatedDays } : w
+          );
           blocks[activeBlockIndex] = {
-            ...blocks[activeBlockIndex],
-            days: updatedDays,
+            ...normalized,
+            weeks: updatedWeeks,
+            days: updatedWeeks[0].days,
           };
           return { ...prev, blocks };
         }
@@ -378,7 +414,7 @@ export function useWorkoutBuilder(initialProgram?: Program) {
 
       setActiveDayIndex((v) => (v ?? 0) + 1);
     },
-    [activeBlockIndex, updateProgram]
+    [activeBlockIndex, activeWeekIndex, updateProgram]
   );
 
   const moveDay = useCallback(
@@ -403,6 +439,7 @@ export function useWorkoutBuilder(initialProgram?: Program) {
   const addTrainingBlock = useCallback(() => {
     updateProgram((prev) => addBlock(prev));
     setActiveBlockIndex((i) => i + 1);
+    setActiveWeekIndex(0);
     setActiveDayIndex(0);
   }, [updateProgram]);
 
@@ -410,6 +447,17 @@ export function useWorkoutBuilder(initialProgram?: Program) {
     (index: number) => {
       updateProgram((prev) => _removeBlock(prev, index));
       setActiveBlockIndex((i) => Math.max(0, i - 1));
+      setActiveWeekIndex(0);
+      setActiveDayIndex(0);
+    },
+    [updateProgram]
+  );
+
+  const duplicateTrainingBlock = useCallback(
+    (index: number) => {
+      updateProgram((prev) => _duplicateBlock(prev, index));
+      setActiveBlockIndex(index + 1);
+      setActiveWeekIndex(0);
       setActiveDayIndex(0);
     },
     [updateProgram]
@@ -427,6 +475,53 @@ export function useWorkoutBuilder(initialProgram?: Program) {
       updateProgram((prev) => _reorderBlocks(prev, reordered));
     },
     [updateProgram]
+  );
+
+  // ---------- Weeks (within blocks) ----------
+  const addWeek = useCallback(() => {
+    updateProgram((prev) => {
+      const blocks = [...(prev.blocks ?? [])];
+      const block = blocks[activeBlockIndex];
+      if (!block) return prev;
+      blocks[activeBlockIndex] = addWeekToBlock(block);
+      const newWeekIndex = blocks[activeBlockIndex].weeks.length - 1;
+      return { ...prev, blocks };
+    });
+    // Select the newly added week
+    const block = program.blocks?.[activeBlockIndex];
+    const newWeekCount = (block?.weeks?.length ?? 0) + 1;
+    setActiveWeekIndex(newWeekCount - 1);
+    setActiveDayIndex(0);
+  }, [updateProgram, activeBlockIndex, program]);
+
+  const removeWeek = useCallback(
+    (weekIndex: number) => {
+      updateProgram((prev) => {
+        const blocks = [...(prev.blocks ?? [])];
+        const block = blocks[activeBlockIndex];
+        if (!block) return prev;
+        blocks[activeBlockIndex] = removeWeekFromBlock(block, weekIndex);
+        return { ...prev, blocks };
+      });
+      setActiveWeekIndex((i) => Math.max(0, i - (weekIndex <= i ? 1 : 0)));
+      setActiveDayIndex(0);
+    },
+    [updateProgram, activeBlockIndex]
+  );
+
+  const duplicateWeek = useCallback(
+    (weekIndex: number) => {
+      updateProgram((prev) => {
+        const blocks = [...(prev.blocks ?? [])];
+        const block = blocks[activeBlockIndex];
+        if (!block) return prev;
+        blocks[activeBlockIndex] = duplicateWeekInBlock(block, weekIndex);
+        return { ...prev, blocks };
+      });
+      setActiveWeekIndex(weekIndex + 1);
+      setActiveDayIndex(0);
+    },
+    [updateProgram, activeBlockIndex]
   );
 
   // ---------- Mode switch ----------
@@ -458,6 +553,8 @@ export function useWorkoutBuilder(initialProgram?: Program) {
     setActiveDayIndex,
     activeBlockIndex,
     setActiveBlockIndex,
+    activeWeekIndex,
+    setActiveWeekIndex,
     targetGroupIndex,
     setTargetGroupIndex,
     lastAddedIndex,
@@ -496,8 +593,14 @@ export function useWorkoutBuilder(initialProgram?: Program) {
     // blocks
     addTrainingBlock,
     removeTrainingBlock,
+    duplicateTrainingBlock,
     updateBlockDetails,
     reorderBlocks,
+
+    // weeks
+    addWeek,
+    removeWeek,
+    duplicateWeek,
 
     // program
     confirmModeSwitch,

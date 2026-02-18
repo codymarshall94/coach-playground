@@ -383,6 +383,7 @@ export type Database = {
       }
       programs: {
         Row: {
+          cover_image: string | null
           created_at: string
           description: string | null
           goal: Database["public"]["Enums"]["program_goal"]
@@ -395,6 +396,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          cover_image?: string | null
           created_at?: string
           description?: string | null
           goal: Database["public"]["Enums"]["program_goal"]
@@ -407,6 +409,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          cover_image?: string | null
           created_at?: string
           description?: string | null
           goal?: Database["public"]["Enums"]["program_goal"]

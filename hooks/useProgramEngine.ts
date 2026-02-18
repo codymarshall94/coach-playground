@@ -1,4 +1,5 @@
 import {
+  buildImprovementPlan,
   coachNudgesForWeek,
   computeAll,
   ProgramSpec,
@@ -25,5 +26,10 @@ export function useProgramEngine(spec: ProgramSpec, sequence: SessionInput[]) {
     return coachNudgesForWeek(out.week, spec);
   }, [stableKey(out.week), stableKey(out.days), stableKey(spec)]);
 
-  return { ...out, nudges };
+  // Build ranked improvement plan from sub-scores
+  const improvements = useMemo(() => {
+    return buildImprovementPlan(spec, out.week, out.program);
+  }, [stableKey(spec), stableKey(out.week), stableKey(out.program)]);
+
+  return { ...out, nudges, improvements };
 }

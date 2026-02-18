@@ -1,5 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import ProgramsView from "@/components/ProgramsView";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import Link from "next/link";
 
 export default async function ProgramsPage() {
@@ -24,7 +26,7 @@ export default async function ProgramsPage() {
   // Fetch programs owned by current user (server-side)
   const { data: programs, error } = await supabase
     .from("programs")
-    .select("id,name,description,goal,mode,created_at,updated_at")
+    .select("id,name,description,goal,mode,cover_image,created_at,updated_at")
     .eq("user_id", user.id)
     .order("updated_at", { ascending: false });
 
@@ -37,8 +39,11 @@ export default async function ProgramsPage() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold leading-tight">Your Programs</h1>
         {programs && programs.length > 0 ? (
-          <Link href="/programs/new" className="inline-flex items-center gap-2 rounded-md bg-brand px-3 py-2 text-white">
-            New Program
+          <Link href="/programs/new">
+            <Button size="default">
+              <Plus className="h-4 w-4" />
+              New Program
+            </Button>
           </Link>
         ) : null}
       </div>

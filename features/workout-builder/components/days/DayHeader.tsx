@@ -97,13 +97,7 @@ export function DayHeader({
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <InlineNameEditor
-              name={
-                program.mode === "blocks"
-                  ? program.blocks?.[activeBlockIndex ?? 0]?.days?.[
-                      activeDayIndex ?? 0
-                    ]?.name || "Untitled Day"
-                  : program.days?.[activeDayIndex ?? 0]?.name || "Untitled Day"
-              }
+              name={day?.name || "Untitled Day"}
               onSave={(next) => updateDayDetails({ name: next })}
               placeholder="Day name"
               size="lg"

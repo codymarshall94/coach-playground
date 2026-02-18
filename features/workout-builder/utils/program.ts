@@ -1,20 +1,23 @@
-import { Program, ProgramBlock, ProgramDay } from "@/types/Workout";
+import { Program, ProgramBlock, ProgramDay, ProgramWeek } from "@/types/Workout";
+import { getBlockWeekDays, normalizeBlock } from "@/utils/program/weekHelpers";
 
 export function getDayRef(
   program: Program,
   usingBlocks: boolean,
   activeBlockIndex: number,
-  activeDayIndex: number | null
+  activeDayIndex: number | null,
+  activeWeekIndex: number = 0
 ): ProgramDay | null {
   if (usingBlocks) {
     const block = program.blocks?.[activeBlockIndex];
+    if (!block) return null;
+    const days = getBlockWeekDays(block, activeWeekIndex);
     if (
-      !block ||
       activeDayIndex === null ||
-      activeDayIndex >= block.days.length
+      activeDayIndex >= days.length
     )
       return null;
-    return block.days[activeDayIndex] ?? null;
+    return days[activeDayIndex] ?? null;
   }
   return program.days?.[activeDayIndex ?? 0] ?? null;
 }
@@ -24,14 +27,25 @@ export function setDayRef(
   usingBlocks: boolean,
   activeBlockIndex: number,
   activeDayIndex: number | null,
-  updatedDay: ProgramDay
+  updatedDay: ProgramDay,
+  activeWeekIndex: number = 0
 ): Program {
   if (usingBlocks) {
     const blocks = [...(program.blocks ?? [])];
     if (!blocks[activeBlockIndex]) return program;
-    const days = [...blocks[activeBlockIndex].days];
-    days[activeDayIndex ?? 0] = updatedDay;
-    blocks[activeBlockIndex] = { ...blocks[activeBlockIndex], days };
+    const block = normalizeBlock(blocks[activeBlockIndex]);
+    const weekIdx = activeWeekIndex;
+    const updatedWeeks = block.weeks.map((w, i) => {
+      if (i !== weekIdx) return w;
+      const days = [...w.days];
+      days[activeDayIndex ?? 0] = updatedDay;
+      return { ...w, days };
+    });
+    blocks[activeBlockIndex] = {
+      ...block,
+      weeks: updatedWeeks,
+      days: updatedWeeks[0].days,
+    };
     return { ...program, blocks };
   } else {
     const days = [...(program.days ?? [])];
@@ -43,11 +57,15 @@ export function setDayRef(
 export function getCurrentDays(
   program: Program,
   usingBlocks: boolean,
-  activeBlockIndex: number
+  activeBlockIndex: number,
+  activeWeekIndex: number = 0
 ): ProgramDay[] {
-  return usingBlocks
-    ? program.blocks?.[activeBlockIndex]?.days ?? []
-    : program.days ?? [];
+  if (usingBlocks) {
+    const block = program.blocks?.[activeBlockIndex];
+    if (!block) return [];
+    return getBlockWeekDays(block, activeWeekIndex);
+  }
+  return program.days ?? [];
 }
 
 export function switchModeToDays(program: Program): Program {
@@ -60,12 +78,19 @@ export function switchModeToDays(program: Program): Program {
 
 export function switchModeToBlocks(program: Program): Program {
   if (!program.days) return program;
+  const days = program.days.map((d, i) => ({ ...d, order_num: i }));
+  const week1: ProgramWeek = {
+    id: crypto.randomUUID(),
+    weekNumber: 1,
+    label: "Week 1",
+    days,
+  };
   const block: ProgramBlock = {
     id: crypto.randomUUID(),
     name: `Block ${program.blocks?.length ?? 0 + 1}`,
     order_num: 0,
-    days: program.days.map((d, i) => ({ ...d, order_num: i })),
-    weeks: 4,
+    days,
+    weeks: [week1],
   };
   return { ...program, mode: "blocks", days: undefined, blocks: [block] };
 }

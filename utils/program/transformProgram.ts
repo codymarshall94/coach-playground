@@ -74,13 +74,29 @@ function transformDays(days: any[]) {
 }
 
 export function transformProgramFromSupabase(data: any): Program {
-  return {
+  const transformed = {
     ...data,
     days: transformDays(data.days ?? []),
     blocks:
-      data.blocks?.map((b: any) => ({
-        ...b,
-        days: transformDays(b.days ?? []),
-      })) ?? [],
+      data.blocks?.map((b: any) => {
+        const days = transformDays(b.days ?? []);
+        // Convert DB weeks (number) → weeks array structure
+        const dbWeekCount = typeof b.weeks === "number" ? b.weeks : 1;
+        const weeks = Array.isArray(b.weeks)
+          ? b.weeks  // already in new format (shouldn't happen from DB, but defensive)
+          : [{
+              id: crypto.randomUUID(),
+              weekNumber: 1,
+              label: "Week 1",
+              days,
+            }];
+        return {
+          ...b,
+          days,
+          weeks,
+          weekCount: dbWeekCount,
+        };
+      }) ?? [],
   } as Program;
+  return transformed;
 }

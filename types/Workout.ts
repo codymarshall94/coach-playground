@@ -114,12 +114,22 @@ export type ProgramDay = {
   groups: WorkoutExerciseGroup[];
 };
 
+export type ProgramWeek = {
+  id: string;
+  weekNumber: number;
+  label?: string;
+  days: ProgramDay[];
+};
+
 export type ProgramBlock = {
   id: string;
   name: string;
   order_num: number;
   description?: string;
-  weeks?: number;
+  /** @deprecated Use weeks array length instead. Kept for backward compat during migration. */
+  weekCount?: number;
+  weeks: ProgramWeek[];
+  /** @deprecated Use weeks[n].days instead. Kept for backward compat during migration. */
   days: ProgramDay[];
 };
 
@@ -129,6 +139,7 @@ export type Program = {
   description: string;
   goal: ProgramGoal;
   mode: "days" | "blocks";
+  cover_image?: string | null;
   blocks?: ProgramBlock[];
   days?: ProgramDay[];
   created_at: Date;

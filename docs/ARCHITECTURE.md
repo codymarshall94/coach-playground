@@ -11,7 +11,7 @@
 | Database & Auth | Supabase (Postgres, RLS, SSR helpers) |
 | Drag-and-drop | dnd-kit |
 | Rich text | TipTap |
-| PDF export | @react-pdf/renderer, html2canvas-pro |
+| PDF export | @react-pdf/renderer |
 | Fuzzy search | Fuse.js |
 | Theming | next-themes (system / light / dark) |
 

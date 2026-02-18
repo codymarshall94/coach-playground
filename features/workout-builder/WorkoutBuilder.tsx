@@ -41,6 +41,7 @@ import { RestDayEmpty } from "./components/empty-states/RestDayEmpty";
 import { ExerciseGroupCard } from "./components/exercises/ExerciseGroupCard";
 import { QuickAddSuggestions } from "./components/exercises/QuickAddSuggestions";
 import { BlockSelector } from "./components/program/BlockSelector";
+import { ProgramCalendarDialog } from "./components/program/ProgramCalendarDialog";
 import { ProgramDaySelector } from "./components/program/ProgramDaySelector";
 import { ProgramMetaEditor } from "./components/program/ProgramMetaEditor";
 import { ProgramOverviewPanel } from "./components/program/ProgramOverview";
@@ -62,6 +63,8 @@ export const WorkoutBuilder = ({
     setActiveDayIndex,
     activeBlockIndex,
     setActiveBlockIndex,
+    activeWeekIndex,
+    setActiveWeekIndex,
     exerciseGroups,
     isWorkoutDay,
     updateDayDetails,
@@ -76,6 +79,7 @@ export const WorkoutBuilder = ({
     updateExerciseNotes,
     addTrainingBlock,
     removeTrainingBlock,
+    duplicateTrainingBlock,
     reorderBlocks,
     usingBlocks,
     updateBlockDetails,
@@ -85,6 +89,9 @@ export const WorkoutBuilder = ({
     moveExerciseByIdToGroup,
     lastAddedIndex,
     setLastAddedIndex,
+    addWeek,
+    removeWeek,
+    duplicateWeek,
   } = useWorkoutBuilder(initialProgram);
 
   const [isSaving, setIsSaving] = useState(false);
@@ -119,9 +126,14 @@ export const WorkoutBuilder = ({
   };
 
   const doSave = async () => {
+    if (isSaving) return;          // guard against double-clicks
     setIsSaving(true);
     try {
       const programId = await saveOrUpdateProgramService(program);
+      // Sync the DB id back so future saves update instead of inserting
+      if (programId !== program.id) {
+        setProgram((prev) => ({ ...prev, id: programId }));
+      }
       toast.success("Program saved!");
       router.push(`/programs/${programId}`);
     } catch (err) {
@@ -170,10 +182,16 @@ export const WorkoutBuilder = ({
 
   const currentDays = useMemo(() => {
     if (usingBlocks && typeof activeBlockIndex === "number") {
-      return program.blocks?.[activeBlockIndex]?.days ?? [];
+      const block = program.blocks?.[activeBlockIndex];
+      if (!block) return [];
+      // Use week-aware days
+      if (block.weeks?.length > 0) {
+        return block.weeks[activeWeekIndex]?.days ?? block.weeks[0]?.days ?? [];
+      }
+      return block.days ?? [];
     }
     return program.days ?? [];
-  }, [program, activeBlockIndex, usingBlocks]);
+  }, [program, activeBlockIndex, activeWeekIndex, usingBlocks]);
 
   const noWorkoutDays = currentDays.length === 0;
 
@@ -225,14 +243,26 @@ export const WorkoutBuilder = ({
           blocks={program.blocks ?? []}
           activeIndex={activeBlockIndex ?? null}
           activeDayIndex={activeDayIndex ?? null}
-          onSelect={(i) => setActiveBlockIndex(i)}
+          activeWeekIndex={activeWeekIndex}
+          onSelect={(i) => {
+            setActiveBlockIndex(i);
+            setActiveWeekIndex(0);
+          }}
           onAddBlock={addTrainingBlock}
           onRemoveBlock={(index) => removeTrainingBlock(index)}
+          onDuplicateBlock={(index) => duplicateTrainingBlock(index)}
           onReorder={(reordered) => reorderBlocks(reordered)}
           onSelectDay={(i) => {
             setActiveDayIndex(i);
             setOverviewOpen(false);
           }}
+          onSelectWeek={(wi) => {
+            setActiveWeekIndex(wi);
+            setActiveDayIndex(0);
+          }}
+          onAddWeek={addWeek}
+          onRemoveWeek={removeWeek}
+          onDuplicateWeek={duplicateWeek}
           onAddWorkoutDay={() => handleAddDay("workout")}
           onAddRestDay={() => handleAddDay("rest")}
           onRemoveWorkoutDay={handleRemoveWorkoutDay}
@@ -242,10 +272,20 @@ export const WorkoutBuilder = ({
               const blocks = [...(prev.blocks ?? [])];
               const target = blocks[activeBlockIndex];
               if (!target) return prev;
-              const nextDays = moveDayWithinList(target.days, from, to, {
+              // Get current week's days for the move
+              const weekDays = target.weeks?.[activeWeekIndex]?.days ?? target.days;
+              const nextDays = moveDayWithinList(weekDays, from, to, {
                 autoRenameDefault: true,
               });
-              blocks[activeBlockIndex] = { ...target, days: nextDays };
+              // Update the specific week
+              if (target.weeks?.length > 0) {
+                const updatedWeeks = target.weeks.map((w, i) =>
+                  i === activeWeekIndex ? { ...w, days: nextDays } : w
+                );
+                blocks[activeBlockIndex] = { ...target, weeks: updatedWeeks, days: updatedWeeks[0].days };
+              } else {
+                blocks[activeBlockIndex] = { ...target, days: nextDays };
+              }
               return { ...prev, blocks };
             })
           }
@@ -274,6 +314,8 @@ export const WorkoutBuilder = ({
           }
         />
       )}
+
+      <ProgramCalendarDialog program={program} />
     </div>
   );
 

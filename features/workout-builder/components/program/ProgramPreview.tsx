@@ -289,7 +289,7 @@ function ProgramSheet({ program }: { program: Program }) {
                       variant="outline"
                       className="text-xs font-medium ml-2"
                     >
-                      {block.weeks} {block.weeks === 1 ? "week" : "weeks"}
+                      {Array.isArray(block.weeks) ? block.weeks.length : block.weekCount ?? 1} {(Array.isArray(block.weeks) ? block.weeks.length : block.weekCount ?? 1) === 1 ? "week" : "weeks"}
                     </Badge>
                   )}
                 </div>

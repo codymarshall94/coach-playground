@@ -9,9 +9,9 @@ const articles = [
     description: "Step-by-step guide to building your first workout routine",
   },
   {
-    title: "How to add supersets",
-    href: "/help/set-types",
-    description: "Learn about advanced set types and supersets",
+    title: "Understanding program analytics",
+    href: "/help/program-analytics",
+    description: "Score, stress grid, muscle map, and coach suggestions",
   },
   {
     title: "How to export as a PDF",
@@ -19,14 +19,19 @@ const articles = [
     description: "Export your workout plans for offline use",
   },
   {
-    title: "How to reorder workout days",
-    href: "/help/reorder-days",
-    description: "Organize your training schedule effectively",
+    title: "Exercise groups & supersets",
+    href: "/help/exercise-groups",
+    description: "Pair exercises into supersets, giant sets, or circuits",
   },
   {
     title: "How to save and preview",
     href: "/help/save-preview",
     description: "Save your progress and preview your workouts",
+  },
+  {
+    title: "Frequently asked questions",
+    href: "/help/faq",
+    description: "What PRGRM is, who it's for, pricing, and more",
   },
 ];
 

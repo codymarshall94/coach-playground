@@ -128,6 +128,61 @@ Accordion, Alert, AlertDialog, Avatar, Badge, Button, Card, Checkbox, Collapsibl
 
 ---
 
+## Card patterns
+
+The app uses a layered card system. Larger containers use softer radii and blurred backgrounds; nested tiles are tighter and border-only.
+
+### Card hierarchy
+
+| Variant | Radius | Background | Padding | Example |
+|---------|--------|------------|---------|---------|
+| **Section card** | `rounded-2xl` | `bg-card/80 backdrop-blur` | `p-5` | ProgramOverview analytics sections |
+| **Program card** | `rounded-xl` | `bg-card` + goal accent bar | `p-4` | ProgramCard on `/programs` |
+| **Interactive card** | `rounded-xl` | `hover:bg-muted/50` → `bg-primary/10` when active | `p-2.5` | ScoreHero in the builder |
+| **Stat tile** | `rounded-xl` | border-only (no fill) | `p-3` | Session count, avg duration, ratio tiles |
+
+### Program card anatomy
+
+`ProgramCard` follows a fixed structure used on the program listing:
+
+1. **Goal accent bar** — `h-1` strip at the top, colored by the program goal (`bg-load-high` strength, `bg-brand` hypertrophy, `bg-info` endurance, `bg-warning` power).
+2. **Icon + title** — 32px rounded-lg icon badge in the goal's color family, beside a truncated name and optional one-line description.
+3. **Metadata footer** — border-top separator with `Badge` chips (goal label, block/day count) and a relative timestamp.
+4. **Hover actions** — kebab dropdown (duplicate, delete) fades in at top-right on `group-hover`.
+
+### Expanded / collapsed interactive cards
+
+The **ScoreHero** card (in the builder meta bar) establishes the expand/collapse pattern:
+
+- **Collapsed:** `hover:bg-muted/50`, chevron pointing right.
+- **Expanded:** `bg-primary/10`, chevron rotated 90° via `transition-transform`.
+- The revealed panel (ProgramOverview) uses the section-card style above.
+
+This same interaction rhythm — lightweight card → expanded detail surface — applies to exercise cards in the builder (collapsed single row → expanded set table).
+
+### Section card internals
+
+Each analytics section in ProgramOverview follows a repeating structure:
+
+- `CardHeader` with icon (`h-4 w-4`) + label (`text-sm text-muted-foreground`), padded `p-5 pb-2`.
+- `CardContent` padded `p-5 pt-2`, containing a grid of **stat tiles**.
+- Stat tiles: label (`text-xs text-muted-foreground`), value (`text-lg font-semibold tabular-nums`), optional sublabel (`text-[11px] text-muted-foreground`).
+
+### Goal color map
+
+Goals use a shared mapping for icon, text color, and background tint. Keep these consistent when adding new goal-aware surfaces:
+
+| Goal | Icon | Text/BG classes | Accent bar |
+|------|------|-----------------|------------|
+| Strength | `Dumbbell` | `text-load-high bg-load-high/10` | `bg-load-high` |
+| Hypertrophy | `Layers` | `text-brand bg-brand/10` | `bg-brand` |
+| Endurance | `Heart` | `text-info bg-info/10` | `bg-info` |
+| Power | `Zap` | `text-warning bg-warning/10` | `bg-warning` |
+
+> **Note:** `ProgramPreview` (print dialog) currently uses hard-coded Tailwind color classes (`bg-red-100`, `bg-blue-100`, etc.) instead of these semantic tokens. This is a known consistency gap — new surfaces should prefer the token-based map above.
+
+---
+
 ## Theming
 
 Managed by `next-themes` with three modes: **system**, **light**, **dark**. The toggle is in the Navbar via `ThemeToggle.tsx`.
