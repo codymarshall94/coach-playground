@@ -537,7 +537,9 @@ export function ProgramOverviewPanel({ program }: { program: Program }) {
 
   const currentDays = useMemo(() => {
     if (program.mode === "blocks") {
-      return (program.blocks ?? []).flatMap((b) => b.days);
+      return (program.blocks ?? []).flatMap((b) =>
+        b.weeks?.length > 0 ? b.weeks.flatMap((w) => w.days) : (b.days ?? [])
+      );
     }
     return program.days ?? [];
   }, [program]);

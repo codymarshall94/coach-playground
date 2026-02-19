@@ -1,4 +1,5 @@
 import { HelpArticle } from "@/features/help/components/HelpArticle";
+import Link from "next/link";
 
 export default function SavePreviewHelp() {
   return (
@@ -19,7 +20,7 @@ export default function SavePreviewHelp() {
         </li>
         <li>
           Your programs are listed at{" "}
-          <a href="/programs">Your Programs</a> and sorted by last updated.
+          <Link href="/programs">Your Programs</Link> and sorted by last updated.
         </li>
       </ul>
 
@@ -56,7 +57,7 @@ export default function SavePreviewHelp() {
         </li>
         <li>
           If you want to try a variation, duplicate the program from{" "}
-          <a href="/programs">Your Programs</a> first.
+          <Link href="/programs">Your Programs</Link> first.
         </li>
       </ul>
     </HelpArticle>

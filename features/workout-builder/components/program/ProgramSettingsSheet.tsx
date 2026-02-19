@@ -28,6 +28,7 @@ import type {
   ProgramDay,
   ProgramGoal,
 } from "@/types/Workout";
+import { getAllBlockDays } from "@/utils/program/weekHelpers";
 import { motion } from "framer-motion";
 import { ImagePlus, Settings2, Trash2, Upload } from "lucide-react";
 import Image from "next/image";
@@ -81,7 +82,7 @@ export const ProgramSettingsSheet = ({
 
     if (usingBlocks && prev.blocks) {
       const mergedDays: ProgramDay[] = prev.blocks
-        .flatMap((block) => block.days)
+        .flatMap((block) => getAllBlockDays(block))
         .map((day, i) => ({ ...day, order_num: i }));
 
       onSwitchMode({

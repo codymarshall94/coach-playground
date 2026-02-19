@@ -7,7 +7,8 @@ All tables live in the `public` schema on Supabase (Postgres). RLS is enabled on
 ```
 programs
  ├── program_blocks        (optional, block-mode only)
- │    └── program_days
+ │    └── program_weeks
+ │         └── program_days
  └── program_days           (direct children in day-mode)
       └── workout_exercise_groups
            └── workout_exercises
@@ -41,8 +42,18 @@ profiles                    (user profiles, FK → auth.users)
 | program_id | uuid FK → programs | cascade |
 | name | text | required |
 | description | text | nullable |
-| weeks | int | default 4, CHECK ≥ 1 |
+| weeks | int | default 4, CHECK ≥ 1 (legacy count — prefer program_weeks rows) |
 | order_num | int | positional |
+
+### `program_weeks`
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid PK | `gen_random_uuid()` |
+| block_id | uuid FK → program_blocks | cascade |
+| week_number | int | ≥ 1, positional within block |
+| label | text | nullable, e.g. "Week 1", "Deload" |
+| order_num | int | positional |
+| created_at, updated_at | timestamptz | auto |
 
 ### `program_days`
 | Column | Type | Notes |
@@ -50,6 +61,7 @@ profiles                    (user profiles, FK → auth.users)
 | id | uuid PK | |
 | program_id | uuid FK → programs | |
 | block_id | uuid FK → program_blocks | nullable (day-mode) |
+| week_id | uuid FK → program_weeks | nullable (day-mode, or legacy data) |
 | name | text | required |
 | description | text | nullable |
 | type | enum `day_type` | workout, rest, active_rest, other |
@@ -133,7 +145,7 @@ Reference table with rich metadata. Key columns: `id` (text PK), `name`, `catego
 
 ## RLS notes
 
-- `programs`, `program_blocks`, `program_days`, `workout_exercise_groups`, `workout_exercises`, `exercise_sets` — RLS enabled; policies scope to `auth.uid()`.
+- `programs`, `program_blocks`, `program_weeks`, `program_days`, `workout_exercise_groups`, `workout_exercises`, `exercise_sets` — RLS enabled; policies scope to `auth.uid()`.
 - `exercises`, `muscles`, `exercise_muscles` — RLS disabled (public read).
 - `profiles` — RLS enabled.
 - The `clone_program_from_template` RPC is `SECURITY DEFINER` and uses `auth.uid()` to set the cloned program's `user_id`.

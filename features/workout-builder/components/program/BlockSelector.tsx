@@ -3,21 +3,21 @@
 import { SortableItem } from "@/components/SortableItem";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-// popover replaced with Sheet for block settings
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetDescription,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import type { ProgramBlock } from "@/types/Workout";
@@ -25,11 +25,11 @@ import { getBlockWeekCount, getBlockWeekDays } from "@/utils/program/weekHelpers
 import { ProgramDaySelector } from "./ProgramDaySelector";
 
 import { DndContext, closestCenter } from "@dnd-kit/core";
-import { useState, useEffect } from "react";
 import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { useEffect, useState } from "react";
 
 import { Textarea } from "@/components/ui/textarea";
 import { VERTICAL_LIST_MODIFIERS } from "@/features/workout-builder/dnd/constants";
@@ -37,7 +37,18 @@ import { DragOverlayPortal } from "@/features/workout-builder/dnd/overlay";
 import { useSortableSensors } from "@/features/workout-builder/dnd/sensors";
 import { useDragAndDrop } from "@/features/workout-builder/hooks/useDragAndDrop";
 
-import { Calendar, Copy, Edit, GripVertical, Plus, Trash, MoreHorizontal } from "lucide-react";
+import {
+  BarChart3,
+  Copy,
+  Edit,
+  GripVertical,
+  MoreHorizontal,
+  Plus,
+  Trash,
+} from "lucide-react";
+import BlockOverviewPanel from "./BlockOverviewPanel";
+
+/* ────────────────────────────────────────────────────────── */
 
 type Props = {
   blocks: ProgramBlock[];
@@ -96,6 +107,8 @@ export function BlockSelector({
 
   const [editingBlockIndex, setEditingBlockIndex] = useState<number | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [overviewOpen, setOverviewOpen] = useState(false);
+  const [overviewBlockIndex, setOverviewBlockIndex] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
 
@@ -107,254 +120,351 @@ export function BlockSelector({
     setEditDescription(blk.description ?? "");
   }, [editingBlockIndex, blocks]);
 
+  const activeBlock =
+    activeIndex !== null ? blocks[activeIndex] : null;
+  const weekCount = activeBlock ? getBlockWeekCount(activeBlock) : 0;
+  const currentWeekDays = activeBlock
+    ? getBlockWeekDays(activeBlock, activeWeekIndex)
+    : [];
+
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      {...handlers}
-      modifiers={modifiers}
-    >
-      <SortableContext
-        items={blocks.map((b) => b.id)}
-        strategy={verticalListSortingStrategy}
+    <div className="flex flex-col gap-0">
+      {/* ═══════ ZONE 1 — Block strip ═══════ */}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        {...handlers}
+        modifiers={modifiers}
       >
-        <div className="flex flex-col gap-2">
-          {blocks.map((block, i) => {
-            const weekCount = getBlockWeekCount(block);
-            const currentWeekDays = getBlockWeekDays(block, i === activeIndex ? activeWeekIndex : 0);
-
-            return (
-              <SortableItem
-                key={block.id}
-                id={block.id}
-                className={cn(isDragging && "opacity-50")}
-              >
-                <div
-                  className="border rounded-lg p-2.5 space-y-2.5 shadow-sm bg-card"
-                  onClick={() => onSelect(i)}
+        <SortableContext
+          items={blocks.map((b) => b.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="flex flex-col gap-1">
+            {blocks.map((block, i) => {
+              const isActive = i === activeIndex;
+              const wc = getBlockWeekCount(block);
+              return (
+                <SortableItem
+                  key={block.id}
+                  id={block.id}
+                  className={cn(isDragging && "opacity-50")}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <Button size="sm" variant={i === activeIndex ? "default" : "outline"} className="text-xs h-7 truncate">
-                      {block.name || `Block ${i + 1}`}
-                    </Button>
-                    <div className="flex items-center gap-1 flex-shrink-0">
+                  <div className="flex items-center gap-0.5">
+                    <Button
+                      size="sm"
+                      variant={isActive ? "default" : "outline"}
+                      className={cn(
+                        "text-xs h-8 px-3 rounded-lg gap-1.5 flex-1 justify-start",
+                        !isActive && "bg-card hover:bg-accent"
+                      )}
+                      onClick={() => onSelect(i)}
+                    >
+                      <span className="truncate max-w-[100px]">
+                        {block.name || `Block ${i + 1}`}
+                      </span>
                       <Badge
                         variant="secondary"
-                        className="bg-blue-50 text-blue-700 border-blue-200 text-[11px] px-1.5 py-0 whitespace-nowrap dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800"
-                      >
-                        {weekCount}w
-                      </Badge>
-                      <Badge
-                        variant="secondary"
-                        className="bg-blue-50 text-blue-700 border-blue-200 text-[11px] px-1.5 py-0 whitespace-nowrap dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800"
-                      >
-                        {currentWeekDays.length}d
-                      </Badge>
-
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditingBlockIndex(i);
-                          setSheetOpen(true);
-                        }}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Week tabs — shown when this block is active */}
-                  {i === activeIndex && (
-                    <>
-                      <div className="flex items-center gap-1 flex-wrap">
-                        {Array.from({ length: weekCount }, (_, wi) => (
-                          <Button
-                            key={wi}
-                            size="sm"
-                            variant={wi === activeWeekIndex ? "default" : "ghost"}
-                            className={cn(
-                              "text-[11px] h-6 px-2 rounded-md",
-                              wi === activeWeekIndex
-                                ? "bg-primary/90 text-primary-foreground"
-                                : "text-muted-foreground hover:text-foreground"
-                            )}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onSelectWeek(wi);
-                            }}
-                          >
-                            W{wi + 1}
-                          </Button>
-                        ))}
-
-                        {/* single menu for actions on the active week */}
-                        {weekCount > 0 && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0"
-                                onClick={(e) => e.stopPropagation()}
-                                title={activeWeekIndex !== undefined ? `Actions for W${activeWeekIndex + 1}` : "Week actions"}
-                              >
-                                <MoreHorizontal className="w-3 h-3" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start" className="w-40">
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (activeWeekIndex !== undefined) onDuplicateWeek(activeWeekIndex);
-                                }}
-                                className="cursor-pointer"
-                              >
-                                <Copy className="w-3.5 h-3.5 mr-2" />
-                                {activeWeekIndex !== undefined ? `Duplicate Week W${activeWeekIndex + 1}` : `Duplicate Week`}
-                              </DropdownMenuItem>
-                              {weekCount > 1 && activeWeekIndex !== undefined && (
-                                <DropdownMenuItem
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onRemoveWeek(activeWeekIndex);
-                                  }}
-                                  className="cursor-pointer text-destructive focus:text-destructive"
-                                >
-                                  <Trash className="w-3.5 h-3.5 mr-2" />
-                                    {`Delete Week W${activeWeekIndex + 1}`}
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                        className={cn(
+                          "text-[10px] px-1 py-0 h-4 rounded-sm",
+                          isActive
+                            ? "bg-primary-foreground/20 text-primary-foreground"
+                            : "bg-muted text-muted-foreground"
                         )}
+                      >
+                        {wc}w
+                      </Badge>
+                    </Button>
 
+                    {/* block context menu */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
                         <Button
-                          size="sm"
                           variant="ghost"
-                          className="text-[11px] h-6 px-1.5 text-muted-foreground hover:text-foreground"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onAddWeek();
-                          }}
-                          title="Add empty week"
+                          size="sm"
+                          className={cn(
+                            "h-6 w-6 p-0 rounded-md",
+                            isActive
+                              ? "text-foreground"
+                              : "text-muted-foreground"
+                          )}
+                          onClick={(e) => e.stopPropagation()}
                         >
-                          <Plus className="w-3 h-3" />
+                          <MoreHorizontal className="w-3.5 h-3.5" />
                         </Button>
-                      </div>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-44">
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setOverviewBlockIndex(i);
+                            setOverviewOpen(true);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <BarChart3 className="w-3.5 h-3.5 mr-2" />
+                          Block Overview
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setEditingBlockIndex(i);
+                            setSheetOpen(true);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <Edit className="w-3.5 h-3.5 mr-2" />
+                          Edit Block
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => onDuplicateBlock(i)}
+                          className="cursor-pointer"
+                        >
+                          <Copy className="w-3.5 h-3.5 mr-2" />
+                          Duplicate
+                        </DropdownMenuItem>
+                        {blocks.length > 1 && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => onRemoveBlock(i)}
+                              className="cursor-pointer text-destructive focus:text-destructive"
+                            >
+                              <Trash className="w-3.5 h-3.5 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </SortableItem>
+              );
+            })}
 
-                      <ProgramDaySelector
-                        days={currentWeekDays}
-                        activeIndex={activeDayIndex}
-                        onSelect={onSelectDay}
-                        onAddWorkoutDay={onAddWorkoutDay}
-                        onAddRestDay={onAddRestDay}
-                        onRemoveWorkoutDay={onRemoveWorkoutDay}
-                        onDuplicateWorkoutDay={onDuplicateWorkoutDay}
-                        onMove={onMoveDay}
-                      />
-                    </>
-                  )}
-                </div>
-              </SortableItem>
-            );
-          })}
+            <Button
+              onClick={onAddBlock}
+              variant="ghost"
+              size="sm"
+              className="h-8 w-full border border-dashed text-xs text-muted-foreground hover:text-foreground"
+            >
+              <Plus className="w-3.5 h-3.5 mr-1" /> Add Block
+            </Button>
+          </div>
+        </SortableContext>
 
-          <Button
-            onClick={onAddBlock}
-            variant="secondary"
-            size="sm"
-            className="w-full mt-2 border border-dashed text-xs h-8"
-          >
-            <Plus className="w-3.5 h-3.5 mr-1.5" /> Add Block
-          </Button>
-        </div>
-      </SortableContext>
-
-      <DragOverlayPortal
-        draggingId={draggingId}
-        render={(id) => {
-          const block = blocks.find((b) => b.id === id)!;
-          const wkCount = getBlockWeekCount(block);
-          return (
-            <div className="relative bg-background border-2 border-primary/50 rounded-lg p-3 shadow-2xl">
-              <div className="flex items-center gap-3">
-                <GripVertical className="w-4 h-4 text-primary" />
-                <span>{block.name || "Training Block"}</span>
-                <div className="ml-auto flex items-center gap-2">
-                  <Badge
-                    variant="secondary"
-                    className="bg-blue-50 text-blue-700 border-blue-200 text-xs"
-                  >
-                    {wkCount} {wkCount === 1 ? "Week" : "Weeks"}
-                  </Badge>
-                  <Badge
-                    variant="secondary"
-                    className="bg-blue-50 text-blue-700 border-blue-200 text-xs"
-                  >
-                    {block.days.length}{" "}
-                    {block.days.length === 1 ? "Day" : "Days"}
-                  </Badge>
-                </div>
+        <DragOverlayPortal
+          draggingId={draggingId}
+          render={(id) => {
+            const block = blocks.find((b) => b.id === id)!;
+            return (
+              <div className="flex items-center gap-2 bg-background border-2 border-primary/50 rounded-lg px-3 py-1.5 shadow-2xl">
+                <GripVertical className="w-3.5 h-3.5 text-primary" />
+                <span className="text-xs font-medium">
+                  {block.name || "Training Block"}
+                </span>
               </div>
-            </div>
-          );
-        }}
-        withHalo
-      />
+            );
+          }}
+          withHalo
+        />
+      </DndContext>
+
+      {/* ═══════ ZONE 2 — Week strip ═══════ */}
+      {activeBlock && (
+        <>
+          <div className="border-t border-border/40 my-2" />
+
+          <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
+            {Array.from({ length: weekCount }, (_, wi) => (
+              <Button
+                key={wi}
+                size="sm"
+                variant={wi === activeWeekIndex ? "default" : "ghost"}
+                className={cn(
+                  "text-xs h-7 px-2.5 rounded-md flex-shrink-0",
+                  wi === activeWeekIndex
+                    ? "bg-primary/90 text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                onClick={() => onSelectWeek(wi)}
+              >
+                W{wi + 1}
+              </Button>
+            ))}
+
+            {/* week actions */}
+            {weekCount > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0 flex-shrink-0"
+                    title={`Actions for W${activeWeekIndex + 1}`}
+                  >
+                    <MoreHorizontal className="w-3.5 h-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-44">
+                  <DropdownMenuItem
+                    onClick={() => onDuplicateWeek(activeWeekIndex)}
+                    className="cursor-pointer"
+                  >
+                    <Copy className="w-3.5 h-3.5 mr-2" />
+                    Duplicate W{activeWeekIndex + 1}
+                  </DropdownMenuItem>
+                  {weekCount > 1 && (
+                    <DropdownMenuItem
+                      onClick={() => onRemoveWeek(activeWeekIndex)}
+                      className="cursor-pointer text-destructive focus:text-destructive"
+                    >
+                      <Trash className="w-3.5 h-3.5 mr-2" />
+                      Delete W{activeWeekIndex + 1}
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 w-7 p-0 flex-shrink-0 text-muted-foreground hover:text-foreground"
+              onClick={onAddWeek}
+              title="Add week"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        </>
+      )}
+
+      {/* ═══════ ZONE 3 — Day list ═══════ */}
+      {activeBlock && (
+        <>
+          <div className="border-t border-border/40 my-2" />
+
+          <ProgramDaySelector
+            days={currentWeekDays}
+            activeIndex={activeDayIndex}
+            onSelect={onSelectDay}
+            onAddWorkoutDay={onAddWorkoutDay}
+            onAddRestDay={onAddRestDay}
+            onRemoveWorkoutDay={onRemoveWorkoutDay}
+            onDuplicateWorkoutDay={onDuplicateWorkoutDay}
+            onMove={onMoveDay}
+          />
+        </>
+      )}
+
+      {/* ═══════ Sheets ═══════ */}
 
       {/* Block settings sheet */}
-      <Sheet open={sheetOpen} onOpenChange={(open) => {
-        setSheetOpen(open);
-        if (!open) setEditingBlockIndex(null);
-      }}>
+      <Sheet
+        open={sheetOpen}
+        onOpenChange={(open) => {
+          setSheetOpen(open);
+          if (!open) setEditingBlockIndex(null);
+        }}
+      >
         <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
           <SheetHeader>
             <SheetTitle>Block Settings</SheetTitle>
-            <SheetDescription>Update name and description for this block.</SheetDescription>
+            <SheetDescription>
+              Update name and description for this block.
+            </SheetDescription>
           </SheetHeader>
 
           <div className="space-y-4 px-4 pb-6">
             <div className="space-y-2">
               <Label className="text-sm font-medium">Name</Label>
-              <Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Block name" />
+              <Input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Block name"
+              />
             </div>
 
             <div className="space-y-2">
               <Label className="text-sm font-medium">Description</Label>
-              <Textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} rows={4} placeholder="Block goals and notes..." />
+              <Textarea
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                rows={4}
+                placeholder="Block goals and notes..."
+              />
             </div>
 
             <div className="flex justify-end gap-2 pt-2 border-t">
-              <Button variant="outline" size="sm" onClick={() => {
-                if (editingBlockIndex !== null) onDuplicateBlock(editingBlockIndex);
-              }}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (editingBlockIndex !== null)
+                    onDuplicateBlock(editingBlockIndex);
+                }}
+              >
                 <Copy className="w-4 h-4 mr-1" />
                 Duplicate
               </Button>
 
-              <Button variant="outline" size="sm" onClick={() => {
-                if (editingBlockIndex !== null) onRemoveBlock(editingBlockIndex);
-                setSheetOpen(false);
-              }} className="text-red-600 hover:text-red-700">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (editingBlockIndex !== null)
+                    onRemoveBlock(editingBlockIndex);
+                  setSheetOpen(false);
+                }}
+                className="text-red-600 hover:text-red-700"
+              >
                 <Trash className="w-4 h-4 mr-1" />
                 Delete
               </Button>
 
-              <Button size="sm" onClick={() => {
-                if (editingBlockIndex !== null) {
-                  onUpdateBlockDetails(editingBlockIndex, { name: editName, description: editDescription });
-                }
-                setSheetOpen(false);
-              }}>
+              <Button
+                size="sm"
+                onClick={() => {
+                  if (editingBlockIndex !== null) {
+                    onUpdateBlockDetails(editingBlockIndex, {
+                      name: editName,
+                      description: editDescription,
+                    });
+                  }
+                  setSheetOpen(false);
+                }}
+              >
                 Save
               </Button>
             </div>
           </div>
         </SheetContent>
       </Sheet>
-    </DndContext>
+
+      {/* Block overview sheet */}
+      <Sheet
+        open={overviewOpen}
+        onOpenChange={(open) => {
+          setOverviewOpen(open);
+          if (!open) setOverviewBlockIndex(null);
+        }}
+      >
+        <SheetContent
+          side="right"
+          className="w-full sm:max-w-2xl overflow-y-auto"
+        >
+          {overviewBlockIndex !== null && (
+            <BlockOverviewPanel
+              block={blocks[overviewBlockIndex]}
+              onClose={() => setOverviewOpen(false)}
+              onOpenWeek={(wi) => {
+                onSelect(overviewBlockIndex);
+                onSelectWeek(wi);
+                setOverviewOpen(false);
+              }}
+            />
+          )}
+        </SheetContent>
+      </Sheet>
+    </div>
   );
 }

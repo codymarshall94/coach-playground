@@ -3,6 +3,7 @@ import { ReactNode } from "react";
 interface BuilderLayoutProps {
   header?: ReactNode;
   sidebar?: ReactNode;
+  iconSidebar?: ReactNode;
   children: ReactNode;
   modals?: ReactNode;
 }
@@ -10,6 +11,7 @@ interface BuilderLayoutProps {
 export function BuilderLayout({
   header,
   sidebar,
+  iconSidebar,
   children,
   modals,
 }: BuilderLayoutProps) {
@@ -22,6 +24,11 @@ export function BuilderLayout({
           <aside className="w-full max-w-96 border-r border-border bg-muted/20 p-3 overflow-y-auto">
             {sidebar}
           </aside>
+        ) : null}
+        {iconSidebar ? (
+          <div className="flex flex-col self-start border-l border-border bg-transparent p-2">
+            {iconSidebar}
+          </div>
         ) : null}
 
         <main className="flex-1 overflow-y-auto p-4">{children}</main>

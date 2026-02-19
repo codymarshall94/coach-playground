@@ -1,4 +1,5 @@
 import { HelpArticle } from "@/features/help/components/HelpArticle";
+import Link from "next/link";
 
 export default function TemplatesHelp() {
   return (
@@ -12,7 +13,7 @@ export default function TemplatesHelp() {
       <h2>Finding Templates</h2>
       <p>
         Go to{" "}
-        <a href="/programs/templates">Browse Templates</a> (also linked from
+        <Link href="/programs/templates">Browse Templates</Link> (also linked from
         the dashboard when you have no programs). You&apos;ll see a collection
         of programs organized by goal — strength, hypertrophy, endurance, and
         power.

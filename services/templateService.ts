@@ -42,6 +42,19 @@ export const getTemplateByIdFull = async (id: string) => {
       *,
       blocks:program_blocks(
         *,
+        weeks:program_weeks(
+          *,
+          days:program_days(
+            *,
+            groups:workout_exercise_groups(
+              *,
+              exercises:workout_exercises(
+                *,
+                sets:exercise_sets(*)
+              )
+            )
+          )
+        ),
         days:program_days(
           *,
           groups:workout_exercise_groups(

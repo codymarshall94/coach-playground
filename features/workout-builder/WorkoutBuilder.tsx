@@ -29,8 +29,9 @@ import { DragOverlayPortal } from "@/features/workout-builder/dnd/overlay";
 import { useSortableSensors } from "@/features/workout-builder/dnd/sensors";
 import { useDragAndDrop } from "@/features/workout-builder/hooks/useDragAndDrop";
 
-import { Plus } from "lucide-react";
+import { Plus, CalendarDays } from "lucide-react";
 import { motion } from "motion/react";
+import ScoreDial from "@/components/ScoreDial";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -232,6 +233,7 @@ export const WorkoutBuilder = ({
         onChange={(fields) => setProgram((prev) => ({ ...prev, ...fields }))}
         onSwitchMode={(updated) => setProgram(updated)}
         overviewOpen={overviewOpen}
+        hideScore={true}
         onOpenOverview={() => {
           setOverviewOpen(true);
           setActiveDayIndex(null);
@@ -315,7 +317,20 @@ export const WorkoutBuilder = ({
         />
       )}
 
-      <ProgramCalendarDialog program={program} />
+      {/* calendar moved to compact icon bar */}
+    </div>
+  );
+
+  const iconSidebarNode = (
+    <div className="flex flex-col items-center gap-3 py-2">
+      <ProgramCalendarDialog
+        program={program}
+        triggerContent={<CalendarDays className="h-5 w-5" />}
+        triggerClassName="h-10 w-10 p-2 rounded-md"
+      />
+      <div className="pt-1 cursor-pointer" onClick={() => setOverviewOpen(true)}>
+        <ScoreDial value={programMetrics?.goalFitScore ?? 0} size={44} thickness={6} />
+      </div>
     </div>
   );
 
@@ -497,6 +512,7 @@ export const WorkoutBuilder = ({
     <BuilderLayout
       header={headerNode}
       sidebar={sidebarNode}
+      iconSidebar={iconSidebarNode}
       modals={modalsNode}
     >
       {mainNode}

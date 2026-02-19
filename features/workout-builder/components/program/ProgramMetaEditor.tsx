@@ -65,6 +65,7 @@ interface ProgramMetaEditorProps {
   onSwitchMode: (updated: Program) => void;
   onOpenOverview?: () => void;
   overviewOpen: boolean;
+  hideScore?: boolean;
 }
 
 export const ProgramMetaEditor = ({
@@ -74,6 +75,7 @@ export const ProgramMetaEditor = ({
   onSwitchMode,
   onOpenOverview,
   overviewOpen,
+  hideScore = false,
 }: ProgramMetaEditorProps) => {
   const [editedName, setEditedName] = useState(program.name || "");
   const [isEditingName, setIsEditingName] = useState(false);
@@ -116,11 +118,13 @@ export const ProgramMetaEditor = ({
         </div>
       </div>
 
-      <ScoreHero
-        score={programScore}
-        openOverview={onOpenOverview}
-        overviewOpen={overviewOpen}
-      />
+      {!hideScore && (
+        <ScoreHero
+          score={programScore}
+          openOverview={onOpenOverview}
+          overviewOpen={overviewOpen}
+        />
+      )}
     </div>
   );
 };

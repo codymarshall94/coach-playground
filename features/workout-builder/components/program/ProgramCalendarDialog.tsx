@@ -19,7 +19,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import type { Program, ProgramDay } from "@/types/Workout";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -241,14 +241,66 @@ function dayTypeDot(day?: ProgramDay): string {
 }
 
 // ---------------------------------------------------------------------------
+// Block / week color palette
+// ---------------------------------------------------------------------------
+
+const BLOCK_PALETTE = [
+  { bg: "bg-sky-50", border: "border-sky-200", text: "text-sky-700", dot: "bg-sky-500" },
+  { bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700", dot: "bg-amber-500" },
+  { bg: "bg-violet-50", border: "border-violet-200", text: "text-violet-700", dot: "bg-violet-500" },
+  { bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700", dot: "bg-emerald-500" },
+  { bg: "bg-rose-50", border: "border-rose-200", text: "text-rose-700", dot: "bg-rose-500" },
+  { bg: "bg-indigo-50", border: "border-indigo-200", text: "text-indigo-700", dot: "bg-indigo-500" },
+];
+
+function getBlockWeekClasses(program: Program, blockLabel?: string, weekLabel?: string) {
+  if (!blockLabel) return null;
+  const blocks = program.blocks ?? [];
+  const bIdx = blocks.findIndex((b) => b.name === blockLabel);
+  const blockIndex = bIdx >= 0 ? bIdx : 0;
+  const block = blocks[blockIndex];
+
+  // determine week index within block if possible
+  let wIdx = 0;
+  if (block && block.weeks?.length && weekLabel) {
+    wIdx = block.weeks.findIndex(
+      (w) => (w.label ?? `W${w.weekNumber}`) === weekLabel
+    );
+    if (wIdx < 0) wIdx = 0;
+  }
+
+  const pick = BLOCK_PALETTE[(blockIndex + wIdx) % BLOCK_PALETTE.length];
+  return `${pick.bg} ${pick.border} ${pick.text}`;
+}
+
+function getBlockDotClass(program: Program, blockLabel?: string, weekLabel?: string) {
+  if (!blockLabel) return "";
+  const blocks = program.blocks ?? [];
+  const bIdx = blocks.findIndex((b) => b.name === blockLabel);
+  const blockIndex = bIdx >= 0 ? bIdx : 0;
+  let wIdx = 0;
+  const block = blocks[blockIndex];
+  if (block && block.weeks?.length && weekLabel) {
+    wIdx = block.weeks.findIndex(
+      (w) => (w.label ?? `W${w.weekNumber}`) === weekLabel
+    );
+    if (wIdx < 0) wIdx = 0;
+  }
+  const pick = BLOCK_PALETTE[(blockIndex + wIdx) % BLOCK_PALETTE.length];
+  return pick.dot;
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
 interface ProgramCalendarDialogProps {
   program: Program;
+  triggerContent?: ReactNode;
+  triggerClassName?: string;
 }
 
-export function ProgramCalendarDialog({ program }: ProgramCalendarDialogProps) {
+export function ProgramCalendarDialog({ program, triggerContent, triggerClassName }: ProgramCalendarDialogProps) {
   const [open, setOpen] = useState(false);
   const [startDayOffset, setStartDayOffset] = useState<StartDay>(1);
   // Default start date: next upcoming Monday (or today if Monday)
@@ -288,9 +340,17 @@ export function ProgramCalendarDialog({ program }: ProgramCalendarDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="w-full gap-2">
-          <CalendarDays className="h-4 w-4" />
-          Calendar View
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn(triggerClassName ?? "w-full gap-2", "inline-flex items-center justify-center")}
+        >
+          {triggerContent ?? (
+            <>
+              <CalendarDays className="h-4 w-4" />
+              Calendar View
+            </>
+          )}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
@@ -397,18 +457,25 @@ export function ProgramCalendarDialog({ program }: ProgramCalendarDialogProps) {
                       const isCurrentMonth =
                         cell.date.getMonth() === currentMonth.month;
 
-                      return (
-                        <div
-                          key={di}
-                          className={cn(
-                            "relative rounded-md border p-1.5 min-h-[72px] transition-colors",
-                            isCurrentMonth
-                              ? cell.inRange
-                                ? dayTypeClasses(cell.programDay)
-                                : "bg-background border-border/50"
-                              : "bg-transparent border-transparent opacity-30"
-                          )}
-                        >
+                          const blockClasses =
+                            isCurrentMonth && cell.inRange && cell.blockLabel
+                              ? getBlockWeekClasses(program, cell.blockLabel, cell.weekLabel)
+                              : null;
+
+                          return (
+                            <div
+                              key={di}
+                              className={cn(
+                                "relative rounded-md border p-1.5 min-h-[72px] transition-colors",
+                                isCurrentMonth
+                                  ? blockClasses
+                                    ? blockClasses
+                                    : cell.inRange
+                                    ? dayTypeClasses(cell.programDay)
+                                    : "bg-background border-border/50"
+                                  : "bg-transparent border-transparent opacity-30"
+                              )}
+                            >
                           {/* Date number */}
                           <div
                             className={cn(
@@ -433,7 +500,13 @@ export function ProgramCalendarDialog({ program }: ProgramCalendarDialogProps) {
                                 <span
                                   className={cn(
                                     "w-1.5 h-1.5 rounded-full shrink-0",
-                                    dayTypeDot(cell.programDay)
+                                    cell.blockLabel
+                                      ? getBlockDotClass(
+                                          program,
+                                          cell.blockLabel,
+                                          cell.weekLabel
+                                        )
+                                      : dayTypeDot(cell.programDay)
                                   )}
                                 />
                                 <span className="text-[10px] font-medium leading-tight truncate">

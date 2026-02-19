@@ -66,7 +66,7 @@ export type Database = {
           one_rep_max_percent: number | null
           params: Json | null
           per_side: boolean
-          rep_scheme: string
+          rep_scheme: string | null
           reps: number | null
           reps_max: number | null
           rest: number | null
@@ -86,7 +86,7 @@ export type Database = {
           one_rep_max_percent?: number | null
           params?: Json | null
           per_side?: boolean
-          rep_scheme?: string
+          rep_scheme?: string | null
           reps?: number | null
           reps_max?: number | null
           rest?: number | null
@@ -106,7 +106,7 @@ export type Database = {
           one_rep_max_percent?: number | null
           params?: Json | null
           per_side?: boolean
-          rep_scheme?: string
+          rep_scheme?: string | null
           reps?: number | null
           reps_max?: number | null
           rest?: number | null
@@ -341,6 +341,7 @@ export type Database = {
           program_id: string
           type: Database["public"]["Enums"]["day_type"]
           updated_at: string
+          week_id: string | null
         }
         Insert: {
           block_id?: string | null
@@ -352,6 +353,7 @@ export type Database = {
           program_id: string
           type?: Database["public"]["Enums"]["day_type"]
           updated_at?: string
+          week_id?: string | null
         }
         Update: {
           block_id?: string | null
@@ -363,6 +365,7 @@ export type Database = {
           program_id?: string
           type?: Database["public"]["Enums"]["day_type"]
           updated_at?: string
+          week_id?: string | null
         }
         Relationships: [
           {
@@ -377,6 +380,51 @@ export type Database = {
             columns: ["program_id"]
             isOneToOne: false
             referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "program_days_week_id_fkey"
+            columns: ["week_id"]
+            isOneToOne: false
+            referencedRelation: "program_weeks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      program_weeks: {
+        Row: {
+          block_id: string
+          created_at: string
+          id: string
+          label: string | null
+          order_num: number
+          updated_at: string
+          week_number: number
+        }
+        Insert: {
+          block_id: string
+          created_at?: string
+          id?: string
+          label?: string | null
+          order_num?: number
+          updated_at?: string
+          week_number?: number
+        }
+        Update: {
+          block_id?: string
+          created_at?: string
+          id?: string
+          label?: string | null
+          order_num?: number
+          updated_at?: string
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "program_weeks_block_id_fkey"
+            columns: ["block_id"]
+            isOneToOne: false
+            referencedRelation: "program_blocks"
             referencedColumns: ["id"]
           },
         ]

@@ -1,6 +1,18 @@
 import type { ProgramBlock, ProgramDay, ProgramWeek } from "@/types/Workout";
 
 /**
+ * Get ALL days across all weeks in a block (flattened).
+ * Useful when you need every day in a block regardless of week.
+ * Falls back to block.days for legacy compatibility.
+ */
+export function getAllBlockDays(block: ProgramBlock): ProgramDay[] {
+  if (block.weeks?.length > 0) {
+    return block.weeks.flatMap((w) => w.days);
+  }
+  return block.days ?? [];
+}
+
+/**
  * Get the days for a specific week within a block.
  * Falls back to block.days (week 0) for backward compatibility.
  */
@@ -161,16 +173,21 @@ export function duplicateWeekInBlock(
     ...normalized.weeks.slice(weekIndex + 1),
   ];
 
-  // Renumber all weeks
-  const renumbered = updatedWeeks.map((w, i) => ({
-    ...w,
-    weekNumber: i + 1,
-    label: w.label?.match(/^Week \d+$/)
-      ? `Week ${i + 1}`
-      : w.label?.replace(/ \(Copy\)$/, "").endsWith(`Week ${w.weekNumber}`)
-        ? w.label
-        : w.label,
-  }));
+  // Renumber all weeks and normalize labels for auto-generated "Week N" names.
+  const renumbered = updatedWeeks.map((w, i) => {
+    const originalLabel = w.label ?? `Week ${w.weekNumber}`;
+    // If the label is auto-generated like "Week 1" or "Week 1 (Copy)",
+    // replace it with the new sequential label. Otherwise strip a trailing
+    // " (Copy)" and keep custom labels as-is.
+    const isAutoWeekLabel = /^Week \d+(?: \(Copy\))?$/.test(originalLabel);
+    const newLabel = isAutoWeekLabel ? `Week ${i + 1}` : originalLabel.replace(/ \(Copy\)$/, "");
+
+    return {
+      ...w,
+      weekNumber: i + 1,
+      label: newLabel,
+    };
+  });
 
   return {
     ...normalized,

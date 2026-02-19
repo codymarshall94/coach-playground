@@ -1,4 +1,5 @@
 import type { Program, ProgramDay } from "@/types/Workout";
+import { getAllBlockDays } from "@/utils/program/weekHelpers";
 
 type Options = {
   /** Count rest/active_rest days too? Default: true */
@@ -32,7 +33,7 @@ export function getProgramDayCount(
 
   // Prefer blocks when in block mode and blocks exist, else fall back to root days
   if (program.mode === "blocks" && program.blocks?.length) {
-    const perBlock = program.blocks.map((b) => countDays(b?.days, includeRest));
+    const perBlock = program.blocks.map((b) => countDays(getAllBlockDays(b), includeRest));
 
     if (!perBlock.length) return 0;
 

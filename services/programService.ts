@@ -10,6 +10,7 @@ import {
   Program,
   ProgramBlock,
   ProgramDay,
+  ProgramWeek,
   SetInfo,
   WorkoutExercise,
 } from "@/types/Workout";
@@ -62,15 +63,38 @@ export async function insertProgramBlocks(
   return data as Array<{ id: string; order_num: number }>;
 }
 
+/** Insert weeks for a block (batched). Returns ids mapped to order. */
+export async function insertProgramWeeks(
+  blockId: string,
+  weeks: ProgramWeek[]
+) {
+  const payload = weeks.map((w, index) => ({
+    block_id: blockId,
+    week_number: w.weekNumber ?? index + 1,
+    label: w.label ?? `Week ${index + 1}`,
+    order_num: index,
+  }));
+
+  const { data, error } = await supabase
+    .from("program_weeks")
+    .insert(payload)
+    .select("id,order_num");
+
+  if (error) throw new Error(`insertProgramWeeks: ${error.message}`);
+  return data as Array<{ id: string; order_num: number }>;
+}
+
 /** Insert days (batched). Returns ids mapped to order. */
 export async function insertProgramDays(
   programId: string,
   days: ProgramDay[],
-  blockId?: string
+  blockId?: string,
+  weekId?: string
 ) {
   const payload = days.map((d, index) => ({
     program_id: programId,
     block_id: blockId ?? null,
+    week_id: weekId ?? null,
     name: d.name,
     description: d.description,
     order_num: index,
@@ -292,19 +316,29 @@ export async function insertProgramStructure(
       const insertedBlock = blocksByOrd.get(bIndex);
       if (!insertedBlock) continue;
 
-      // Save all weeks' days (flattened). For now, we save days from each week.
-      // The DB doesn't yet have a week_number column, so we save week 0's days
-      // (the primary/template week) and the block.weeks count goes in the blocks table.
-      const primaryDays = Array.isArray(block.weeks) && block.weeks.length > 0
-        ? block.weeks[0].days
-        : block.days;
+      // Normalize: ensure we have a weeks array
+      const weeks = Array.isArray(block.weeks) && block.weeks.length > 0
+        ? block.weeks
+        : [{ id: crypto.randomUUID(), weekNumber: 1, label: "Week 1", days: block.days ?? [] }];
 
-      const daysInserted = await insertProgramDays(
-        programId,
-        primaryDays,
-        insertedBlock.id
-      );
-      await insertDaysWithGroups(daysInserted, primaryDays);
+      // Insert week rows for this block
+      const weeksInserted = await insertProgramWeeks(insertedBlock.id, weeks as ProgramWeek[]);
+      const weeksByOrd = byOrder(weeksInserted);
+
+      // Insert days for each week
+      for (let wIndex = 0; wIndex < weeks.length; wIndex++) {
+        const week = weeks[wIndex];
+        const insertedWeek = weeksByOrd.get(wIndex);
+        if (!insertedWeek || !week.days?.length) continue;
+
+        const daysInserted = await insertProgramDays(
+          programId,
+          week.days,
+          insertedBlock.id,
+          insertedWeek.id
+        );
+        await insertDaysWithGroups(daysInserted, week.days);
+      }
     }
   }
 }
@@ -455,7 +489,7 @@ type ProgramIndex = {
   cover_image: string | null;
   created_at: string | null;
   updated_at: string | null;
-  blocks: Array<{ id: string; days: Array<{ id: string }> }>;
+  blocks: Array<{ id: string; weeks: Array<{ id: string; days: Array<{ id: string }> }>; days: Array<{ id: string }> }>;
   days: Array<{ id: string }>;
 };
 
@@ -467,6 +501,10 @@ export async function getAllProgramsForUser(): Promise<Program[]> {
       id, name, description, goal, mode, cover_image, created_at, updated_at,
       blocks:program_blocks (
         id,
+        weeks:program_weeks (
+          id,
+          days:program_days ( id )
+        ),
         days:program_days ( id )
       ),
       days:program_days ( id )
@@ -497,6 +535,19 @@ export async function getProgramById(id: string): Promise<Program | null> {
       *,
       blocks:program_blocks (
         *,
+        weeks:program_weeks (
+          *,
+          days:program_days (
+            *,
+            groups:workout_exercise_groups (
+              *,
+              exercises:workout_exercises (
+                *,
+                sets:exercise_sets (*)
+              )
+            )
+          )
+        ),
         days:program_days (
           *,
           groups:workout_exercise_groups (

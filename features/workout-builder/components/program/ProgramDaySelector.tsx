@@ -196,7 +196,7 @@ export function ProgramDaySelector({
                 e.stopPropagation();
                 onAddWorkoutDay();
               }}
-              variant="outline"
+              variant="ghost"
               size="sm"
               className="flex-1 cursor-pointer text-xs h-8"
               disabled={days.length >= 7}

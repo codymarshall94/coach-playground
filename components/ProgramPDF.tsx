@@ -446,7 +446,12 @@ export function ProgramPDF({ program }: { program: Program }) {
                     ) : null}
                   </View>
                   <View style={s.separator} />
-                  {block.days
+                  {(block.weeks?.length > 0
+                    ? block.weeks
+                        .sort((a, b) => (a.weekNumber ?? 0) - (b.weekNumber ?? 0))
+                        .flatMap((w) => w.days)
+                    : block.days ?? []
+                  )
                     .sort((a, b) => a.order_num - b.order_num)
                     .map((day) => (
                       <DayTable key={day.id} day={day} />

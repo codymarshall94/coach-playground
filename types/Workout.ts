@@ -108,6 +108,7 @@ export type ProgramDay = {
   id: string;
   name: string;
   block_id?: string;
+  week_id?: string;
   description: string;
   order_num: number;
   type: DayType;

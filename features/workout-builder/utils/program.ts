@@ -1,5 +1,5 @@
 import { Program, ProgramBlock, ProgramDay, ProgramWeek } from "@/types/Workout";
-import { getBlockWeekDays, normalizeBlock } from "@/utils/program/weekHelpers";
+import { getBlockWeekDays, getAllBlockDays, normalizeBlock } from "@/utils/program/weekHelpers";
 
 export function getDayRef(
   program: Program,
@@ -71,8 +71,8 @@ export function getCurrentDays(
 export function switchModeToDays(program: Program): Program {
   if (!program.blocks) return program;
   const merged: ProgramDay[] = program.blocks
-    .flatMap((b) => b.days)
-    .map((d, i) => ({ ...d, order: i }));
+    .flatMap((b) => getAllBlockDays(b))
+    .map((d, i) => ({ ...d, order_num: i }));
   return { ...program, mode: "days", blocks: undefined, days: merged };
 }
 

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Program, ProgramBlock, ProgramDay } from "@/types/Workout";
+import { getAllBlockDays } from "@/utils/program/weekHelpers";
 import { useState } from "react";
 
 type Props = {
@@ -26,7 +27,7 @@ export function ModeSwitchDialog({ currentProgram, onSwitchMode }: Props) {
 
     if (targetMode === "days" && prev.blocks) {
       const mergedDays: ProgramDay[] = prev.blocks
-        .flatMap((block) => block.days)
+        .flatMap((block) => getAllBlockDays(block))
         .map((day, i) => ({ ...day, order_num: i }));
 
       onSwitchMode({

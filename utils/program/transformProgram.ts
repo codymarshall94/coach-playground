@@ -79,22 +79,40 @@ export function transformProgramFromSupabase(data: any): Program {
     days: transformDays(data.days ?? []),
     blocks:
       data.blocks?.map((b: any) => {
-        const days = transformDays(b.days ?? []);
-        // Convert DB weeks (number) → weeks array structure
-        const dbWeekCount = typeof b.weeks === "number" ? b.weeks : 1;
-        const weeks = Array.isArray(b.weeks)
-          ? b.weeks  // already in new format (shouldn't happen from DB, but defensive)
-          : [{
-              id: crypto.randomUUID(),
-              weekNumber: 1,
-              label: "Week 1",
-              days,
-            }];
+        // `b.weeks` from the new query is an array of week rows with nested days.
+        // Legacy fallback: if `b.weeks` is a number (old int column), synthesize.
+        const hasWeeksTable = Array.isArray(b.weeks);
+
+        let weeks: any[];
+        if (hasWeeksTable && b.weeks.length > 0) {
+          // New format: weeks rows from program_weeks table, each with nested days
+          weeks = b.weeks
+            .sort((a: any, b2: any) => (a.order_num ?? 0) - (b2.order_num ?? 0))
+            .map((w: any) => ({
+              id: w.id,
+              weekNumber: w.week_number ?? w.weekNumber ?? 1,
+              label: w.label ?? `Week ${w.week_number ?? 1}`,
+              days: transformDays(w.days ?? []),
+            }));
+        } else {
+          // Legacy block: no weeks rows — synthesize a single week from block.days
+          const fallbackDays = transformDays(b.days ?? []);
+          weeks = [{
+            id: crypto.randomUUID(),
+            weekNumber: 1,
+            label: "Week 1",
+            days: fallbackDays,
+          }];
+        }
+
+        // block.days = union of all weeks' days (backward compat)
+        const allDays = weeks.flatMap((w: any) => w.days);
+
         return {
           ...b,
-          days,
+          days: allDays,
           weeks,
-          weekCount: dbWeekCount,
+          weekCount: weeks.length,
         };
       }) ?? [],
   } as Program;

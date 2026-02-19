@@ -386,13 +386,15 @@ function distributeSetToMuscles(
   }));
 }
 
+import { getBlockWeekDays, getAllBlockDays } from "@/utils/program/weekHelpers";
+
 export function scoreProgram(
   program: Program,
   lookup: ExerciseLookup
 ): ProgramScore {
   const days: ProgramDay[] = (
     program.days ??
-    program.blocks?.flatMap((b) => b.days) ??
+    program.blocks?.flatMap((b) => getAllBlockDays(b)) ??
     []
   ).filter((d) => d.type === "workout");
 
