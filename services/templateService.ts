@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/client";
 import { transformProgramFromSupabase } from "@/utils/program/transformProgram";
+import { PROGRAM_DETAIL_SELECT } from "@/services/programQueries";
 
 /**
  * Lightweight list for template picker cards.
@@ -37,47 +38,7 @@ export const getTemplateByIdFull = async (id: string) => {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("programs")
-    .select(
-      `
-      *,
-      blocks:program_blocks(
-        *,
-        weeks:program_weeks(
-          *,
-          days:program_days(
-            *,
-            groups:workout_exercise_groups(
-              *,
-              exercises:workout_exercises(
-                *,
-                sets:exercise_sets(*)
-              )
-            )
-          )
-        ),
-        days:program_days(
-          *,
-          groups:workout_exercise_groups(
-            *,
-            exercises:workout_exercises(
-              *,
-              sets:exercise_sets(*)
-            )
-          )
-        )
-      ),
-      days:program_days(
-        *,
-        groups:workout_exercise_groups(
-          *,
-          exercises:workout_exercises(
-            *,
-            sets:exercise_sets(*)
-          )
-        )
-      )
-    `
-    )
+    .select(PROGRAM_DETAIL_SELECT)
     .eq("id", id)
     .eq("is_template", true)
     .single();

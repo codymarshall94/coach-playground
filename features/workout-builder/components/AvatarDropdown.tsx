@@ -6,110 +6,88 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { ChevronDown, ExternalLink, ListOrdered, LogOut } from "lucide-react";
+import { ExternalLink, HelpCircle, ListOrdered, LogOut } from "lucide-react";
 import Link from "next/link";
 
 export default function AvatarDropdown() {
   const { profile } = useUserProfile();
 
-  if (!profile) return <Skeleton className="w-10 h-10 rounded-full" />;
+  if (!profile) return <Skeleton className="w-8 h-8 rounded-full" />;
+
+  const initials = profile?.full_name
+    ? profile.full_name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .slice(0, 2)
+    : "U";
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger>
-        <div className="relative cursor-pointer">
-          <Avatar className="w-10 h-10">
-            <AvatarImage src={profile?.avatar_url} />
-            <AvatarFallback className="text-xl bg-gradient-to-br from-brand to-brand-foreground text-foreground">
-              {profile?.full_name?.[0] ?? "U"}
-            </AvatarFallback>
-          </Avatar>
-          <div className="absolute bottom-0 -right-1.5 bg-background border border-border rounded-full p-1">
-            <ChevronDown className="w-3 h-3" />
-          </div>
-        </div>
+      <DropdownMenuTrigger className="outline-none">
+        <Avatar className="w-8 h-8 cursor-pointer ring-2 ring-transparent hover:ring-border transition-all">
+          <AvatarImage src={profile?.avatar_url} />
+          <AvatarFallback className="text-xs font-semibold bg-gradient-to-br from-brand to-brand-foreground text-foreground">
+            {initials}
+          </AvatarFallback>
+        </Avatar>
       </DropdownMenuTrigger>
+
       <DropdownMenuContent
-        className="w-80 p-0  text-foreground"
+        className="w-52 p-1.5 rounded-xl shadow-lg border-border/60"
         align="end"
-        side="bottom"
+        sideOffset={8}
       >
-        <div className="p-6 pb-4">
-          <div className="flex items-center gap-4 mb-6">
-            <Avatar className="w-16 h-16">
-              <AvatarImage src={profile?.avatar_url} />
-              <AvatarFallback className="text-xl bg-gradient-to-br from-brand to-brand-foreground text-foreground">
-                {profile?.full_name?.[0] ?? "U"}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h3 className="text-lg font-semibold text-foreground">
-                {profile?.full_name || "User"}
-              </h3>
-              <p className="text-sm text-muted-foreground">See your profile</p>
-            </div>
-          </div>
+        {/* Identity */}
+        <div className="px-2.5 pt-1.5 pb-2">
+          <p className="text-[13px] font-semibold text-foreground truncate">
+            {profile?.full_name || "User"}
+          </p>
+          <p className="text-[11px] text-muted-foreground truncate">
+            {profile?.email ?? ""}
+          </p>
         </div>
 
-        <DropdownMenuSeparator className="my-0" />
+        <div className="h-px bg-border/60 mx-1 my-1" />
 
-        <div className="p-2">
-          <DropdownMenuItem
-            className="cursor-pointer h-12 px-4 rounded-lg text-foreground"
-            asChild
-          >
-            <Link href="/programs">
-              <ListOrdered className="w-5 h-5 mr-3 text-muted-foreground" />
-              <span className="font-medium">My Programs</span>
-            </Link>
-          </DropdownMenuItem>
-        </div>
-
-        <DropdownMenuSeparator className="my-2" />
-
-        <div className="p-2">
-          <div className="flex items-center justify-between h-12 px-4 rounded-lg hover:bg-muted/50">
-            <span className="font-medium">Theme</span>
-            <ThemeToggle />
-          </div>
-        </div>
-
-        <DropdownMenuSeparator className="my-2" />
-
-        <div className="p-2">
-          <DropdownMenuItem
-            className="cursor-pointer h-12 px-4 rounded-lg text-destructive focus:text-destructive hover:bg-destructive/10"
-            asChild
-          >
-            <form action="/auth/signout" method="post">
-              <button className="flex items-center w-full" type="submit">
-                <LogOut className="w-5 h-5 mr-3" />
-                <span className="font-medium">Log Out</span>
-              </button>
-            </form>
-          </DropdownMenuItem>
-        </div>
-
-        <DropdownMenuSeparator className="my-2" />
-
-        <div className="p-4 pt-2">
-          <Link
-            target="_blank"
-            href="/help"
-            className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <span>Questions?</span>
-            <span className="text-blue-600 font-medium flex items-center gap-1">
-              FAQ
-              <ExternalLink className="w-3 h-3" />
-            </span>
+        <DropdownMenuItem asChild className="cursor-pointer rounded-lg text-[13px] h-8">
+          <Link href="/programs">
+            <ListOrdered className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
+            My Programs
           </Link>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem asChild className="cursor-pointer rounded-lg text-[13px] h-8">
+          <Link href="/help" target="_blank">
+            <HelpCircle className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
+            Help & FAQ
+            <ExternalLink className="w-2.5 h-2.5 ml-auto text-muted-foreground/50" />
+          </Link>
+        </DropdownMenuItem>
+
+        {/* Theme */}
+        <div className="flex items-center justify-between rounded-lg px-2 h-8">
+          <span className="text-[13px]">Theme</span>
+          <ThemeToggle />
         </div>
+
+        <div className="h-px bg-border/60 mx-1 my-1" />
+
+        <DropdownMenuItem
+          className="cursor-pointer rounded-lg text-[13px] h-8 text-destructive focus:text-destructive focus:bg-destructive/10"
+          asChild
+        >
+          <form action="/auth/signout" method="post">
+            <button className="flex items-center w-full" type="submit">
+              <LogOut className="w-3.5 h-3.5 mr-2" />
+              Sign Out
+            </button>
+          </form>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

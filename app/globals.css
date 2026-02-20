@@ -73,7 +73,7 @@
    /* Neutral surfaces */
   --card:       oklch(1 0 0 / 0.9);
   --card-foreground: var(--foreground);
-  --popover:    oklch(0.97 0.01 250);
+  --popover:    oklch(1 0 0);
   --popover-foreground: var(--foreground);
   --muted:      oklch(0.94 0.01 250);
   --muted-foreground: oklch(0.45 0.01 250);
@@ -156,7 +156,7 @@
   --secondary: oklch(0.28 0.02 140);
   --secondary-foreground: var(--foreground);
 
-  --popover: oklch(0.22 0.015 140 );
+  --popover: oklch(0.18 0.005 250);
   --popover-foreground: var(--foreground);
 
   --accent: oklch(0.82 0.22 160);

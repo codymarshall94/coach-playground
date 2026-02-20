@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 
 import { Program } from "@/types/Workout";
 import { transformProgramFromSupabase } from "@/utils/program/transformProgram";
+import { PROGRAM_DETAIL_SELECT } from "@/services/programQueries";
 import { SupabaseClient } from "@supabase/supabase-js";
 
 export const metadata = {
@@ -12,38 +13,10 @@ export const metadata = {
   icons: { icon: "/favicon.ico" },
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function fetchProgramById(supabase: SupabaseClient, id: string) {
   const { data, error } = await supabase
     .from("programs")
-    .select(
-      `
-      *,
-      blocks:program_blocks (
-        *,
-        days:program_days (
-          *,
-          groups:workout_exercise_groups (
-            *,
-            exercises:workout_exercises (
-              *,
-              sets:exercise_sets (*)
-            )
-          )
-        )
-      ),
-      days:program_days (
-        *,
-        groups:workout_exercise_groups (
-          *,
-          exercises:workout_exercises (
-            *,
-            sets:exercise_sets (*)
-          )
-        )
-      )
-    `
-    )
+    .select(PROGRAM_DETAIL_SELECT)
     .eq("id", id)
     .single();
 
@@ -54,7 +27,7 @@ async function fetchProgramById(supabase: SupabaseClient, id: string) {
 export default async function BuilderPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ template?: string }>;
+  searchParams?: Promise<{ template?: string; guided?: string }>;
 }) {
   const params = (await searchParams) ?? {};
   const supabase = await createClient();

@@ -15,6 +15,7 @@ import { useProgramEngine } from "@/hooks/useProgramEngine";
 import { useUser } from "@/hooks/useUser";
 import { useWorkoutBuilder } from "@/hooks/useWorkoutBuilder";
 import { saveOrUpdateProgramService } from "@/services/programService";
+import { uploadCoverImage } from "@/services/coverImageService";
 
 import type { Program } from "@/types/Workout";
 
@@ -112,6 +113,7 @@ export const WorkoutBuilder = ({
 
   const router = useRouter();
   const groupRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const pendingCoverFileRef = useRef<File | null>(null);
 
   const { days, program: programMetrics } = useProgramEngine(
     buildSpecFromProgram(program),
@@ -130,7 +132,19 @@ export const WorkoutBuilder = ({
     if (isSaving) return;          // guard against double-clicks
     setIsSaving(true);
     try {
-      const programId = await saveOrUpdateProgramService(program);
+      // If the user picked a local cover image, upload it now
+      let programToSave = program;
+      if (pendingCoverFileRef.current) {
+        const url = await uploadCoverImage(pendingCoverFileRef.current, program.id);
+        programToSave = { ...program, cover_image: url };
+        setProgram((prev) => ({ ...prev, cover_image: url }));
+        pendingCoverFileRef.current = null;
+      } else if (program.cover_image?.startsWith("blob:")) {
+        // Blob URL without a file means it was cleared or lost — strip it
+        programToSave = { ...program, cover_image: null };
+      }
+
+      const programId = await saveOrUpdateProgramService(programToSave);
       // Sync the DB id back so future saves update instead of inserting
       if (programId !== program.id) {
         setProgram((prev) => ({ ...prev, id: programId }));
@@ -238,6 +252,7 @@ export const WorkoutBuilder = ({
           setOverviewOpen(true);
           setActiveDayIndex(null);
         }}
+        onPendingCoverFile={(file) => { pendingCoverFileRef.current = file; }}
       />
 
       {usingBlocks ? (

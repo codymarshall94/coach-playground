@@ -19,7 +19,7 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Bed, Dumbbell, MoreVertical, Plus, Trash } from "lucide-react";
+import { Bed, Dumbbell, MoreVertical, Plus, Repeat, Trash } from "lucide-react";
 
 type Props = {
   days: ProgramDay[];
@@ -165,6 +165,16 @@ export function ProgramDaySelector({
         strategy={verticalListSortingStrategy}
       >
         <div className="flex flex-col gap-1.5">
+          {/* Cycle indicator */}
+          <div className="flex items-center gap-1.5 px-1 mb-0.5">
+            <Repeat className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+            <span className="text-[11px] text-muted-foreground">
+              {days.length}-day cycle
+              {days.length > 0 && " \u00b7 loops after Day "}
+              {days.length > 0 && days.length}
+            </span>
+          </div>
+
           {days.map((day, i) => (
             <SortableItem
               key={day.id}
@@ -199,8 +209,6 @@ export function ProgramDaySelector({
               variant="ghost"
               size="sm"
               className="flex-1 cursor-pointer text-xs h-8"
-              disabled={days.length >= 7}
-              title={days.length >= 7 ? "A week can have at most 7 days" : undefined}
             >
               <Dumbbell className="w-3.5 h-3.5 mr-1.5" />
               Add Workout
@@ -213,13 +221,18 @@ export function ProgramDaySelector({
               variant="ghost"
               size="sm"
               className="flex-1 cursor-pointer text-xs h-8"
-              disabled={days.length >= 7}
-              title={days.length >= 7 ? "A week can have at most 7 days" : undefined}
             >
               <Bed className="w-3.5 h-3.5 mr-1.5" />
               Add Rest
             </Button>
           </div>
+
+          {/* Cycle hint */}
+          {days.length > 0 && days.length < 3 && (
+            <p className="text-[11px] text-muted-foreground px-1">
+              Include rest days to complete your cycle.
+            </p>
+          )}
         </div>
       </SortableContext>
 

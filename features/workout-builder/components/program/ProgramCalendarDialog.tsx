@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -89,13 +90,23 @@ function flattenProgram(program: Program) {
 
   if (program.mode === "blocks" && program.blocks?.length) {
     for (const block of program.blocks) {
-      for (const week of block.weeks ?? []) {
-        for (const day of week.days ?? []) {
-          sequence.push({
-            day,
-            blockLabel: block.name,
-            weekLabel: week.label ?? `W${week.weekNumber}`,
-          });
+      // Guard: block.weeks is typed ProgramWeek[] but DB may return the
+      // legacy integer column if the query didn't embed program_weeks.
+      const weeks = Array.isArray(block.weeks) ? block.weeks : [];
+      if (weeks.length > 0) {
+        for (const week of weeks) {
+          for (const day of week.days ?? []) {
+            sequence.push({
+              day,
+              blockLabel: block.name,
+              weekLabel: week.label ?? `W${week.weekNumber}`,
+            });
+          }
+        }
+      } else {
+        // Fallback: iterate block.days directly (legacy or flat blocks)
+        for (const day of block.days ?? []) {
+          sequence.push({ day, blockLabel: block.name });
         }
       }
     }
@@ -302,29 +313,29 @@ interface ProgramCalendarDialogProps {
 
 export function ProgramCalendarDialog({ program, triggerContent, triggerClassName }: ProgramCalendarDialogProps) {
   const [open, setOpen] = useState(false);
-  const [startDayOffset, setStartDayOffset] = useState<StartDay>(1);
-  // Default start date: next upcoming Monday (or today if Monday)
-  const [startDate] = useState<Date>(() => {
+  // Calendar grid always starts on Sunday
+  const GRID_START_DAY: StartDay = 0;
+  // Program start day — the weekday the program begins on
+  const [programStartDay, setProgramStartDay] = useState<StartDay>(1);
+  // Compute start date: next upcoming occurrence of programStartDay (or today if it matches)
+  const startDate = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const day = today.getDay();
-    const daysUntilMonday = day === 0 ? 1 : day === 1 ? 0 : 8 - day;
+    const daysUntil = (programStartDay - day + 7) % 7;
     const next = new Date(today);
-    next.setDate(next.getDate() + daysUntilMonday);
+    next.setDate(next.getDate() + (daysUntil === 0 ? 0 : daysUntil));
     return next;
-  });
+  }, [programStartDay]);
 
   const [monthOffset, setMonthOffset] = useState(0);
 
-  const orderedDayNames = useMemo(() => {
-    const names = [...DAY_NAMES_FULL];
-    // Rotate so startDayOffset is first
-    return [...names.slice(startDayOffset), ...names.slice(0, startDayOffset)];
-  }, [startDayOffset]);
+  // Column headers are always Sun–Sat
+  const orderedDayNames = DAY_NAMES_FULL;
 
   const calendarData = useMemo(
-    () => buildCalendarGrid(program, startDate, startDayOffset),
-    [program, startDate, startDayOffset]
+    () => buildCalendarGrid(program, startDate, GRID_START_DAY),
+    [program, startDate, GRID_START_DAY]
   );
 
   const totalMonths = calendarData.months.length;
@@ -359,6 +370,9 @@ export function ProgramCalendarDialog({ program, triggerContent, triggerClassNam
             <CalendarDays className="h-5 w-5" />
             Program Calendar
           </DialogTitle>
+          <DialogDescription>
+            Preview how your training cycle maps onto a real calendar. Pick the day you want to start and your program will repeat in order from there.
+          </DialogDescription>
         </DialogHeader>
 
         {/* Controls row */}
@@ -366,12 +380,12 @@ export function ProgramCalendarDialog({ program, triggerContent, triggerClassNam
           {/* Start-day selector */}
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground whitespace-nowrap">
-              Week starts on
+              Program starts on
             </span>
             <Select
-              value={String(startDayOffset)}
+              value={String(programStartDay)}
               onValueChange={(v) => {
-                setStartDayOffset(Number(v) as StartDay);
+                setProgramStartDay(Number(v) as StartDay);
                 setMonthOffset(0);
               }}
             >

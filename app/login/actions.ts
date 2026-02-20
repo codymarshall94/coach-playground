@@ -8,6 +8,8 @@ import { createClient } from "@/utils/supabase/server";
 export async function login(formData: FormData) {
   const supabase = await createClient();
 
+  const redirectTo = (formData.get("redirect") as string) || "/programs";
+
   // type-casting here for convenience
   // in practice, you should validate your inputs
   const data = {
@@ -24,15 +26,17 @@ export async function login(formData: FormData) {
         "User not found": "No account with that email exists",
       }[error.message] ?? "Login failed";
 
-    redirect(`/login?error=${encodeURIComponent(friendlyMessage)}`);
+    redirect(`/login?error=${encodeURIComponent(friendlyMessage)}&redirect=${encodeURIComponent(redirectTo)}`);
   }
 
   revalidatePath("/", "layout");
-  redirect("/programs");
+  redirect(redirectTo);
 }
 
 export async function signup(formData: FormData) {
   const supabase = await createClient();
+
+  const redirectTo = (formData.get("redirect") as string) || "/programs";
 
   // type-casting here for convenience
   // in practice, you should validate your inputs
@@ -48,5 +52,5 @@ export async function signup(formData: FormData) {
   }
 
   revalidatePath("/", "layout");
-  redirect("/programs");
+  redirect(redirectTo);
 }

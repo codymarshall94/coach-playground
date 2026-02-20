@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -8,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import DOMPurify from "dompurify";
 import { IntensitySystem, Program, ProgramDay, RepSchemeType, SetInfo } from "@/types/Workout";
 import { Activity, Dumbbell, Eye, Target, Zap } from "lucide-react";
+import { PROGRAM_GRADIENTS } from "@/features/workout-builder/components/program/ProgramSettingsSheet";
 
 const goalIcons = {
   strength: Zap,
@@ -15,12 +15,7 @@ const goalIcons = {
   endurance: Activity,
   power: Target,
 };
-const goalColors = {
-  strength: "bg-red-100 text-red-800 border-red-200",
-  hypertrophy: "bg-blue-100 text-blue-800 border-blue-200",
-  endurance: "bg-green-100 text-green-800 border-green-200",
-  power: "bg-purple-100 text-purple-800 border-purple-200",
-};
+
 function formatRestTime(seconds: number) {
   if (seconds < 60) return `${seconds}s`;
   const m = Math.floor(seconds / 60);
@@ -249,27 +244,41 @@ function WorkoutDayTable({ day }: { day: ProgramDay }) {
 
 function ProgramSheet({ program }: { program: Program }) {
   const GoalIcon = goalIcons[program.goal];
+  const gradient = PROGRAM_GRADIENTS[program.goal];
+  const totalWeeks = program.mode === "blocks" && program.blocks
+    ? program.blocks.reduce((sum, b) => sum + (Array.isArray(b.weeks) ? b.weeks.length : b.weekCount ?? 1), 0)
+    : null;
+  const totalDays = program.mode === "blocks" && program.blocks
+    ? program.blocks.reduce((sum, b) => sum + (b.days?.length ?? 0), 0)
+    : program.days?.length ?? 0;
+
   return (
-    <div className="p-6 bg-white text-[13px] leading-6">
-      <h1 className="text-3xl font-extrabold tracking-tight">{program.name}</h1>
-      <div className="flex items-center gap-3 mt-2">
-        <Badge
-          className={`${
-            goalColors[program.goal]
-          } flex items-center gap-2 px-3 py-1.5 text-sm font-medium border`}
-        >
-          <GoalIcon className="w-4 h-4" />
-          <span className="capitalize">{program.goal}</span>
-        </Badge>
-        <span className="text-muted-foreground text-sm">
-          {program.mode === "blocks"
-            ? "Block-based program"
-            : "Day-based program"}
-        </span>
+    <div className="bg-white text-[13px] leading-6">
+      {/* ── Hero header ── */}
+      <div className="relative overflow-hidden px-6 pt-8 pb-6" style={{ background: gradient }}>
+        {/* Decorative icon */}
+        <GoalIcon className="absolute -bottom-4 -right-4 w-32 h-32 text-white/[0.06]" />
+        <div className="relative z-10">
+          <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-white/50">
+            {program.mode === "blocks" ? "Block-based program" : "Day-based program"}
+          </span>
+          <h1 className="text-3xl font-extrabold tracking-tight text-white mt-1">{program.name}</h1>
+          <div className="flex items-center gap-4 mt-3">
+            <div className="flex items-center gap-1.5 text-white/70 text-xs font-medium">
+              <GoalIcon className="w-3.5 h-3.5" />
+              <span className="capitalize">{program.goal}</span>
+            </div>
+            {totalWeeks && (
+              <span className="text-white/50 text-xs font-medium">{totalWeeks} weeks</span>
+            )}
+            <span className="text-white/50 text-xs font-medium">{totalDays} training days{program.mode === "blocks" ? " / block" : ""}</span>
+          </div>
+        </div>
       </div>
-      <Separator className="my-4" />
+
+      <div className="px-6 pb-6">
       {program.description && (
-        <div className="w-full mt-2 text-sm  space-y-2 prose">
+        <div className="w-full mt-4 text-sm space-y-2 prose text-gray-600">
           <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(program.description) }} />
         </div>
       )}
@@ -278,31 +287,57 @@ function ProgramSheet({ program }: { program: Program }) {
         <div className="space-y-8">
           {program.blocks
             .sort((a, b) => a.order_num - b.order_num)
-            .map((block) => (
+            .map((block, bi) => {
+              const weekCount = Array.isArray(block.weeks) ? block.weeks.length : block.weekCount ?? 1;
+              return (
               <div key={block.id}>
-                <div className="mb-4">
-                  <span className="inline-block text-xs font-semibold tracking-wide uppercase text-yellow-800 bg-yellow-100 px-2 py-1 rounded-md">
-                    {block.name}
-                  </span>
-                  {block.weeks && (
-                    <Badge
-                      variant="outline"
-                      className="text-xs font-medium ml-2"
-                    >
-                      {Array.isArray(block.weeks) ? block.weeks.length : block.weekCount ?? 1} {(Array.isArray(block.weeks) ? block.weeks.length : block.weekCount ?? 1) === 1 ? "week" : "weeks"}
-                    </Badge>
+                <div className="overflow-hidden mb-4">
+                  <div className="bg-gray-900 text-white px-4 py-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-[11px] font-bold tracking-widest uppercase opacity-50">Block {bi + 1}</span>
+                      <span className="text-sm font-semibold tracking-wide uppercase">{block.name}</span>
+                    </div>
+                    <span className="text-xs text-gray-400 font-medium">
+                      {weekCount} {weekCount === 1 ? "week" : "weeks"}
+                    </span>
+                  </div>
+                  {block.description && (
+                    <div className="bg-gray-800 text-gray-300 px-4 py-2 text-xs">
+                      {block.description}
+                    </div>
                   )}
                 </div>
-                <Separator className="mb-3" />
                 <div className="space-y-4">
-                  {block.days
-                    .sort((a, b) => a.order_num - b.order_num)
-                    .map((day) => (
-                      <WorkoutDayTable key={day.id} day={day} />
-                    ))}
+                  {Array.isArray(block.weeks) && block.weeks.length > 0
+                    ? block.weeks
+                        .sort((a, b) => a.weekNumber - b.weekNumber)
+                        .map((week) => (
+                          <div key={week.id}>
+                            <div className="flex items-center gap-3 mb-3 mt-2">
+                              <span className="text-[11px] font-bold tracking-widest uppercase text-gray-400">
+                                Week {week.weekNumber}
+                                {week.label ? ` — ${week.label}` : ""}
+                              </span>
+                              <div className="flex-1 h-px bg-gray-200" />
+                            </div>
+                            <div className="space-y-4">
+                              {week.days
+                                .sort((a, b) => a.order_num - b.order_num)
+                                .map((day) => (
+                                  <WorkoutDayTable key={day.id} day={day} />
+                                ))}
+                            </div>
+                          </div>
+                        ))
+                    : block.days
+                        .sort((a, b) => a.order_num - b.order_num)
+                        .map((day) => (
+                          <WorkoutDayTable key={day.id} day={day} />
+                        ))}
                 </div>
               </div>
-            ))}
+              );
+            })}
         </div>
       ) : (
         program.days && (
@@ -318,6 +353,7 @@ function ProgramSheet({ program }: { program: Program }) {
           </div>
         )
       )}
+      </div>
     </div>
   );
 }

@@ -4,9 +4,11 @@
 
 * [Product Vision and Goals](docs/PRODUCT.md): What PRGRM does, who it's for, and key user flows.
 * [System Architecture](docs/ARCHITECTURE.md): Directory layout, layer responsibilities, and design patterns.
+* [Program Structure](docs/PROGRAMS.md): Program hierarchy, days vs blocks, exercise groups, sets, and engine analytics.
 * [Design System](docs/DESIGN.md): Color tokens, typography, components, theming, and visual conventions.
 * [Contributing Guidelines](docs/CONTRIBUTING.md): Dev setup, coding conventions, and PR workflow.
 * [Database Schema](docs/DATABASE.md): Supabase tables, relationships, and RLS notes.
+* [Running TODO List](TODO.md): Bugs, suspicious code, tech debt, and UX papercuts noticed during development. Add to this whenever you spot something off — we revisit it periodically.
 
 Suggest updates to these docs if you find incomplete or conflicting information during your work.
 

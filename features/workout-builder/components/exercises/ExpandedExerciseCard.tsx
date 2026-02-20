@@ -58,7 +58,7 @@ const intensityOptions: IntensityOptions[] = [
     id: "one_rep_max_percent",
     label: "%1RM",
     icon: Activity,
-    options: [60, 65, 70, 75, 80, 85, 90, 95],
+    options: Array.from({ length: 15 }, (_, i) => 30 + i * 5),
   },
   {
     id: "rir",
@@ -72,26 +72,26 @@ const intensityOptions: IntensityOptions[] = [
 const ADVANCED_SET_CONFIG = {
   drop: {
     fields: [
-      { label: "Drop %", key: "drop_percent", placeholder: "20" },
-      { label: "Drop Sets", key: "drop_sets", placeholder: "2" },
+      { label: "Drop %", key: "drop_percent", placeholder: "e.g. 20" },
+      { label: "Drop Sets", key: "drop_sets", placeholder: "e.g. 2" },
     ],
   },
   cluster: {
     fields: [
-      { label: "Cluster Reps", key: "cluster_reps", placeholder: "3" },
-      { label: "Intra Rest (s)", key: "intra_rest", placeholder: "15" },
+      { label: "Cluster Reps", key: "cluster_reps", placeholder: "e.g. 3" },
+      { label: "Intra Rest (s)", key: "intra_rest", placeholder: "e.g. 15" },
     ],
   },
   myo_reps: {
     fields: [
-      { label: "Activation Reps", key: "activation_set_reps", placeholder: "12" },
-      { label: "Mini Sets", key: "mini_sets", placeholder: "3" },
+      { label: "Activation Reps", key: "activation_set_reps", placeholder: "e.g. 12" },
+      { label: "Mini Sets", key: "mini_sets", placeholder: "e.g. 3" },
     ],
   },
   rest_pause: {
     fields: [
-      { label: "Initial Reps", key: "initial_reps", placeholder: "8" },
-      { label: "Pause (s)", key: "pause_duration", placeholder: "10" },
+      { label: "Initial Reps", key: "initial_reps", placeholder: "e.g. 8" },
+      { label: "Pause (s)", key: "pause_duration", placeholder: "e.g. 10" },
     ],
   },
 } as const;
@@ -363,6 +363,11 @@ export function ExpandedExerciseCard({
                   s.one_rep_max_percent > getMaxAllowedPercent1RM(s.reps)
               );
               const isLastBorder = isLastRow && !hasWarning;
+              const setExceedsLimit =
+                exercise.intensity === "one_rep_max_percent" &&
+                set.reps != null &&
+                set.one_rep_max_percent != null &&
+                set.one_rep_max_percent > getMaxAllowedPercent1RM(set.reps);
 
               return (
               <motion.div
@@ -386,7 +391,8 @@ export function ExpandedExerciseCard({
                   <div
                     className={cn(
                       "flex-1 grid grid-cols-4 border-x border-b border-border hover:bg-muted/20 transition-colors",
-                      isLastBorder && !advancedConfig && "rounded-b-lg"
+                      isLastBorder && !advancedConfig && "rounded-b-lg",
+                      setExceedsLimit && "bg-destructive/5 border-destructive/30"
                     )}
                   >
                     {/* Type */}
@@ -489,7 +495,7 @@ export function ExpandedExerciseCard({
                               }
                               min={0}
                               placeholder={field.placeholder}
-                              className="h-full w-16 bg-transparent text-center text-sm font-medium outline-none placeholder:text-muted-foreground"
+                              className="h-full w-16 bg-transparent text-center text-sm font-medium outline-none placeholder:text-muted-foreground/50 placeholder:font-normal placeholder:italic"
                             />
                           </div>
                         ))}
@@ -502,25 +508,36 @@ export function ExpandedExerciseCard({
               );
             })}
 
-            {/* 1RM warning */}
-            {sets.some(
-              (set) =>
-                exercise.intensity === "one_rep_max_percent" &&
-                set.reps != null &&
-                set.one_rep_max_percent != null &&
-                set.one_rep_max_percent > getMaxAllowedPercent1RM(set.reps)
-            ) && (
-              <div className="flex items-stretch">
-                <div className="w-7 flex-shrink-0" />
-                <div className="flex-1 px-2 py-1.5 bg-destructive/5 border-x border-b border-border rounded-b-lg flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3 text-destructive flex-shrink-0" />
-                  <p className="text-[11px] text-destructive">
-                    One or more sets exceed the safe %1RM range for the given reps. Try lowering the % or reps.
-                  </p>
+            {/* 1RM warning — per-set details */}
+            {(() => {
+              const offending = sets
+                .map((s, i) => ({ s, i }))
+                .filter(
+                  ({ s }) =>
+                    exercise.intensity === "one_rep_max_percent" &&
+                    s.reps != null &&
+                    s.one_rep_max_percent != null &&
+                    s.one_rep_max_percent > getMaxAllowedPercent1RM(s.reps)
+                );
+              if (offending.length === 0) return null;
+
+              return (
+                <div className="flex items-stretch">
+                  <div className="w-7 flex-shrink-0" />
+                  <div className="flex-1 px-2 py-1.5 bg-destructive/5 border-x border-b border-border rounded-b-lg space-y-0.5">
+                    {offending.map(({ s, i }) => (
+                      <div key={i} className="flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3 text-destructive flex-shrink-0" />
+                        <p className="text-[11px] text-destructive">
+                          Set {i + 1}: {s.one_rep_max_percent}% is too high for {s.reps} reps — max safe is {getMaxAllowedPercent1RM(s.reps!)}%
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="w-8 flex-shrink-0" />
                 </div>
-                <div className="w-8 flex-shrink-0" />
-              </div>
-            )}
+              );
+            })()}
           </div>
         )}
 

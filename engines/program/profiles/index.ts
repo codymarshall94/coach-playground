@@ -16,6 +16,7 @@ const PROFILES: Record<Goal, GoalProfile> = {
   athletic: AthleticProfile,
   fat_loss: HypertrophyProfile, // fallback: volume bias + feasibility (tune later)
   endurance: AthleticProfile, // fallback: mixed intensity & spacing
+  power: StrengthProfile, // power shares strength's heavy compound emphasis
 };
 
 export function getGoalProfile(goal: Goal): GoalProfile {

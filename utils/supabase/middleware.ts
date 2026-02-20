@@ -30,7 +30,25 @@ export async function updateSession(request: NextRequest) {
   );
 
   // refreshing the auth token
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Protected routes — redirect unauthenticated users to /login
+  // Exclude /programs/builder and /programs/templates (allow anonymous preview)
+  const { pathname } = request.nextUrl;
+  const isProtectedPrograms =
+    (pathname === "/programs" || pathname.startsWith("/programs/")) &&
+    !pathname.startsWith("/programs/builder") &&
+    !pathname.startsWith("/programs/templates") &&
+    !pathname.startsWith("/programs/new");
+
+  if (!user && isProtectedPrograms) {
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = "/login";
+    loginUrl.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
 
   return supabaseResponse;
 }

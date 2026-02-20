@@ -20,6 +20,7 @@ function getETLCategory(normalizedETL: number) {
       textColor: "text-foreground",
       bgColor: "bg-load-low/30",
       desc: "Very low stress. Good for warmups, deloads, or active recovery.",
+      rangeIndex: 0,
     };
   if (normalizedETL < 3)
     return {
@@ -27,6 +28,7 @@ function getETLCategory(normalizedETL: number) {
       textColor: "text-foreground",
       bgColor: "bg-load-low/30",
       desc: "Low effort. Suitable for easy accessories or deload sessions.",
+      rangeIndex: 1,
     };
   if (normalizedETL < 4.5)
     return {
@@ -34,6 +36,7 @@ function getETLCategory(normalizedETL: number) {
       textColor: "text-foreground",
       bgColor: "bg-load-medium/30",
       desc: "Solid work. Typical for accessories or moderate compound lifts.",
+      rangeIndex: 2,
     };
   if (normalizedETL < 6)
     return {
@@ -41,6 +44,7 @@ function getETLCategory(normalizedETL: number) {
       textColor: "text-foreground",
       bgColor: "bg-load-max/30",
       desc: "Pushing hard. High effort compound work or heavy isolation.",
+      rangeIndex: 3,
     };
   if (normalizedETL < 8)
     return {
@@ -48,14 +52,25 @@ function getETLCategory(normalizedETL: number) {
       textColor: "text-foreground",
       bgColor: "bg-load-max/30",
       desc: "Very demanding. Heavy compounds near failure. Manage recovery.",
+      rangeIndex: 4,
     };
   return {
     label: "Max Effort",
     textColor: "text-foreground",
     bgColor: "bg-destructive/50",
     desc: "Extreme training load. Peak efforts or testing. Use sparingly.",
+    rangeIndex: 5,
   };
 }
+
+const ETL_RANGES = [
+  { label: "Recovery", range: "0 – 1.5" },
+  { label: "Light", range: "1.5 – 3" },
+  { label: "Moderate", range: "3 – 4.5" },
+  { label: "Challenging", range: "4.5 – 6" },
+  { label: "Hard", range: "6 – 8" },
+  { label: "Max Effort", range: "8 – 10" },
+];
 
 export const ETLDisplay = ({
   normalizedETL,
@@ -105,6 +120,29 @@ export const ETLDisplay = ({
           <span className="font-mono">{normalizedETL.toFixed(1)}</span>
           <span className="text-gray-500"> / 10</span>
         </p>
+
+        {/* Difficulty scale */}
+        <div className="mt-2 pt-2 border-t border-border space-y-0.5">
+          {ETL_RANGES.map((tier, i) => (
+            <div
+              key={tier.label}
+              className={cn(
+                "flex items-center justify-between px-1.5 py-0.5 rounded text-[11px]",
+                i === category.rangeIndex
+                  ? "bg-muted font-medium text-foreground"
+                  : "text-muted-foreground"
+              )}
+            >
+              <span className="flex items-center gap-1">
+                {i === category.rangeIndex && (
+                  <span className="w-1 h-1 rounded-full bg-foreground inline-block" />
+                )}
+                {tier.label}
+              </span>
+              <span className="font-mono text-[10px]">{tier.range}</span>
+            </div>
+          ))}
+        </div>
       </TooltipContent>
     </Tooltip>
   );

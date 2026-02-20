@@ -70,9 +70,33 @@ function updateGroup(
 // -----------------------------------------------------------------------------
 // Hook
 // -----------------------------------------------------------------------------
+
+function resolveInitialProgram(initialProgram?: Program): Program {
+  if (initialProgram) return initialProgram;
+
+  // Check for a guided-setup program stashed in sessionStorage
+  if (typeof window !== "undefined") {
+    try {
+      const raw = sessionStorage.getItem("guided-program");
+      if (raw) {
+        sessionStorage.removeItem("guided-program");
+        const parsed = JSON.parse(raw) as Program;
+        // Rehydrate dates
+        parsed.created_at = new Date(parsed.created_at);
+        parsed.updated_at = new Date(parsed.updated_at);
+        return parsed;
+      }
+    } catch {
+      // Ignore parse errors — fall through to default
+    }
+  }
+
+  return createEmptyProgram();
+}
+
 export function useWorkoutBuilder(initialProgram?: Program) {
   const [program, setProgram] = useState<Program>(
-    initialProgram ?? createEmptyProgram()
+    () => resolveInitialProgram(initialProgram)
   );
 
   const usingBlocks = program.mode === "blocks";
@@ -313,15 +337,6 @@ export function useWorkoutBuilder(initialProgram?: Program) {
         ? _getCurrentDays(program, usingBlocks, activeBlockIndex, activeWeekIndex).length
         : program.days?.length ?? 0;
 
-      // Enforce max 7 days per week when using blocks
-      if (usingBlocks && nextOrder >= 7) {
-        // client-side hook — show a simple alert to the user
-        if (typeof window !== "undefined") {
-          window.alert("A week can have at most 7 days.");
-        }
-        return;
-      }
-
       const newDay = createDay(type, nextOrder);
 
       updateProgram((prev) => {
@@ -373,15 +388,6 @@ export function useWorkoutBuilder(initialProgram?: Program) {
 
   const handleDuplicateWorkoutDay = useCallback(
     (index: number) => {
-      // Prevent duplicating if the active week already has 7 days
-      const currentDays = _getCurrentDays(program, usingBlocks, activeBlockIndex, activeWeekIndex);
-      if (usingBlocks && currentDays.length >= 7) {
-        if (typeof window !== "undefined") {
-          window.alert("A week can have at most 7 days.");
-        }
-        return;
-      }
-
       updateProgram((prev) => {
         const isBlock = prev.mode === "blocks";
         const blocks = [...(prev.blocks ?? [])];

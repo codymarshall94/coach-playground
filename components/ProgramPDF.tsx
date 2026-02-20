@@ -2,6 +2,7 @@ import {
   IntensitySystem,
   Program,
   ProgramDay,
+  ProgramWeek,
   RepSchemeType,
   SetInfo,
   WorkoutExerciseGroup,
@@ -137,69 +138,134 @@ const GRAY = {
   100: "#F3F4F6",
   200: "#E5E7EB",
   300: "#D1D5DB",
+  400: "#9CA3AF",
   500: "#6B7280",
   600: "#4B5563",
   800: "#1F2937",
+  900: "#111827",
 };
 
-const GOAL_COLORS: Record<string, { bg: string; text: string }> = {
-  strength: { bg: "#FEE2E2", text: "#991B1B" },
-  hypertrophy: { bg: "#DBEAFE", text: "#1E40AF" },
-  endurance: { bg: "#DCFCE7", text: "#166534" },
-  power: { bg: "#F3E8FF", text: "#6B21A8" },
+/** Solid dark colours that approximate each goal's gradient for the PDF hero. */
+const GOAL_HERO: Record<string, { bg: string; accent: string }> = {
+  strength: { bg: "#2e1065", accent: "#a78bfa" },
+  hypertrophy: { bg: "#052e16", accent: "#4ade80" },
+  endurance: { bg: "#0c1a3a", accent: "#60a5fa" },
+  power: { bg: "#451a03", accent: "#f59e0b" },
 };
 
 const s = StyleSheet.create({
   page: {
-    padding: 36,
     fontSize: 9,
     fontFamily: "Helvetica",
     color: GRAY[800],
   },
-  title: { fontSize: 20, fontWeight: "bold", letterSpacing: -0.5 },
-  headerRow: {
+
+  /* ── Hero header ── */
+  hero: {
+    paddingHorizontal: 36,
+    paddingTop: 28,
+    paddingBottom: 20,
+  },
+  heroModeLabel: {
+    fontSize: 7,
+    fontWeight: "bold",
+    letterSpacing: 1.6,
+    textTransform: "uppercase",
+    opacity: 0.5,
+    color: "#FFFFFF",
+  },
+  heroTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    letterSpacing: -0.5,
+    color: "#FFFFFF",
+    marginTop: 3,
+  },
+  heroMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    marginTop: 8,
+  },
+  heroMetaText: {
+    fontSize: 8,
+    color: "rgba(255,255,255,0.55)",
+    fontWeight: "bold",
+  },
+  heroGoalText: {
+    fontSize: 8,
+    color: "rgba(255,255,255,0.7)",
+    fontWeight: "bold",
+    textTransform: "capitalize",
+  },
+
+  /* ── Body content ── */
+  body: {
+    padding: 36,
+    paddingTop: 14,
+  },
+  description: { fontSize: 9, color: GRAY[600], marginBottom: 10 },
+
+  /* ── Block header (dark bar) ── */
+  blockHeader: {
+    backgroundColor: GRAY[900],
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  blockHeaderLeft: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    marginTop: 6,
   },
-  goalBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    fontSize: 9,
+  blockNumber: {
+    fontSize: 7,
     fontWeight: "bold",
+    letterSpacing: 1.2,
     textTransform: "uppercase",
+    color: "rgba(255,255,255,0.45)",
   },
-  modeText: { fontSize: 9, color: GRAY[500] },
-  separator: {
-    borderBottomWidth: 1,
-    borderBottomColor: GRAY[200],
-    marginVertical: 10,
+  blockName: {
+    fontSize: 10,
+    fontWeight: "bold",
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+    color: "#FFFFFF",
   },
-  description: { fontSize: 9, color: GRAY[600], marginBottom: 6 },
+  blockWeeks: {
+    fontSize: 8,
+    color: GRAY[400],
+    fontWeight: "bold",
+  },
+  blockDesc: {
+    backgroundColor: GRAY[800],
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    fontSize: 8,
+    color: GRAY[300],
+  },
 
-  // blocks
-  blockBadge: {
-    fontSize: 8,
-    fontWeight: "bold",
-    textTransform: "uppercase",
-    color: "#92400E",
-    backgroundColor: "#FEF3C7",
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 4,
-    alignSelf: "flex-start",
+  /* ── Week separator ── */
+  weekSep: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 8,
+    marginBottom: 6,
   },
-  weeksBadge: {
-    fontSize: 8,
-    color: GRAY[600],
-    borderWidth: 1,
-    borderColor: GRAY[300],
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginLeft: 6,
+  weekLabel: {
+    fontSize: 7,
+    fontWeight: "bold",
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+    color: GRAY[400],
+  },
+  weekLine: {
+    flex: 1,
+    borderBottomWidth: 0.75,
+    borderBottomColor: GRAY[200],
   },
 
   // day
@@ -208,7 +274,7 @@ const s = StyleSheet.create({
   dayDesc: { fontSize: 8, color: GRAY[500], marginBottom: 6 },
 
   // table
-  table: { borderWidth: 1, borderColor: GRAY[300], borderRadius: 4 },
+  table: { borderWidth: 1, borderColor: GRAY[300] },
   headerCell: {
     fontFamily: "Helvetica-Bold",
     fontSize: 7,
@@ -396,78 +462,129 @@ function DayTable({ day }: { day: ProgramDay }) {
 }
 
 /* ------------------------------------------------------------------
+   Week helper
+   ------------------------------------------------------------------ */
+
+function WeekSection({ week }: { week: ProgramWeek }) {
+  return (
+    <View>
+      <View style={s.weekSep}>
+        <Text style={s.weekLabel}>
+          Week {week.weekNumber}
+          {week.label ? ` — ${week.label}` : ""}
+        </Text>
+        <View style={s.weekLine} />
+      </View>
+      {week.days
+        .sort((a, b) => a.order_num - b.order_num)
+        .map((day) => (
+          <DayTable key={day.id} day={day} />
+        ))}
+    </View>
+  );
+}
+
+/* ------------------------------------------------------------------
    Main PDF Document
    ------------------------------------------------------------------ */
 
 export function ProgramPDF({ program }: { program: Program }) {
-  const gc = GOAL_COLORS[program.goal] ?? GOAL_COLORS.strength;
+  const hero = GOAL_HERO[program.goal] ?? GOAL_HERO.strength;
+
+  const totalWeeks =
+    program.mode === "blocks" && program.blocks
+      ? program.blocks.reduce(
+          (sum, b) =>
+            sum +
+            (Array.isArray(b.weeks) ? b.weeks.length : b.weekCount ?? 1),
+          0
+        )
+      : null;
+  const totalDays =
+    program.mode === "blocks" && program.blocks
+      ? program.blocks.reduce((sum, b) => sum + (b.days?.length ?? 0), 0)
+      : program.days?.length ?? 0;
 
   return (
     <Document>
       <Page size="A4" style={s.page}>
-        {/* Header */}
-        <Text style={s.title}>{program.name}</Text>
-
-        <View style={s.headerRow}>
-          <Text style={[s.goalBadge, { backgroundColor: gc.bg, color: gc.text }]}>
-            {program.goal}
-          </Text>
-          <Text style={s.modeText}>
+        {/* ── Hero header ── */}
+        <View style={[s.hero, { backgroundColor: hero.bg }]}>
+          <Text style={s.heroModeLabel}>
             {program.mode === "blocks"
               ? "Block-based program"
               : "Day-based program"}
           </Text>
+          <Text style={s.heroTitle}>{program.name}</Text>
+          <View style={s.heroMeta}>
+            <Text style={[s.heroGoalText, { color: hero.accent }]}>
+              {program.goal}
+            </Text>
+            {totalWeeks ? (
+              <Text style={s.heroMetaText}>{totalWeeks} weeks</Text>
+            ) : null}
+            <Text style={s.heroMetaText}>
+              {totalDays} training days
+              {program.mode === "blocks" ? " / block" : ""}
+            </Text>
+          </View>
         </View>
 
-        <View style={s.separator} />
+        {/* ── Body ── */}
+        <View style={s.body}>
+          {program.description ? (
+            <Text style={s.description}>{stripHtml(program.description)}</Text>
+          ) : null}
 
-        {program.description ? (
-          <Text style={s.description}>{stripHtml(program.description)}</Text>
-        ) : null}
-
-        {/* Body */}
-        {program.mode === "blocks" && program.blocks
-          ? program.blocks
-              .sort((a, b) => a.order_num - b.order_num)
-              .map((block) => (
-                <View key={block.id} style={{ marginBottom: 12 }}>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      marginBottom: 6,
-                    }}
-                  >
-                    <Text style={s.blockBadge}>{block.name}</Text>
-                    {Array.isArray(block.weeks) && block.weeks.length > 0 ? (
-                      <Text style={s.weeksBadge}>
-                        {block.weeks.length} {block.weeks.length === 1 ? "week" : "weeks"}
-                      </Text>
-                    ) : null}
-                  </View>
-                  <View style={s.separator} />
-                  {(block.weeks?.length > 0
-                    ? block.weeks
-                        .sort((a, b) => (a.weekNumber ?? 0) - (b.weekNumber ?? 0))
-                        .flatMap((w) => w.days)
-                    : block.days ?? []
-                  )
-                    .sort((a, b) => a.order_num - b.order_num)
-                    .map((day) => (
-                      <DayTable key={day.id} day={day} />
-                    ))}
-                </View>
-              ))
-          : program.days
-            ? program.days
+          {/* Block mode */}
+          {program.mode === "blocks" && program.blocks
+            ? program.blocks
                 .sort((a, b) => a.order_num - b.order_num)
-                .map((day) => (
-                  <View key={day.id}>
-                    <DayTable day={day} />
-                    <View style={s.separator} />
-                  </View>
-                ))
-            : null}
+                .map((block, bi) => {
+                  const weekCount = Array.isArray(block.weeks)
+                    ? block.weeks.length
+                    : block.weekCount ?? 1;
+                  return (
+                    <View key={block.id} style={{ marginBottom: 16 }}>
+                      {/* Block dark header */}
+                      <View style={s.blockHeader}>
+                        <View style={s.blockHeaderLeft}>
+                          <Text style={s.blockNumber}>Block {bi + 1}</Text>
+                          <Text style={s.blockName}>{block.name}</Text>
+                        </View>
+                        <Text style={s.blockWeeks}>
+                          {weekCount} {weekCount === 1 ? "week" : "weeks"}
+                        </Text>
+                      </View>
+                      {block.description ? (
+                        <Text style={s.blockDesc}>{block.description}</Text>
+                      ) : null}
+
+                      {/* Weeks with separators, or fallback to flat days */}
+                      {Array.isArray(block.weeks) && block.weeks.length > 0
+                        ? block.weeks
+                            .sort(
+                              (a, b) =>
+                                (a.weekNumber ?? 0) - (b.weekNumber ?? 0)
+                            )
+                            .map((week) => (
+                              <WeekSection key={week.id} week={week} />
+                            ))
+                        : (block.days ?? [])
+                            .sort((a, b) => a.order_num - b.order_num)
+                            .map((day) => (
+                              <DayTable key={day.id} day={day} />
+                            ))}
+                    </View>
+                  );
+                })
+            : /* Day mode */
+              program.days
+              ? program.days
+                  .sort((a, b) => a.order_num - b.order_num)
+                  .map((day) => <DayTable key={day.id} day={day} />)
+              : null}
+        </View>
       </Page>
     </Document>
   );

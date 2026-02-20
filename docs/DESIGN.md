@@ -181,6 +181,18 @@ Goals use a shared mapping for icon, text color, and background tint. Keep these
 
 > **Note:** `ProgramPreview` (print dialog) currently uses hard-coded Tailwind color classes (`bg-red-100`, `bg-blue-100`, etc.) instead of these semantic tokens. This is a known consistency gap — new surfaces should prefer the token-based map above.
 
+### Auth & modal surfaces
+
+PRGRM's identity is **editorial and monochrome** — not generic SaaS. Auth-related surfaces (login page, save/signup modal) follow these rules:
+
+1. **No decorative gradients** — Use `bg-background` or solid `bg-neutral-950` (dark panels), never `bg-gradient-to-*` from slate/gray.
+2. **No hard-coded slate/gray** — Use semantic tokens (`text-foreground`, `text-muted-foreground`, `bg-muted`, `border-border`). This ensures dark mode works automatically.
+3. **Branded dark panel** — The `SavePromptModal` uses a split layout: left side is `bg-neutral-950` with Logo, bold headline, and emerald bullet points (value props). Right side is the form on `bg-background`.
+4. **Button style** — Primary CTAs use `rounded-full` to match the landing page. Cancel actions are plain text links (`text-muted-foreground hover:text-foreground`), not ghost buttons.
+5. **Error treatment** — Inline error banners use `border-destructive/30 bg-destructive/5 text-destructive` with an `AlertCircle` icon. Per-field errors use `text-xs text-destructive` with icon. Never plain `text-red-600`.
+6. **Color only carries meaning** — Emerald dots = feature bullets. Red = errors. No decorative color splashes.
+7. **Login page** — Clean centered layout on `bg-background`, Logo above, no Card wrapper, `rounded-full` buttons, consistent with landing page aesthetic.
+
 ---
 
 ## Theming

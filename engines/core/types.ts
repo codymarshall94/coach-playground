@@ -20,7 +20,8 @@ export type Goal =
   | "hypertrophy"
   | "athletic"
   | "fat_loss"
-  | "endurance";
+  | "endurance"
+  | "power";
 export type DayRole = "High" | "Medium" | "Low";
 
 /** Movement categories used for balance / coverage */

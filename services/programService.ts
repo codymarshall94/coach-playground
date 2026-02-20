@@ -16,6 +16,7 @@ import {
 } from "@/types/Workout";
 import { createClient } from "@/utils/supabase/client";
 import { transformProgramFromSupabase } from "@/utils/program/transformProgram";
+import { PROGRAM_DETAIL_SELECT, PROGRAM_INDEX_SELECT } from "@/services/programQueries";
 
 /* ----------------------------------------------------------------------------
  * Supabase client (single instance per module import)
@@ -51,7 +52,7 @@ export async function insertProgramBlocks(
     name: b.name,
     description: b.description,
     order_num: index,
-    weeks: Array.isArray(b.weeks) ? b.weeks.length : (b.weekCount ?? 1),
+    week_count: Array.isArray(b.weeks) ? b.weeks.length : (b.weekCount ?? 1),
   }));
 
   const { data, error } = await supabase
@@ -89,7 +90,11 @@ export async function insertProgramDays(
   programId: string,
   days: ProgramDay[],
   blockId?: string,
-  weekId?: string
+  weekId?: string,
+  /** Offset added to each day's positional index for order_num.
+   *  Used in block mode so each week's days get globally-unique
+   *  order values within a block (e.g. week 0 → 0,1,2; week 1 → 3,4,5). */
+  orderOffset = 0
 ) {
   const payload = days.map((d, index) => ({
     program_id: programId,
@@ -97,7 +102,7 @@ export async function insertProgramDays(
     week_id: weekId ?? null,
     name: d.name,
     description: d.description,
-    order_num: index,
+    order_num: orderOffset + index,
     type: d.type,
   }));
 
@@ -211,6 +216,23 @@ export async function insertExerciseSetsBulk(
 
 /* ----------------------------------------------------------------------------
  * Top-level save/update flow
+ *
+ * Strategy: delete-all + re-insert.
+ *
+ * Why not upsert / diff?
+ *   The program tree is 6 levels deep (program → blocks → weeks → days →
+ *   groups → exercises → sets). Client-side IDs are ephemeral UUIDs that
+ *   don't correspond to DB row IDs, so there's no stable key to diff on.
+ *   Implementing order-based matching across all levels would be error-prone
+ *   and fragile when the user reorders items.
+ *
+ *   The current approach is simple, correct, and fast enough. The trade-off
+ *   is that child row IDs change on every save. This is acceptable because
+ *   no external system references those IDs — they're purely internal.
+ *
+ *   If ID stability becomes important (e.g. for workout logging or sharing
+ *   deep-links to individual days), revisit with a server-side Postgres
+ *   function that can do a transactional diff.
  * -------------------------------------------------------------------------- */
 
 export async function saveOrUpdateProgramService(program: Program) {
@@ -325,7 +347,9 @@ export async function insertProgramStructure(
       const weeksInserted = await insertProgramWeeks(insertedBlock.id, weeks as ProgramWeek[]);
       const weeksByOrd = byOrder(weeksInserted);
 
-      // Insert days for each week
+      // Insert days for each week, offsetting order_num so values are
+      // unique within the block (the DB has a unique index on (block_id, order_num)).
+      let dayOrderOffset = 0;
       for (let wIndex = 0; wIndex < weeks.length; wIndex++) {
         const week = weeks[wIndex];
         const insertedWeek = weeksByOrd.get(wIndex);
@@ -335,9 +359,11 @@ export async function insertProgramStructure(
           programId,
           week.days,
           insertedBlock.id,
-          insertedWeek.id
+          insertedWeek.id,
+          dayOrderOffset
         );
         await insertDaysWithGroups(daysInserted, week.days);
+        dayOrderOffset += week.days.length;
       }
     }
   }
@@ -351,13 +377,15 @@ export async function insertDaysWithGroups(
   insertedDays: Array<{ id: string; order_num: number }>,
   originalDays: ProgramDay[]
 ) {
-  const dayByOrd = byOrder(insertedDays);
+  // Sort by order_num so positional pairing with originalDays is correct
+  // even when order_num is offset (block mode with multiple weeks).
+  const sorted = [...insertedDays].sort((a, b) => a.order_num - b.order_num);
   const dayErrors: Array<{ dayIndex: number; where: string; message: string }> =
     [];
 
   for (let i = 0; i < originalDays.length; i++) {
     const srcDay = originalDays[i];
-    const dstDay = dayByOrd.get(i);
+    const dstDay = sorted[i];
     if (!dstDay) continue;
 
     const groups = arr(srcDay?.groups);
@@ -489,27 +517,14 @@ type ProgramIndex = {
   cover_image: string | null;
   created_at: string | null;
   updated_at: string | null;
-  blocks: Array<{ id: string; weeks: Array<{ id: string; days: Array<{ id: string }> }>; days: Array<{ id: string }> }>;
+  blocks: Array<{ id: string; weeks: Array<{ id: string; days: Array<{ id: string }> }> }>;
   days: Array<{ id: string }>;
 };
 
 export async function getAllProgramsForUser(): Promise<Program[]> {
   const { data, error } = await supabase
     .from("programs")
-    .select(
-      `
-      id, name, description, goal, mode, cover_image, created_at, updated_at,
-      blocks:program_blocks (
-        id,
-        weeks:program_weeks (
-          id,
-          days:program_days ( id )
-        ),
-        days:program_days ( id )
-      ),
-      days:program_days ( id )
-    `
-    )
+    .select(PROGRAM_INDEX_SELECT)
     .order("updated_at", { ascending: false });
 
   if (error) {
@@ -530,47 +545,7 @@ export async function getAllProgramsForUser(): Promise<Program[]> {
 export async function getProgramById(id: string): Promise<Program | null> {
   const { data, error } = await supabase
     .from("programs")
-    .select(
-      `
-      *,
-      blocks:program_blocks (
-        *,
-        weeks:program_weeks (
-          *,
-          days:program_days (
-            *,
-            groups:workout_exercise_groups (
-              *,
-              exercises:workout_exercises (
-                *,
-                sets:exercise_sets (*)
-              )
-            )
-          )
-        ),
-        days:program_days (
-          *,
-          groups:workout_exercise_groups (
-            *,
-            exercises:workout_exercises (
-              *,
-              sets:exercise_sets (*)
-            )
-          )
-        )
-      ),
-      days:program_days (
-        *,
-        groups:workout_exercise_groups (
-          *,
-          exercises:workout_exercises (
-            *,
-            sets:exercise_sets (*)
-          )
-        )
-      )
-    `
-    )
+    .select(PROGRAM_DETAIL_SELECT)
     .eq("id", id)
     .single();
 

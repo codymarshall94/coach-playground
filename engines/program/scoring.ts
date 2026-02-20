@@ -143,7 +143,7 @@ export function scoreProgram(spec: ProgramSpec, blocks: BlockMetrics[]) {
   const lo = Math.max(0, 1 - hi - mid);
 
   const intensityFit =
-    spec.goal === "strength"
+    spec.goal === "strength" || spec.goal === "power"
       ? clamp01(0.5 + 0.5 * hi)
       : spec.goal === "hypertrophy"
       ? clamp01(0.5 + 0.5 * mid)

@@ -2,10 +2,10 @@ import type { Program, SetInfo } from "@/types/Workout";
 
 // ---------------------------------------------------------------------------
 // Transform Supabase program response → application Program type
-// Unpacks `params` JSONB into top-level SetInfo fields after fetch.
 // ---------------------------------------------------------------------------
 
-function transformSets(sets: any[]): SetInfo[] {
+/** Unpack `params` JSONB column into top-level SetInfo fields. */
+function transformSets(sets: Record<string, unknown>[]): SetInfo[] {
   return sets.map((s) => {
     const { params, ...rest } = s;
     return {
@@ -15,106 +15,121 @@ function transformSets(sets: any[]): SetInfo[] {
   });
 }
 
-function transformGroups(groups: any[]) {
+/** Transform exercise groups, applying sensible intensity defaults per exercise. */
+function transformGroups(groups: Record<string, unknown>[]) {
   return (
-    groups?.map((g: any) => ({
+    groups?.map((g: Record<string, unknown>) => ({
       ...g,
-      exercises: g.exercises?.map((ex: any) => {
-        const sets = transformSets(ex.sets ?? []);
+      exercises: (g.exercises as Record<string, unknown>[] | undefined)?.map(
+        (ex: Record<string, unknown>) => {
+          const sets = transformSets(
+            (ex.sets as Record<string, unknown>[]) ?? []
+          );
 
-        // Ensure each set has a sensible default for the exercise's intensity
-        const normalized = sets.map((s: any) => {
-          // Default rest to 60s when null/undefined/0 (0 is not a valid option)
-          const withRest = { ...s, rest: s.rest || 60 };
-          const intensity = ex.intensity;
-          if (intensity === "rpe") {
-            return {
-              ...withRest,
-              rpe: withRest.rpe ?? 8,
-              rir: withRest.rir ?? null,
-              one_rep_max_percent: withRest.one_rep_max_percent ?? null,
-            };
-          }
-          if (intensity === "one_rep_max_percent") {
-            return {
-              ...withRest,
-              one_rep_max_percent: withRest.one_rep_max_percent ?? 75,
-              rpe: withRest.rpe ?? null,
-              rir: withRest.rir ?? null,
-            };
-          }
-          if (intensity === "rir") {
-            return {
-              ...withRest,
-              rir: withRest.rir ?? 2,
-              rpe: withRest.rpe ?? null,
-              one_rep_max_percent: withRest.one_rep_max_percent ?? null,
-            };
-          }
+          const normalized = sets.map((s) => {
+            // Default rest to 60s when null/undefined/0 (0 is not a valid option)
+            const withRest = { ...s, rest: s.rest || 60 };
+            const intensity = ex.intensity as string | undefined;
 
-          return withRest;
-        });
+            if (intensity === "rpe") {
+              return {
+                ...withRest,
+                rpe: withRest.rpe ?? 8,
+                rir: null,
+                one_rep_max_percent: null,
+              };
+            }
+            if (intensity === "one_rep_max_percent") {
+              return {
+                ...withRest,
+                one_rep_max_percent: withRest.one_rep_max_percent ?? 75,
+                rpe: null,
+                rir: null,
+              };
+            }
+            if (intensity === "rir") {
+              return {
+                ...withRest,
+                rir: withRest.rir ?? 2,
+                rpe: null,
+                one_rep_max_percent: null,
+              };
+            }
 
-        return {
-          ...ex,
-          sets: normalized,
-        };
-      }),
+            return withRest;
+          });
+
+          return { ...ex, sets: normalized };
+        }
+      ),
     })) ?? []
   );
 }
 
-function transformDays(days: any[]) {
+function transformDays(days: Record<string, unknown>[]) {
   return (
-    days?.map((d: any) => ({
+    days?.map((d: Record<string, unknown>) => ({
       ...d,
-      groups: transformGroups(d.groups ?? []),
+      groups: transformGroups(
+        (d.groups as Record<string, unknown>[]) ?? []
+      ),
     })) ?? []
   );
 }
 
-export function transformProgramFromSupabase(data: any): Program {
+export function transformProgramFromSupabase(data: Record<string, unknown>): Program {
   const transformed = {
     ...data,
-    days: transformDays(data.days ?? []),
+    days: transformDays((data.days as Record<string, unknown>[]) ?? []),
     blocks:
-      data.blocks?.map((b: any) => {
-        // `b.weeks` from the new query is an array of week rows with nested days.
-        // Legacy fallback: if `b.weeks` is a number (old int column), synthesize.
-        const hasWeeksTable = Array.isArray(b.weeks);
+      (data.blocks as Record<string, unknown>[] | undefined)?.map(
+        (b: Record<string, unknown>) => {
+          // `b.weeks` is the embedded program_weeks array from PostgREST.
+          // (The old integer column was renamed to `week_count` so there is
+          //  no collision — `b.weeks` is always an array.)
+          const weeksArr = b.weeks as Record<string, unknown>[] | undefined;
+          const hasWeeks = Array.isArray(weeksArr) && weeksArr.length > 0;
 
-        let weeks: any[];
-        if (hasWeeksTable && b.weeks.length > 0) {
-          // New format: weeks rows from program_weeks table, each with nested days
-          weeks = b.weeks
-            .sort((a: any, b2: any) => (a.order_num ?? 0) - (b2.order_num ?? 0))
-            .map((w: any) => ({
-              id: w.id,
-              weekNumber: w.week_number ?? w.weekNumber ?? 1,
-              label: w.label ?? `Week ${w.week_number ?? 1}`,
-              days: transformDays(w.days ?? []),
-            }));
-        } else {
-          // Legacy block: no weeks rows — synthesize a single week from block.days
-          const fallbackDays = transformDays(b.days ?? []);
-          weeks = [{
-            id: crypto.randomUUID(),
-            weekNumber: 1,
-            label: "Week 1",
-            days: fallbackDays,
-          }];
+          let weeks: Record<string, unknown>[];
+          if (hasWeeks) {
+            weeks = weeksArr
+              .sort(
+                (a, b2) =>
+                  ((a.order_num as number) ?? 0) -
+                  ((b2.order_num as number) ?? 0)
+              )
+              .map((w) => ({
+                id: w.id,
+                weekNumber: w.week_number ?? (w as Record<string, unknown>).weekNumber ?? 1,
+                label: w.label ?? `Week ${w.week_number ?? 1}`,
+                days: transformDays(
+                  (w.days as Record<string, unknown>[]) ?? []
+                ),
+              }));
+          } else {
+            // Pre-migration block with no program_weeks rows — synthesize
+            // a single week from whatever days are available on the block.
+            const fallbackDays = transformDays(
+              (b.days as Record<string, unknown>[]) ?? []
+            );
+            weeks = [
+              {
+                id: crypto.randomUUID(),
+                weekNumber: 1,
+                label: "Week 1",
+                days: fallbackDays,
+              },
+            ];
+          }
+
+          const allDays = weeks.flatMap(
+            (w) => w.days as Record<string, unknown>[]
+          );
+
+          return { ...b, days: allDays, weeks, weekCount: weeks.length };
         }
-
-        // block.days = union of all weeks' days (backward compat)
-        const allDays = weeks.flatMap((w: any) => w.days);
-
-        return {
-          ...b,
-          days: allDays,
-          weeks,
-          weekCount: weeks.length,
-        };
-      }) ?? [],
+      ) ?? [],
   } as Program;
+
   return transformed;
 }

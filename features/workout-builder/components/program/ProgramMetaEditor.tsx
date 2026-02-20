@@ -66,6 +66,7 @@ interface ProgramMetaEditorProps {
   onOpenOverview?: () => void;
   overviewOpen: boolean;
   hideScore?: boolean;
+  onPendingCoverFile?: (file: File | null) => void;
 }
 
 export const ProgramMetaEditor = ({
@@ -76,6 +77,7 @@ export const ProgramMetaEditor = ({
   onOpenOverview,
   overviewOpen,
   hideScore = false,
+  onPendingCoverFile,
 }: ProgramMetaEditorProps) => {
   const [editedName, setEditedName] = useState(program.name || "");
   const [isEditingName, setIsEditingName] = useState(false);
@@ -114,6 +116,7 @@ export const ProgramMetaEditor = ({
             program={program}
             onChange={onChange}
             onSwitchMode={onSwitchMode}
+            onPendingCoverFile={onPendingCoverFile}
           />
         </div>
       </div>

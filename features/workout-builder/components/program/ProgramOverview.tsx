@@ -544,7 +544,14 @@ export function ProgramOverviewPanel({ program }: { program: Program }) {
     return program.days ?? [];
   }, [program]);
 
-  const dayNames = currentDays.map((d) => d.name || "Day");
+  // dayNames should only include days that have exercises (matching the
+  // engine's active-day filter which excludes zero-load days from roles).
+  const trainingDays = currentDays.filter(
+    (d) =>
+      (d.type === "workout" || d.type === "active_rest") &&
+      (d.groups ?? []).length > 0,
+  );
+  const dayNames = trainingDays.map((d) => d.name || "Day");
 
   const workoutDayCount = currentDays.filter(
     (d) => d.type === "workout" || d.type === "active_rest",

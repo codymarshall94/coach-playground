@@ -1,5 +1,7 @@
 import { WorkoutBuilder } from "@/features/workout-builder/WorkoutBuilder";
 import { createClient } from "@/utils/supabase/server";
+import { PROGRAM_DETAIL_SELECT } from "@/services/programQueries";
+import { transformProgramFromSupabase } from "@/utils/program/transformProgram";
 
 export default async function ProgramEditPage({
   params,
@@ -11,34 +13,7 @@ export default async function ProgramEditPage({
 
   const { data, error } = await supabase
     .from("programs")
-    .select(
-      `
-      *,
-      blocks:program_blocks (
-        *,
-        days:program_days (
-          *,
-          groups:workout_exercise_groups (
-            *,
-            exercises:workout_exercises (
-              *,
-              sets:exercise_sets (*)
-            )
-          )
-        )
-      ),
-      days:program_days (
-        *,
-        groups:workout_exercise_groups (
-          *,
-          exercises:workout_exercises (
-            *,
-            sets:exercise_sets (*)
-          )
-        )
-      )
-      `
-    )
+    .select(PROGRAM_DETAIL_SELECT)
     .eq("id", id)
     .single();
 
@@ -47,5 +22,5 @@ export default async function ProgramEditPage({
     return <p>Failed to load program</p>;
   }
 
-  return <WorkoutBuilder initialProgram={data} />;
+  return <WorkoutBuilder initialProgram={transformProgramFromSupabase(data)} />;
 }

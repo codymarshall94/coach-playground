@@ -18,10 +18,6 @@ import {
 } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import {
-  deleteCoverImage,
-  uploadCoverImage,
-} from "@/services/coverImageService";
 import type {
   Program,
   ProgramBlock,
@@ -33,6 +29,24 @@ import { motion } from "framer-motion";
 import { ImagePlus, Settings2, Trash2, Upload } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useRef, useState } from "react";
+
+/* -------------------------------------------------------------------------- */
+/*  Cover image validation                                                    */
+/* -------------------------------------------------------------------------- */
+
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+
+function validateCoverImage(file: File): string | null {
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    return "File type not supported. Please use JPG, PNG, WebP, or GIF.";
+  }
+  if (file.size > MAX_FILE_SIZE) {
+    const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+    return `File is too large (${sizeMB} MB). Maximum size is 5 MB.`;
+  }
+  return null;
+}
 
 /* -------------------------------------------------------------------------- */
 /*  Default gradient backgrounds (used when no cover image is set)            */
@@ -59,6 +73,8 @@ interface ProgramSettingsSheetProps {
   program: Program;
   onChange: (updated: Partial<Program>) => void;
   onSwitchMode: (updated: Program) => void;
+  /** Called with the raw File when the user picks a cover image, or null to clear. */
+  onPendingCoverFile?: (file: File | null) => void;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -71,10 +87,11 @@ export const ProgramSettingsSheet = ({
   program,
   onChange,
   onSwitchMode,
+  onPendingCoverFile,
 }: ProgramSettingsSheetProps) => {
   const usingBlocks = program.mode === "blocks";
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
 
   /* ---- Mode switch ---- */
   const handleSwitch = () => {
@@ -112,37 +129,48 @@ export const ProgramSettingsSheet = ({
     }
   };
 
-  /* ---- Image upload ---- */
+  /* ---- Image pick (local preview only — upload deferred to save) ---- */
   const handleFileChange = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
+    (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
 
-      setUploading(true);
-      try {
-        const url = await uploadCoverImage(file, program.id);
-        onChange({ cover_image: url });
-      } catch (err) {
-        console.error("Cover upload failed:", err);
-      } finally {
-        setUploading(false);
-        // Reset so the same file can be re-selected
+      // Client-side validation
+      const validationError = validateCoverImage(file);
+      if (validationError) {
+        setImageError(validationError);
         if (fileInputRef.current) fileInputRef.current.value = "";
+        return;
       }
+
+      setImageError(null);
+
+      // Revoke any previous blob URL to avoid memory leaks
+      if (program.cover_image?.startsWith("blob:")) {
+        URL.revokeObjectURL(program.cover_image);
+      }
+
+      const blobUrl = URL.createObjectURL(file);
+      onChange({ cover_image: blobUrl });
+      onPendingCoverFile?.(file);
+
+      // Reset so the same file can be re-selected
+      if (fileInputRef.current) fileInputRef.current.value = "";
     },
-    [program.id, onChange]
+    [program.cover_image, onChange, onPendingCoverFile]
   );
 
-  const handleRemoveImage = useCallback(async () => {
+  const handleRemoveImage = useCallback(() => {
     if (!program.cover_image) return;
 
-    try {
-      await deleteCoverImage(program.id, program.cover_image);
-    } catch {
-      // Deletion from storage is best-effort
+    // Revoke blob URL if local
+    if (program.cover_image.startsWith("blob:")) {
+      URL.revokeObjectURL(program.cover_image);
     }
+
     onChange({ cover_image: null });
-  }, [program.id, program.cover_image, onChange]);
+    onPendingCoverFile?.(null);
+  }, [program.cover_image, onChange, onPendingCoverFile]);
 
   const nextMode = usingBlocks ? "Days" : "Blocks";
   const gradient = PROGRAM_GRADIENTS[program.goal];
@@ -191,6 +219,7 @@ export const ProgramSettingsSheet = ({
                   fill
                   className="object-cover"
                   sizes="(max-width: 448px) 100vw, 448px"
+                  unoptimized={program.cover_image.startsWith("blob:")}
                 />
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-white/60">
@@ -198,6 +227,8 @@ export const ProgramSettingsSheet = ({
                   <span className="text-xs font-medium">Default gradient</span>
                 </div>
               )}
+
+
             </div>
 
             {/* Upload / Remove buttons */}
@@ -206,11 +237,10 @@ export const ProgramSettingsSheet = ({
                 variant="outline"
                 size="sm"
                 className="flex-1"
-                disabled={uploading}
                 onClick={() => fileInputRef.current?.click()}
               >
                 <Upload className="w-3.5 h-3.5 mr-1.5" />
-                {uploading ? "Uploading…" : "Upload image"}
+                Upload image
               </Button>
 
               {program.cover_image && (
@@ -228,10 +258,14 @@ export const ProgramSettingsSheet = ({
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif"
+              accept=".jpg,.jpeg,.png,.webp,.gif"
               className="hidden"
               onChange={handleFileChange}
             />
+
+            {imageError && (
+              <p className="text-xs text-destructive">{imageError}</p>
+            )}
 
             <p className="text-xs text-muted-foreground">
               Max 5 MB. JPG, PNG, WebP or GIF.

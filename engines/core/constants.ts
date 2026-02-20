@@ -71,6 +71,15 @@ export const GOAL_WEIGHTS: Record<
     balanceHealth: 0.05,
     feasibility: 0.1,
   },
+  power: {
+    specificity: 0.2,
+    progression: 0.2,
+    stressPatterning: 0.2,
+    volumeFit: 0.1,
+    intensityFit: 0.2,
+    balanceHealth: 0.05,
+    feasibility: 0.05,
+  },
 };
 
 export const RECOMMENDED_MINUTES_BAND: Record<

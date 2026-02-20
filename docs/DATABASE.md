@@ -42,7 +42,7 @@ profiles                    (user profiles, FK → auth.users)
 | program_id | uuid FK → programs | cascade |
 | name | text | required |
 | description | text | nullable |
-| weeks | int | default 4, CHECK ≥ 1 (legacy count — prefer program_weeks rows) |
+| week_count | int | default 4, CHECK ≥ 1 (legacy count — prefer program_weeks rows) |
 | order_num | int | positional |
 
 ### `program_weeks`

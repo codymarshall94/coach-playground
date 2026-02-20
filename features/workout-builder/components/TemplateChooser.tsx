@@ -3,33 +3,31 @@
 import { RichTextRenderer } from "@/components/RichTextEditor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import useTemplates from "@/hooks/useTemplates";
+import { PROGRAM_GRADIENTS } from "@/features/workout-builder/components/program/ProgramSettingsSheet";
+import type { ProgramGoal } from "@/types/Workout";
 import { motion } from "framer-motion";
-import { ArrowLeft, Bolt, Dumbbell, Flame, HeartPulse } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Bolt,
+  Dumbbell,
+  Flame,
+  HeartPulse,
+  type LucideIcon,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
-import { JSX } from "react";
 
-const goalSections: Record<
-  "hypertrophy" | "strength" | "power" | "endurance",
-  { label: string; icon: JSX.Element }
-> = {
-  hypertrophy: {
-    label: "Hypertrophy Programs",
-    icon: <Dumbbell className="text-pink-500 w-5 h-5" />,
-  },
-  strength: {
-    label: "Strength Programs",
-    icon: <Flame className="text-blue-500 w-5 h-5" />,
-  },
-  power: {
-    label: "Athletic Power Programs",
-    icon: <Bolt className="text-orange-500 w-5 h-5" />,
-  },
-  endurance: {
-    label: "Conditioning & Endurance",
-    icon: <HeartPulse className="text-green-500 w-5 h-5" />,
-  },
+interface GoalMeta {
+  label: string;
+  icon: LucideIcon;
+}
+
+const goalSections: Record<ProgramGoal, GoalMeta> = {
+  hypertrophy: { label: "Hypertrophy Programs", icon: Dumbbell },
+  strength: { label: "Strength Programs", icon: Flame },
+  power: { label: "Athletic Power Programs", icon: Bolt },
+  endurance: { label: "Conditioning & Endurance", icon: HeartPulse },
 };
 
 export default function TemplateChooserPage() {
@@ -46,8 +44,15 @@ export default function TemplateChooserPage() {
             {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
-                className="h-40 bg-muted/60 animate-pulse rounded-2xl"
-              />
+                className="overflow-hidden rounded-xl border bg-card"
+              >
+                <div className="h-32 bg-muted/60 animate-pulse" />
+                <div className="p-4 space-y-3">
+                  <div className="h-5 w-3/4 bg-muted animate-pulse rounded" />
+                  <div className="h-4 w-full bg-muted/40 animate-pulse rounded" />
+                  <div className="h-4 w-2/3 bg-muted/40 animate-pulse rounded" />
+                </div>
+              </div>
             ))}
           </div>
         </div>
@@ -101,6 +106,8 @@ export default function TemplateChooserPage() {
           if (!sectionTemplates.length) return null;
 
           const meta = goalSections[goalKey];
+          const Icon = meta.icon;
+          const gradient = PROGRAM_GRADIENTS[goalKey];
 
           return (
             <motion.section
@@ -111,6 +118,9 @@ export default function TemplateChooserPage() {
               transition={{ delay: sectionIndex * 0.2 }}
             >
               <div className="flex items-center gap-3 mb-6">
+                <div className="flex items-center justify-center w-8 h-8 rounded-lg" style={{ background: gradient }}>
+                  <Icon className="w-4 h-4 text-white" />
+                </div>
                 <h2 className="text-display text-foreground">{meta.label}</h2>
               </div>
 
@@ -122,42 +132,58 @@ export default function TemplateChooserPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
                   >
-                    <Card
-                      onClick={
-                        () =>
-                          router.push(
-                            `/programs/builder?template=${template.id}`
-                          ) // UUID from DB
+                    <div
+                      onClick={() =>
+                        router.push(
+                          `/programs/builder?template=${template.id}`
+                        )
                       }
-                      className="cursor-pointer group border border-border bg-background/70 backdrop-blur-lg rounded-2xl transition-all hover:shadow-xl hover:-translate-y-1 relative overflow-hidden"
+                      className="cursor-pointer group relative flex flex-col overflow-hidden rounded-xl border bg-card transition-all duration-200 hover:shadow-lg hover:border-border/80 hover:-translate-y-1 focus-within:ring-2 focus-within:ring-brand/40"
                     >
-                      <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r bg-brand" />
-
-                      <CardHeader className="relative z-10">
-                        <CardTitle className="text-title group-hover:text-foreground">
-                          {template.name}
-                        </CardTitle>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          <Badge variant="secondary" className="text-meta">
+                      {/* Gradient banner with decorative icon */}
+                      <div
+                        className="relative h-32 w-full shrink-0 overflow-hidden"
+                        style={{ background: gradient }}
+                      >
+                        {/* Large decorative icon */}
+                        <Icon className="absolute -bottom-3 -right-3 w-24 h-24 text-white/10 rotate-[-15deg] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-10deg]" />
+                        {/* Small icon badge */}
+                        <div className="absolute top-3 left-3 flex items-center justify-center w-9 h-9 rounded-lg bg-white/15 backdrop-blur-sm">
+                          <Icon className="w-5 h-5 text-white" />
+                        </div>
+                        {/* Badges on banner */}
+                        <div className="absolute bottom-3 left-3 flex gap-2">
+                          <Badge className="bg-white/20 text-white border-white/20 backdrop-blur-sm text-[11px] hover:bg-white/30">
                             {template.mode === "blocks" ? "Blocks" : "Days"}
                           </Badge>
-                          <Badge variant="outline" className="text-meta">
+                          <Badge className="bg-white/20 text-white border-white/20 backdrop-blur-sm text-[11px] hover:bg-white/30">
                             {`${template.daysCount ?? 0} Days`}
                           </Badge>
                         </div>
-                      </CardHeader>
-
-                      <CardContent className="text-sm text-muted-foreground z-10 relative px-6 pb-6 min-h-[72px]">
-                        <RichTextRenderer
-                          html={template.description}
-                          truncate
-                        />
-                      </CardContent>
-
-                      <div className="absolute bottom-2 right-2 opacity-10 group-hover:opacity-20 transition-opacity z-0">
-                        {meta.icon}
                       </div>
-                    </Card>
+
+                      {/* Card body */}
+                      <div className="flex flex-1 flex-col p-4">
+                        <h3 className="text-title group-hover:text-foreground transition-colors">
+                          {template.name}
+                        </h3>
+
+                        {template.description && (
+                          <div className="mt-2 text-sm text-muted-foreground line-clamp-3 min-h-[3.75rem]">
+                            <RichTextRenderer
+                              html={template.description}
+                              truncate
+                            />
+                          </div>
+                        )}
+
+                        {/* CTA footer */}
+                        <div className="mt-auto pt-4 flex items-center text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+                          Use this template
+                          <ArrowRight className="ml-1.5 w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                        </div>
+                      </div>
+                    </div>
                   </motion.div>
                 ))}
               </div>

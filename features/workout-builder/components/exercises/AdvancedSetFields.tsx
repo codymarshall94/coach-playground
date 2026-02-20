@@ -18,15 +18,15 @@ const setTypeConfig = {
   drop: {
     title: "Drop Set",
     fields: [
-      { label: "Drop %", key: "drop_percent", placeholder: "20" },
-      { label: "Drop Sets", key: "drop_sets", placeholder: "2" },
+      { label: "Drop %", key: "drop_percent", placeholder: "e.g. 20" },
+      { label: "Drop Sets", key: "drop_sets", placeholder: "e.g. 2" },
     ],
   },
   cluster: {
     title: "Cluster Set",
     fields: [
-      { label: "Cluster Reps", key: "cluster_reps", placeholder: "3" },
-      { label: "Intra Rest (s)", key: "intra_rest", placeholder: "15" },
+      { label: "Cluster Reps", key: "cluster_reps", placeholder: "e.g. 3" },
+      { label: "Intra Rest (s)", key: "intra_rest", placeholder: "e.g. 15" },
     ],
   },
   myo_reps: {
@@ -35,16 +35,16 @@ const setTypeConfig = {
       {
         label: "Activation Reps",
         key: "activation_set_reps",
-        placeholder: "12",
+        placeholder: "e.g. 12",
       },
-      { label: "Mini Sets", key: "mini_sets", placeholder: "3" },
+      { label: "Mini Sets", key: "mini_sets", placeholder: "e.g. 3" },
     ],
   },
   rest_pause: {
     title: "Rest Pause",
     fields: [
-      { label: "Initial Reps", key: "initial_reps", placeholder: "8" },
-      { label: "Pause Duration (s)", key: "pause_duration", placeholder: "10" },
+      { label: "Initial Reps", key: "initial_reps", placeholder: "e.g. 8" },
+      { label: "Pause Duration (s)", key: "pause_duration", placeholder: "e.g. 10" },
     ],
   },
 };
@@ -73,7 +73,7 @@ export function AdvancedSetFields({ set, index, updateSet }: Props) {
                 )
               }
               placeholder={field.placeholder}
-              className="h-8 text-sm text-center bg-white/50"
+              className="h-8 text-sm text-center bg-white/50 placeholder:text-muted-foreground/50 placeholder:font-normal placeholder:italic"
             />
           </div>
         ))}

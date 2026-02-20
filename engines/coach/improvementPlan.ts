@@ -61,6 +61,7 @@ function goalLabel(goal: Goal): string {
     athletic: "athletic performance",
     fat_loss: "fat loss",
     endurance: "endurance",
+    power: "power development",
   };
   return map[goal] ?? goal;
 }
@@ -241,6 +242,17 @@ function buildIntensityFitItem(
     );
     steps.push(
       "Increase light circuit-style work with higher rep ranges (15–20+).",
+    );
+  } else if (spec.goal === "power") {
+    const hi = Math.round((ih.high ?? 0) * 100);
+    steps.push(
+      `Currently ${hi}% of sessions are high-intensity — aim for ≥30%.`,
+    );
+    steps.push(
+      "Pair heavy compound lifts (1–5 reps at 80–95% 1RM) with explosive movements like jumps and throws.",
+    );
+    steps.push(
+      "Keep accessory work moderate to support recovery between power sessions.",
     );
   } else {
     steps.push(

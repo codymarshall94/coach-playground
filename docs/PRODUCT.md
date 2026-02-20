@@ -2,7 +2,11 @@
 
 ## What it is
 
-PRGRM is a workout-program builder and analyzer for coaches and self-coached athletes. Users design structured training programs, receive real-time analytics, and export finished programs — no account required to start building.
+PRGRM is a workout-program **design and analysis** tool for coaches and self-coached athletes. Users build structured training programs, receive real-time analytics on volume, intensity, and balance, and export or share finished programs. **PRGRM is not a workout-tracking app** — it focuses entirely on the planning and programming side. There is no rep logging, session tracking, or progress journaling.
+
+## Where it's going
+
+Saved programs will eventually be **publishable to a marketplace** where other users can browse, preview, and purchase them. The builder is the authoring tool; the marketplace is the distribution layer. Keep this in mind when designing features — programs should be self-contained, well-structured artifacts that make sense to someone who didn't create them.
 
 ## Who it's for
 

@@ -43,15 +43,19 @@ export function computeWeekFromSequence(
     };
   }
 
-  // Use first N slots as the projected “week”
-  const N = Math.min(cycle.length);
-  const projected = cycle.slice(0, N);
 
-  // Normalize loads across projected window → High/Med/Low via z-score
-  const loads = projected.map((d) => d.sessionLoad);
+  // Use all slots for volume/duration, but only active days (load > 0) for
+  // stress roles. Rest days and empty workout days have zero load and should
+  // not appear in the stress strip.
+  const projected = cycle;
+  const active = projected.filter((d) => d.sessionLoad > 0);
+  const N = active.length;
+
+  // Normalize loads across active days only → High/Med/Low via z-score
+  const loads = active.map((d) => d.sessionLoad);
   const mean = avg(loads),
     sd = stddev(loads);
-  const roles = projected.map((d) => {
+  const roles = active.map((d) => {
     const z = zScore(d.sessionLoad, mean, sd);
     return z >= +0.5 ? "High" : z <= -0.5 ? "Low" : "Medium";
   });
@@ -61,11 +65,13 @@ export function computeWeekFromSequence(
   const balances = balanceRatios(volumeByMuscle);
 
   // Intensity “histogram” proxy from roles (refine later with %1RM bins)
-  const intensityHistogram = {
-    low: roles.filter((r) => r === "Low").length / N,
-    moderate: roles.filter((r) => r === "Medium").length / N,
-    high: roles.filter((r) => r === "High").length / N,
-  };
+  const intensityHistogram = N > 0
+    ? {
+        low: roles.filter((r) => r === "Low").length / N,
+        moderate: roles.filter((r) => r === "Medium").length / N,
+        high: roles.filter((r) => r === "High").length / N,
+      }
+    : { low: 0, moderate: 0, high: 0 };
 
   const projectedWeeklyMinutes = projected.reduce(
     (a, d) => a + d.estDurationMin,

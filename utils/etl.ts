@@ -14,13 +14,13 @@
  *      status, and equipment — simple and transparent.
  *   4. Output is a 0-10 scale per exercise, 0-10 average per session.
  *
- * Reference values (sanity checks baked into the design):
- *   Face Pull 3x15 @ RPE 7       -> ~3.5 (Moderate)
- *   Bench Press 3x8 @ RPE 8      -> ~4.5 (Challenging)
- *   Back Squat 4x5 @ RPE 8       -> ~5.0 (Challenging)
- *   Deadlift 4x5 @ RPE 9         -> ~6.8 (Hard)
- *   Lateral Raise 3x12 @ RPE 8   -> ~4.0 (Moderate)
- *   Tricep Pushdown 3x12 @ RPE 7 -> ~3.0 (Light)
+ * Reference values (sanity checks — actual results vary with DB exercise metadata):
+ *   Face Pull 3x15 @ RPE 7       -> ~3.4 (Moderate)
+ *   Bench Press 3x8 @ RPE 8      -> ~4.9 (Challenging)
+ *   Back Squat 4x5 @ RPE 8       -> ~4.8 (Challenging)
+ *   Deadlift 4x5 @ RPE 9         -> ~7.3 (Hard)
+ *   Lateral Raise 3x12 @ RPE 8   -> ~4.2 (Moderate)
+ *   Tricep Pushdown 3x12 @ RPE 7 -> ~2.5 (Light)
  */
 
 import { Exercise } from "@/types/Exercise";
@@ -69,7 +69,7 @@ function intensityWeight(set: WorkoutExercise["sets"][0]): number {
    ═══════════════════════════════════════════════════════════════ */
 
 const SET_TYPE_MULT: Record<SetType, number> = {
-  warmup: 0.3,
+  warmup: 0.5,
   standard: 1.0,
   amrap: 1.2,
   drop: 1.15,
@@ -130,13 +130,13 @@ function setLoad(set: WorkoutExercise["sets"][0]): number {
    ═══════════════════════════════════════════════════════════════
    A "reference moderate exercise" is ~3 sets x 10 reps @ RPE 7.5
    with difficulty 1.0.
-   repFactor(10) = 5.62, intensityWeight(RPE 7.5) ~ 0.58,
-   3 sets -> raw = 3 * 5.62 * 0.58 * 1.0 = 9.78
+   repFactor(10) = 5.62, intensityWeight(RPE 7.5) = 0.512,
+   3 sets -> raw = 3 * 5.62 * 0.512 * 1.0 = 8.63
    We want that to produce ETL ~ 4.0 (Moderate),
-   so NORMALIZER = 9.78 / 4.0 ~ 2.45.
+   so NORMALIZER = 8.63 / 4.0 ~ 2.15.
    ═══════════════════════════════════════════════════════════════ */
 
-const NORMALIZER = 2.45;
+const NORMALIZER = 2.15;
 
 /* ═══════════════════════════════════════════════════════════════
    6. PUBLIC API — exercise-level and workout-level ETL

@@ -298,7 +298,7 @@ export type Database = {
           order_num: number
           program_id: string
           updated_at: string
-          weeks: number
+          week_count: number
         }
         Insert: {
           created_at?: string
@@ -308,7 +308,7 @@ export type Database = {
           order_num: number
           program_id: string
           updated_at?: string
-          weeks?: number
+          week_count?: number
         }
         Update: {
           created_at?: string
@@ -318,7 +318,7 @@ export type Database = {
           order_num?: number
           program_id?: string
           updated_at?: string
-          weeks?: number
+          week_count?: number
         }
         Relationships: [
           {
