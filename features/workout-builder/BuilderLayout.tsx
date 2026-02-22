@@ -1,3 +1,4 @@
+import { ProfileSetupBanner } from "@/components/ProfileSetupBanner";
 import { ReactNode } from "react";
 
 interface BuilderLayoutProps {
@@ -18,6 +19,7 @@ export function BuilderLayout({
   return (
     <div className="flex flex-col h-screen">
       {header ?? null}
+      <ProfileSetupBanner />
 
       <div className="flex flex-1 overflow-hidden">
         {sidebar ? (

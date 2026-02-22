@@ -17,6 +17,7 @@ import {
 import { createClient } from "@/utils/supabase/client";
 import { transformProgramFromSupabase } from "@/utils/program/transformProgram";
 import { PROGRAM_DETAIL_SELECT, PROGRAM_INDEX_SELECT } from "@/services/programQueries";
+import { slugify } from "@/utils/slugify";
 
 /* ----------------------------------------------------------------------------
  * Supabase client (single instance per module import)
@@ -238,6 +239,14 @@ export async function insertExerciseSetsBulk(
 export async function saveOrUpdateProgramService(program: Program) {
   const programId = await ensureProgramRecord(program);
 
+  // Snapshot the current state before destructive clear (only for existing programs)
+  if (programId === program.id) {
+    await snapshotProgramVersion(programId).catch((err) => {
+      // Non-fatal — save should still proceed even if snapshot fails
+      console.warn("⚠️ Version snapshot failed:", err);
+    });
+  }
+
   await clearProgramChildren(programId, program.mode);
 
   await insertProgramStructure(programId, program);
@@ -250,10 +259,17 @@ export async function saveOrUpdateProgramService(program: Program) {
  * -------------------------------------------------------------------------- */
 
 export async function doesProgramExist(programId: string) {
+  // RLS already scopes this to the current user's rows, but we also
+  // explicitly filter by user_id so a template's ID is never mistaken
+  // for the caller's own program.
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+
   const { data, error } = await supabase
     .from("programs")
     .select("id")
     .eq("id", programId)
+    .eq("user_id", user.id)
     .single();
 
   if (error && error.code !== "PGRST116") {
@@ -490,6 +506,135 @@ export async function insertProgram({
     .single();
 }
 
+/* ----------------------------------------------------------------------------
+ * Publish / unpublish
+ * -------------------------------------------------------------------------- */
+
+/**
+ * Generate a unique program slug: "{username}-{program-name}".
+ * Falls back to "{program-name}" if no username is set.
+ * Appends "-2", "-3", etc. if the slug is already taken.
+ */
+async function generateProgramSlug(programId: string): Promise<string> {
+  // Fetch the program name + author username in one query
+  const { data: prog } = await supabase
+    .from("programs")
+    .select("name, slug, profiles!programs_profile_id_fkey(username)")
+    .eq("id", programId)
+    .single();
+
+  // If this program already has a slug, keep it stable
+  if (prog?.slug) return prog.slug;
+
+  const username =
+    (prog?.profiles as unknown as { username: string | null })?.username ?? "";
+  const base = slugify(
+    [username, prog?.name ?? "program"].filter(Boolean).join("-"),
+  );
+
+  // Find an available slug (with numeric suffix if collisions)
+  let candidate = base;
+  let attempt = 1;
+  const MAX_ATTEMPTS = 20;
+
+  while (attempt <= MAX_ATTEMPTS) {
+    const { data: existing } = await supabase
+      .from("programs")
+      .select("id")
+      .eq("slug", candidate)
+      .neq("id", programId)
+      .limit(1);
+
+    if (!existing || existing.length === 0) return candidate;
+    attempt++;
+    candidate = `${base}-${attempt}`;
+  }
+
+  // Ultimate fallback: append a short random suffix
+  return `${base}-${Date.now().toString(36)}`;
+}
+
+export interface PublishOptions {
+  /** Price in dollars (e.g. 29.99). null or 0 = free */
+  price?: number | null;
+  /** ISO 4217 currency code (default "usd") */
+  currency?: string;
+  /** Listing metadata (skill level, session duration, FAQs, etc.) */
+  listing_metadata?: import("@/types/Workout").ListingMetadata | null;
+}
+
+export async function publishProgram(
+  programId: string,
+  options: PublishOptions = {},
+) {
+  const price = options.price && options.price > 0 ? options.price : null;
+  const currency = options.currency ?? "usd";
+
+  // Save listing metadata to the program before snapshotting
+  if (options.listing_metadata !== undefined) {
+    await supabase
+      .from("programs")
+      .update({
+        listing_metadata: (options.listing_metadata ?? null) as unknown as Record<string, unknown>,
+        updated_at: nowIso(),
+      })
+      .eq("id", programId);
+  }
+
+  // Snapshot the current state as the published version
+  const versionId = await snapshotProgramVersion(programId, "Published");
+
+  // Generate a human-readable slug: "{username}-{program-name}"
+  const slug = await generateProgramSlug(programId);
+
+  const { error } = await supabase
+    .from("programs")
+    .update({
+      is_published: true,
+      published_version_id: versionId,
+      price,
+      currency,
+      published_at: nowIso(),
+      updated_at: nowIso(),
+      slug,
+    })
+    .eq("id", programId);
+
+  if (error) throw new Error(`publishProgram: ${error.message}`);
+
+  return { versionId, slug };
+}
+
+export async function unpublishProgram(programId: string) {
+  const { error } = await supabase
+    .from("programs")
+    .update({
+      is_published: false,
+      published_version_id: null,
+      updated_at: nowIso(),
+    })
+    .eq("id", programId);
+
+  if (error) throw new Error(`unpublishProgram: ${error.message}`);
+}
+
+export async function updateProgramPricing(
+  programId: string,
+  price: number | null,
+  currency = "usd",
+) {
+  const { error } = await supabase
+    .from("programs")
+    .update({
+      price: price && price > 0 ? price : null,
+      currency,
+      updated_at: nowIso(),
+    })
+    .eq("id", programId);
+
+  if (error) throw new Error(`updateProgramPricing: ${error.message}`);
+}
+
 export async function updateProgram(program: Program) {
   return supabase
     .from("programs")
@@ -499,6 +644,10 @@ export async function updateProgram(program: Program) {
       goal: program.goal,
       mode: program.mode,
       cover_image: program.cover_image ?? null,
+      is_published: program.is_published ?? false,
+      price: program.price ?? null,
+      currency: program.currency ?? "usd",
+      listing_metadata: (program.listing_metadata ?? null) as unknown as Record<string, unknown>,
       updated_at: nowIso(),
     })
     .eq("id", program.id);
@@ -515,6 +664,11 @@ type ProgramIndex = {
   goal: Program["goal"];
   mode: Program["mode"];
   cover_image: string | null;
+  is_published: boolean;
+  price: number | null;
+  currency: string;
+  published_at: string | null;
+  published_version_id: string | null;
   created_at: string | null;
   updated_at: string | null;
   blocks: Array<{ id: string; weeks: Array<{ id: string; days: Array<{ id: string }> }> }>;
@@ -555,4 +709,143 @@ export async function getProgramById(id: string): Promise<Program | null> {
   }
 
   return transformProgramFromSupabase(data);
+}
+
+/* ----------------------------------------------------------------------------
+ * Duplicate a program (deep copy with new IDs)
+ * -------------------------------------------------------------------------- */
+
+export async function duplicateProgram(sourceId: string): Promise<Program> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const source = await getProgramById(sourceId);
+  if (!source) throw new Error("Program not found");
+
+  // Create new program row
+  const { data: newRow, error: insertErr } = await insertProgram({
+    user_id: user.id,
+    name: `${source.name} (Copy)`,
+    description: source.description,
+    goal: source.goal,
+    mode: source.mode,
+    cover_image: source.cover_image,
+  });
+  if (insertErr || !newRow) {
+    throw new Error(insertErr?.message || "Failed to duplicate program");
+  }
+
+  // Deep-copy the full structure into the new program
+  await insertProgramStructure(newRow.id, source);
+
+  // Return the fully-hydrated duplicate
+  const duplicate = await getProgramById(newRow.id);
+  if (!duplicate) throw new Error("Failed to fetch duplicated program");
+  return duplicate;
+}
+
+/* ----------------------------------------------------------------------------
+ * Program Versioning
+ * -------------------------------------------------------------------------- */
+
+export interface ProgramVersion {
+  id: string;
+  program_id: string;
+  version: number;
+  label: string | null;
+  snapshot: Program;
+  created_at: string;
+}
+
+/**
+ * Snapshot the current program state before a destructive save.
+ * The trigger auto-increments the version number.
+ */
+export async function snapshotProgramVersion(
+  programId: string,
+  label?: string
+): Promise<string | null> {
+  const current = await getProgramById(programId);
+  if (!current) return null; // nothing to snapshot (new program)
+
+  const { data, error } = await supabase
+    .from("program_versions")
+    .insert({
+      program_id: programId,
+      label: label ?? null,
+      snapshot: current as unknown as Record<string, unknown>,
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    console.error("❌ snapshotProgramVersion:", error.message);
+    throw error;
+  }
+
+  return data?.id ?? null;
+}
+
+/**
+ * List all versions for a program, newest first.
+ */
+export async function getProgramVersions(
+  programId: string
+): Promise<ProgramVersion[]> {
+  const { data, error } = await supabase
+    .from("program_versions")
+    .select("id, program_id, version, label, snapshot, created_at")
+    .eq("program_id", programId)
+    .order("version", { ascending: false });
+
+  if (error) {
+    console.error("❌ getProgramVersions:", error.message);
+    throw error;
+  }
+
+  return (data ?? []) as unknown as ProgramVersion[];
+}
+
+/**
+ * Restore a program to a specific version's snapshot.
+ * This creates a new version (of the current state) before restoring,
+ * so the restore itself is non-destructive.
+ */
+export async function restoreProgramVersion(
+  programId: string,
+  versionId: string
+): Promise<void> {
+  // Fetch the target version
+  const { data: version, error: fetchErr } = await supabase
+    .from("program_versions")
+    .select("snapshot")
+    .eq("id", versionId)
+    .eq("program_id", programId)
+    .single();
+
+  if (fetchErr || !version) {
+    throw new Error(fetchErr?.message || "Version not found");
+  }
+
+  const snapshot = version.snapshot as unknown as Program;
+
+  // Snapshot current state before restoring (safety net)
+  await snapshotProgramVersion(programId, "Before restore");
+
+  // Clear and re-insert from snapshot
+  await clearProgramChildren(programId, snapshot.mode);
+  await insertProgramStructure(programId, snapshot);
+
+  // Update program-level fields from snapshot
+  await supabase
+    .from("programs")
+    .update({
+      name: snapshot.name,
+      description: snapshot.description,
+      goal: snapshot.goal,
+      mode: snapshot.mode,
+      cover_image: snapshot.cover_image ?? null,
+      updated_at: nowIso(),
+    })
+    .eq("id", programId);
 }

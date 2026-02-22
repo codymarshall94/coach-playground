@@ -54,13 +54,20 @@ export const MOVEMENT_ICONS: Record<string, React.ReactNode> = {
   pull_horizontal: <ArrowLeftRight className="w-3.5 h-3.5 rotate-180" />,
   pull_vertical: <ArrowUpDown className="w-3.5 h-3.5 rotate-180" />,
   hinge: <ArrowDown className="w-3.5 h-3.5" />,
+  hinge_horizontal: <ArrowLeftRight className="w-3.5 h-3.5" />,
   lunge: <ArrowDown className="w-3.5 h-3.5" />,
   squat: <ArrowDown className="w-3.5 h-3.5" />,
+  carry: <ArrowUpDown className="w-3.5 h-3.5" />,
+  jump: <ArrowUpDown className="w-3.5 h-3.5" />,
+  sprint: <ArrowLeftRight className="w-3.5 h-3.5" />,
+  throw: <ArrowLeftRight className="w-3.5 h-3.5" />,
+  brace: <ArrowDown className="w-3.5 h-3.5" />,
+  other: <ArrowDown className="w-3.5 h-3.5" />,
 };
 
 const PUSH = ["push_horizontal", "push_vertical"] as const;
 const PULL = ["pull_horizontal", "pull_vertical"] as const;
-const LOWER = ["squat", "hinge", "lunge"] as const;
+const LOWER = ["squat", "hinge", "hinge_horizontal", "lunge", "jump", "sprint"] as const;
 const UPPER = [...PUSH, ...PULL] as const;
 
 /* ─── Helpers ────────────────────────────────────────────── */

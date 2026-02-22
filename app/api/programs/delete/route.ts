@@ -2,6 +2,25 @@ import { NextResponse } from "next/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createClient as createServerSupabase } from "@/utils/supabase/server";
 
+const COVER_BUCKET = "program-covers";
+
+/** Best-effort removal of cover image from storage. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function cleanupCoverImage(
+  supabase: { storage: { from: (bucket: string) => { remove: (paths: string[]) => Promise<{ error: { message: string } | null }> } } },
+  coverImageUrl: string | null,
+) {
+  if (!coverImageUrl) return;
+  const bucketBase = `/storage/v1/object/public/${COVER_BUCKET}/`;
+  const idx = coverImageUrl.indexOf(bucketBase);
+  if (idx === -1) return;
+  const path = coverImageUrl.slice(idx + bucketBase.length).split("?")[0];
+  const { error } = await supabase.storage.from(COVER_BUCKET).remove([path]);
+  if (error) {
+    console.warn("[api/programs/delete] cover image cleanup failed", error.message);
+  }
+}
+
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   const id = body?.id;
@@ -28,7 +47,7 @@ export async function POST(req: Request) {
     // Fetch program row and verify ownership using server client
     const { data: before, error: beforeErr } = await serverSupabase
       .from("programs")
-      .select("id,user_id")
+      .select("id,user_id,cover_image")
       .eq("id", id)
       .maybeSingle();
 
@@ -53,6 +72,8 @@ export async function POST(req: Request) {
       .select("id,user_id");
 
     if (!delErr) {
+      // Best-effort cleanup of cover image from storage
+      await cleanupCoverImage(serverSupabase, before.cover_image);
       return NextResponse.json({ data: delData });
     }
 
@@ -83,7 +104,7 @@ export async function POST(req: Request) {
     // Check existence & ownership first (service role used to bypass RLS safely)
     const { data: before, error: beforeErr } = await supabase
       .from("programs")
-      .select("id,user_id")
+      .select("id,user_id,cover_image")
       .eq("id", id)
       .maybeSingle();
 
@@ -108,6 +129,9 @@ export async function POST(req: Request) {
       console.error("[api/programs/delete] supabase error", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    // Best-effort cleanup of cover image from storage
+    await cleanupCoverImage(supabase, before.cover_image);
 
     return NextResponse.json({ data });
   } catch (err) {

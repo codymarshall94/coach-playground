@@ -29,6 +29,8 @@ import { motion } from "framer-motion";
 import { ImagePlus, Settings2, Trash2, Upload } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useRef, useState } from "react";
+import { VersionHistoryPanel } from "./VersionHistoryPanel";
+import { PublishPanel } from "./PublishPanel";
 
 /* -------------------------------------------------------------------------- */
 /*  Cover image validation                                                    */
@@ -75,6 +77,14 @@ interface ProgramSettingsSheetProps {
   onSwitchMode: (updated: Program) => void;
   /** Called with the raw File when the user picks a cover image, or null to clear. */
   onPendingCoverFile?: (file: File | null) => void;
+  /** Called after a version restore so the builder can reload the program. */
+  onVersionRestored?: () => void;
+  /** Whether the program has been persisted to the DB at least once. */
+  isSaved?: boolean;
+  /** Whether the program has unsaved local changes */
+  hasUnsavedChanges?: boolean;
+  /** Opens the full-page publish flow (first-time publish) */
+  onOpenPublishFlow?: () => void;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -88,6 +98,10 @@ export const ProgramSettingsSheet = ({
   onChange,
   onSwitchMode,
   onPendingCoverFile,
+  onVersionRestored,
+  isSaved = false,
+  hasUnsavedChanges = false,
+  onOpenPublishFlow,
 }: ProgramSettingsSheetProps) => {
   const usingBlocks = program.mode === "blocks";
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -319,6 +333,41 @@ export const ProgramSettingsSheet = ({
               <br />
               This change cannot be undone.
             </p>
+          </div>
+
+          {/* ============ PUBLISH ============ */}
+          <div className="border-t pt-4">
+            <PublishPanel
+              programId={program.id}
+              isSaved={isSaved}
+              isPublished={program.is_published ?? false}
+              price={program.price ?? null}
+              currency={program.currency ?? "usd"}
+              publishedVersionId={program.published_version_id ?? null}
+              hasUnsavedChanges={hasUnsavedChanges}
+              onPublishChange={(published, versionId) =>
+                onChange({
+                  is_published: published,
+                  published_version_id: versionId,
+                  ...(published ? { published_at: new Date() } : {}),
+                })
+              }
+              onPricingChange={(price, currency) =>
+                onChange({ price, currency })
+              }
+              onOpenPublishFlow={() => {
+                onOpenChange(false);   // close the sheet
+                onOpenPublishFlow?.();  // open the full-page flow
+              }}
+            />
+          </div>
+
+          {/* ============ VERSION HISTORY ============ */}
+          <div className="border-t pt-4">
+            <VersionHistoryPanel
+              programId={program.id}
+              onRestored={onVersionRestored}
+            />
           </div>
         </motion.div>
       </SheetContent>

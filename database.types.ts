@@ -261,28 +261,55 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_type: string
           avatar_url: string | null
+          bio: string | null
+          brand_name: string | null
+          cover_image_url: string | null
           created_at: string
           full_name: string | null
           id: string
+          logo_url: string | null
+          profile_completed: boolean
+          social_instagram: string | null
+          social_twitter: string | null
+          social_youtube: string | null
           updated_at: string | null
           username: string | null
           website: string | null
         }
         Insert: {
+          account_type?: string
           avatar_url?: string | null
+          bio?: string | null
+          brand_name?: string | null
+          cover_image_url?: string | null
           created_at?: string
           full_name?: string | null
           id: string
+          logo_url?: string | null
+          profile_completed?: boolean
+          social_instagram?: string | null
+          social_twitter?: string | null
+          social_youtube?: string | null
           updated_at?: string | null
           username?: string | null
           website?: string | null
         }
         Update: {
+          account_type?: string
           avatar_url?: string | null
+          bio?: string | null
+          brand_name?: string | null
+          cover_image_url?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
+          logo_url?: string | null
+          profile_completed?: boolean
+          social_instagram?: string | null
+          social_twitter?: string | null
+          social_youtube?: string | null
           updated_at?: string | null
           username?: string | null
           website?: string | null
@@ -391,6 +418,115 @@ export type Database = {
           },
         ]
       }
+      program_purchases: {
+        Row: {
+          buyer_id: string
+          created_at: string
+          currency: string
+          id: string
+          price_paid: number | null
+          program_id: string
+          version_id: string | null
+        }
+        Insert: {
+          buyer_id: string
+          created_at?: string
+          currency?: string
+          id?: string
+          price_paid?: number | null
+          program_id: string
+          version_id?: string | null
+        }
+        Update: {
+          buyer_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          price_paid?: number | null
+          program_id?: string
+          version_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "program_purchases_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "program_purchases_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "program_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      program_versions: {
+        Row: {
+          created_at: string
+          id: string
+          label: string | null
+          program_id: string
+          snapshot: Json
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          program_id: string
+          snapshot: Json
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          program_id?: string
+          snapshot?: Json
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "program_versions_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      program_views: {
+        Row: {
+          created_at: string
+          id: string
+          program_id: string
+          viewer_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          program_id: string
+          viewer_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          program_id?: string
+          viewer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "program_views_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       program_weeks: {
         Row: {
           block_id: string
@@ -433,39 +569,60 @@ export type Database = {
         Row: {
           cover_image: string | null
           created_at: string
+          currency: string
           description: string | null
           goal: Database["public"]["Enums"]["program_goal"]
           id: string
+          is_published: boolean
           is_template: boolean
+          listing_metadata: Json | null
           mode: Database["public"]["Enums"]["program_mode"]
           name: string
           parent_program_id: string | null
+          price: number | null
+          published_at: string | null
+          published_version_id: string | null
+          slug: string | null
           updated_at: string
           user_id: string | null
         }
         Insert: {
           cover_image?: string | null
           created_at?: string
+          currency?: string
           description?: string | null
           goal: Database["public"]["Enums"]["program_goal"]
           id?: string
+          is_published?: boolean
           is_template?: boolean
+          listing_metadata?: Json | null
           mode?: Database["public"]["Enums"]["program_mode"]
           name: string
           parent_program_id?: string | null
+          price?: number | null
+          published_at?: string | null
+          published_version_id?: string | null
+          slug?: string | null
           updated_at?: string
           user_id?: string | null
         }
         Update: {
           cover_image?: string | null
           created_at?: string
+          currency?: string
           description?: string | null
           goal?: Database["public"]["Enums"]["program_goal"]
           id?: string
+          is_published?: boolean
           is_template?: boolean
+          listing_metadata?: Json | null
           mode?: Database["public"]["Enums"]["program_mode"]
           name?: string
           parent_program_id?: string | null
+          price?: number | null
+          published_at?: string | null
+          published_version_id?: string | null
+          slug?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -475,6 +632,20 @@ export type Database = {
             columns: ["parent_program_id"]
             isOneToOne: false
             referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "programs_profile_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "programs_published_version_id_fkey"
+            columns: ["published_version_id"]
+            isOneToOne: false
+            referencedRelation: "program_versions"
             referencedColumns: ["id"]
           },
         ]
@@ -579,15 +750,45 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      acquire_program: { Args: { p_program_id: string }; Returns: string }
       clone_program_from_template: {
         Args: { template_program_id: string }
         Returns: string
+      }
+      get_my_program_view_counts: {
+        Args: never
+        Returns: {
+          program_id: string
+          view_count: number
+        }[]
+      }
+      get_my_purchased_programs: {
+        Args: never
+        Returns: {
+          author_avatar_url: string
+          author_full_name: string
+          author_username: string
+          price_paid: number
+          program_cover_image: string
+          program_description: string
+          program_goal: string
+          program_id: string
+          program_mode: string
+          program_name: string
+          program_slug: string
+          purchase_id: string
+          purchased_at: string
+        }[]
       }
       is_program_accessible: {
         Args: { p_program_id: string }
         Returns: boolean
       }
       is_program_owner: { Args: { p_program_id: string }; Returns: boolean }
+      record_program_view: {
+        Args: { p_program_id: string }
+        Returns: undefined
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
     }
@@ -761,4 +962,3 @@ export const Constants = {
     },
   },
 } as const
-

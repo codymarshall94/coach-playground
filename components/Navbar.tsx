@@ -36,6 +36,11 @@ export function Navbar({ user }: { user: User | null }) {
         </Link>
 
         <div className="hidden md:flex items-center space-x-3">
+          <Link href="/marketplace">
+            <Button variant="ghost" size="sm">
+              Marketplace
+            </Button>
+          </Link>
           {user ? (
             <AvatarDropdown />
           ) : (
@@ -63,6 +68,11 @@ export function Navbar({ user }: { user: User | null }) {
               </div>
 
               <div className="pt-6 border-t">
+                <Link href="/marketplace">
+                  <Button variant="ghost" className="w-full justify-start mb-2">
+                    Marketplace
+                  </Button>
+                </Link>
                 {user ? (
                   <div className="space-y-2">
                     <div className="flex items-center space-x-3 px-3 py-2 rounded-lg bg-muted/50">
@@ -105,7 +115,7 @@ export function Navbar({ user }: { user: User | null }) {
                         Sign In
                       </Button>
                     </Link>
-                    <Link href="/signup">
+                    <Link href="/login">
                       <Button className="w-full">Get Started</Button>
                     </Link>
                   </div>

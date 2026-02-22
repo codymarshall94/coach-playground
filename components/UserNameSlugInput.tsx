@@ -10,9 +10,12 @@ import { useEffect, useState } from "react";
 
 export function UsernameSlugInput({
   initialValue = "",
+  currentUserId,
   onChange,
 }: {
   initialValue?: string;
+  /** Pass the logged-in user's ID so their own row is excluded from the uniqueness check. */
+  currentUserId?: string;
   onChange?: (value: string) => void;
 }) {
   const [rawInput, setRawInput] = useState(initialValue);
@@ -32,10 +35,17 @@ export function UsernameSlugInput({
 
     const checkAvailability = async () => {
       setIsChecking(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from("profiles")
         .select("id")
         .eq("username", s);
+
+      // Exclude the current user's own row so their existing slug shows as available
+      if (currentUserId) {
+        query = query.neq("id", currentUserId);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error(error);

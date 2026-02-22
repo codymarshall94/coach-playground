@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { Exercise } from "@/types/Exercise";
 import { Program } from "@/types/Workout";
 import { User } from "@supabase/supabase-js";
-import { HelpCircle, Loader2, Save } from "lucide-react";
+import { Circle, Globe, HelpCircle, Loader2, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
 import AvatarDropdown from "./AvatarDropdown";
 import { ExerciseLibrary } from "./exercises/ExerciseLibrary";
@@ -18,6 +18,7 @@ export const WorkoutBuilderHeader = ({
   program,
   isSaving,
   handleSave,
+  hasUnsavedChanges,
   isWorkoutDay,
   addExercise,
   exercises,
@@ -28,10 +29,13 @@ export const WorkoutBuilderHeader = ({
   setProgramPreviewOpen,
   exerciseLibraryOpen,
   setExerciseLibraryOpen,
+  isSaved,
+  onPublishClick,
 }: {
   program: Program;
   isSaving: boolean;
   handleSave: () => void;
+  hasUnsavedChanges: boolean;
   isWorkoutDay: boolean;
   addExercise: (exercise: Exercise) => void;
   exercises: Exercise[];
@@ -42,6 +46,10 @@ export const WorkoutBuilderHeader = ({
   setProgramPreviewOpen: (open: boolean) => void;
   exerciseLibraryOpen: boolean;
   setExerciseLibraryOpen: (open: boolean) => void;
+  /** True when the program has been saved at least once */
+  isSaved: boolean;
+  /** Opens the first-time publish flow */
+  onPublishClick?: () => void;
 }) => {
   const router = useRouter();
 
@@ -52,10 +60,13 @@ export const WorkoutBuilderHeader = ({
       <div className="flex items-center gap-1 sm:gap-2">
         <Button
           onClick={handleSave}
-          disabled={isSaving}
+          disabled={isSaving || !hasUnsavedChanges}
           className={cn(
-            "h-9 sm:h-10 flex items-center justify-center gap-2 px-4 transition-all duration-200 bg-primary text-primary-foreground hover:bg-primary/90",
-            isSaving && " cursor-wait"
+            "relative h-9 sm:h-10 flex items-center justify-center gap-2 px-4 transition-all duration-200",
+            hasUnsavedChanges
+              ? "bg-primary text-primary-foreground hover:bg-primary/90"
+              : "bg-muted text-muted-foreground",
+            isSaving && "cursor-wait"
           )}
         >
           {isSaving ? (
@@ -66,10 +77,25 @@ export const WorkoutBuilderHeader = ({
           ) : (
             <>
               <Save className="w-4 h-4" />
-              Save Draft
+              {hasUnsavedChanges ? "Save Draft" : "Saved"}
             </>
           )}
+          {hasUnsavedChanges && !isSaving && (
+            <Circle className="absolute -top-1 -right-1 w-2.5 h-2.5 fill-amber-500 text-amber-500" />
+          )}
         </Button>
+
+        {/* Publish button — first-time publish only */}
+        {isSaved && !program.is_published && onPublishClick && (
+          <Button
+            variant="outline"
+            onClick={onPublishClick}
+            className="h-9 sm:h-10 gap-2 px-4 border-primary/30 text-primary hover:bg-primary/10"
+          >
+            <Globe className="w-4 h-4" />
+            <span className="hidden sm:inline">Publish</span>
+          </Button>
+        )}
 
         <ProgramPreview
           program={program}

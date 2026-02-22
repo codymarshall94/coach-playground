@@ -32,6 +32,7 @@ import type { Program } from "@/types/Workout";
 import ScoreDial from "@/components/ScoreDial";
 import { MUSCLE_DISPLAY_MAP, MUSCLE_NAME_MAP } from "@/constants/muscles";
 import {
+  buildBlockInputs,
   buildSequence,
   buildSpecFromProgram,
 } from "@/engines/core/utils/helpers";
@@ -528,12 +529,16 @@ export function ProgramOverviewPanel({ program }: { program: Program }) {
     () => buildSequence(program, allExercises),
     [program, allExercises],
   );
+  const blockInputs = useMemo(
+    () => buildBlockInputs(program, allExercises),
+    [program, allExercises],
+  );
 
   const {
     week,
     program: programMetrics,
     improvements,
-  } = useProgramEngine(spec, sequence);
+  } = useProgramEngine(spec, sequence, blockInputs);
 
   const currentDays = useMemo(() => {
     if (program.mode === "blocks") {

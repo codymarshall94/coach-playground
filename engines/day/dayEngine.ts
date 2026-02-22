@@ -24,6 +24,7 @@ import {
   DayRole,
   EnergySystem,
   FatigueBreakdown,
+  MovementPattern,
   SessionInput,
 } from "@/engines/main";
 
@@ -34,7 +35,7 @@ export function computeDayMetrics(input: SessionInput): DayMetrics {
   let totalMinutes = 0;
   const muscleSets: Record<string, number> = {}; // weighted (effective)
   const muscleHits: Record<string, number> = {}; // raw set count
-  const patternExposure: any = {};
+  const patternExposure: Partial<Record<MovementPattern, number>> = {};
 
   let fatigueAcc: FatigueBreakdown = { cns: 0, metabolic: 0, joint: 0 };
   let energyAcc: Record<EnergySystem, number> = {

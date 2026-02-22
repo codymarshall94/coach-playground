@@ -16,6 +16,10 @@ import { formatDistanceToNow } from "date-fns";
 import {
   Calendar,
   Copy,
+  Dumbbell,
+  Eye,
+  Globe,
+  Layers,
   MoreVertical,
   Trash2,
 } from "lucide-react";
@@ -34,25 +38,42 @@ const goalLabels: Record<ProgramGoal, string> = {
   power: "Power",
 };
 
+const GOAL_COLORS: Record<string, string> = {
+  strength: "bg-red-500/10 text-red-600 dark:text-red-400",
+  hypertrophy: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
+  endurance: "bg-green-500/10 text-green-600 dark:text-green-400",
+  power: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+};
+
 interface Props {
   program: Program;
+  viewCount?: number;
   onDelete?: (id: string) => void;
   onDuplicate?: (id: string) => void;
 }
 
 export default function ProgramCard({
   program,
+  viewCount,
   onDelete,
   onDuplicate,
 }: Props) {
   const name = program.name || "Untitled program";
   const goalLabel = goalLabels[program.goal] ?? "Strength";
 
-  // Always count total training days, even in blocks mode
+  // Count total training days across modes
   const dayCount =
     program.mode === "blocks"
-      ? (program.blocks ?? []).reduce((sum, b) => sum + (b.days?.length ?? 0), 0)
+      ? (program.blocks ?? []).reduce((sum, b) => {
+          if (Array.isArray(b.weeks) && b.weeks.length > 0) {
+            return sum + b.weeks.reduce((ws, w) => ws + (w.days?.length ?? 0), 0);
+          }
+          return sum + (b.days?.length ?? 0);
+        }, 0)
       : (program.days?.length ?? 0);
+
+  const blockCount =
+    program.mode === "blocks" ? (program.blocks?.length ?? 0) : 0;
 
   return (
     <div
@@ -62,25 +83,39 @@ export default function ProgramCard({
         "focus-within:ring-2 focus-within:ring-brand/40",
       )}
     >
-      {/* Cover image or default gradient — taller, unobstructed */}
+      {/* Cover image or goal gradient with fallback icon */}
       <div
-        className="relative h-44 w-full overflow-hidden shrink-0"
+        className="relative aspect-[4/3] w-full overflow-hidden shrink-0"
         style={
           !program.cover_image
             ? { background: PROGRAM_GRADIENTS[program.goal] }
             : undefined
         }
       >
-        {program.cover_image && (
+        {program.cover_image ? (
           <Image
             src={program.cover_image}
             alt=""
             fill
-            className="object-cover"
-            sizes="(max-width: 640px) 100vw, 400px"
+            className="object-cover group-hover:scale-[1.03] transition-transform duration-300"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Dumbbell className="w-10 h-10 text-white/20" />
+          </div>
         )}
       </div>
+
+      {/* Published badge */}
+      {program.is_published && (
+        <div className="absolute left-2 top-2 z-10">
+          <Badge className="bg-green-600 text-white text-[10px] font-bold gap-1">
+            <Globe className="w-3 h-3" />
+            Published
+          </Badge>
+        </div>
+      )}
 
       {/* Actions dropdown */}
       <div className="absolute right-2 top-2 z-10 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
@@ -129,34 +164,51 @@ export default function ProgramCard({
         href={`/programs/${program.id}`}
         className="flex flex-1 flex-col p-4"
       >
+        {/* Goal category */}
+        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          {goalLabel}
+        </span>
+
         {/* Title */}
-        <h2 className="truncate text-base font-semibold leading-tight">
+        <h2 className="mt-1 text-sm font-semibold leading-snug group-hover:text-primary transition-colors line-clamp-2">
           {name}
         </h2>
 
         {/* Description — 2 lines */}
         {program.description && (
-          <p className="mt-1 line-clamp-2 text-sm text-muted-foreground leading-snug">
+          <p className="mt-1 line-clamp-2 text-xs text-muted-foreground leading-snug">
             {stripHtml(program.description)}
           </p>
         )}
 
         {/* Metadata footer */}
-        <div className="mt-auto flex items-center gap-2 pt-3 border-t border-border/50">
+        <div className="mt-auto flex items-center gap-3 pt-3 text-[11px] text-muted-foreground">
+          {dayCount > 0 && (
+            <span className="inline-flex items-center gap-1">
+              <Calendar className="w-3 h-3" />
+              {dayCount} {dayCount === 1 ? "day" : "days"}
+            </span>
+          )}
+          {blockCount > 0 && (
+            <span className="inline-flex items-center gap-1">
+              <Layers className="w-3 h-3" />
+              {blockCount} {blockCount === 1 ? "block" : "blocks"}
+            </span>
+          )}
           <Badge
-            variant="secondary"
-            className="text-[10px] font-medium px-1.5 py-0"
+            className={`ml-auto text-[9px] font-semibold px-1.5 py-0 ${GOAL_COLORS[program.goal] ?? ""}`}
           >
             {goalLabel}
           </Badge>
-          <Badge
-            variant="outline"
-            className="text-[10px] font-medium px-1.5 py-0"
-          >
-            {dayCount} {dayCount === 1 ? "day" : "days"}
-          </Badge>
-          <span className="ml-auto flex items-center gap-1 text-[10px] text-muted-foreground">
-            <Calendar className="h-2.5 w-2.5" />
+          {viewCount != null && viewCount > 0 && (
+            <span className="inline-flex items-center gap-1 text-[10px]">
+              <Eye className="w-3 h-3" />
+              {viewCount >= 1000
+                ? `${(viewCount / 1000).toFixed(1)}k`
+                : viewCount}
+            </span>
+          )}
+          <span className="flex items-center gap-1 text-[10px]">
             {program.updated_at
               ? formatDistanceToNow(program.updated_at, { addSuffix: true })
               : "just now"}

@@ -7,14 +7,16 @@ import { Button } from "@/components/ui/button";
 import { WelcomeModal } from "@/components/WelcomeModal";
 
 import {
+  buildBlockInputs,
   buildSequence,
   buildSpecFromProgram,
 } from "@/engines/core/utils/helpers";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useProgramEngine } from "@/hooks/useProgramEngine";
+import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
 import { useUser } from "@/hooks/useUser";
 import { useWorkoutBuilder } from "@/hooks/useWorkoutBuilder";
-import { saveOrUpdateProgramService } from "@/services/programService";
+import { getProgramById, saveOrUpdateProgramService } from "@/services/programService";
 import { uploadCoverImage } from "@/services/coverImageService";
 
 import type { Program } from "@/types/Workout";
@@ -31,7 +33,7 @@ import { useSortableSensors } from "@/features/workout-builder/dnd/sensors";
 import { useDragAndDrop } from "@/features/workout-builder/hooks/useDragAndDrop";
 
 import { Plus, CalendarDays } from "lucide-react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import ScoreDial from "@/components/ScoreDial";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -47,6 +49,7 @@ import { ProgramCalendarDialog } from "./components/program/ProgramCalendarDialo
 import { ProgramDaySelector } from "./components/program/ProgramDaySelector";
 import { ProgramMetaEditor } from "./components/program/ProgramMetaEditor";
 import { ProgramOverviewPanel } from "./components/program/ProgramOverview";
+import { PublishFlow } from "./components/program/PublishFlow";
 import { SavePromptModal } from "./components/SavePromptModal";
 import { WorkoutBuilderHeader } from "./components/WorkoutBuilderHeader";
 import { moveDayWithinList } from "./utils/days";
@@ -96,6 +99,14 @@ export const WorkoutBuilder = ({
     duplicateWeek,
   } = useWorkoutBuilder(initialProgram);
 
+  // ── Unsaved-changes guard ────────────────────────────────────────
+  const savedSnapshotRef = useRef(JSON.stringify(initialProgram ?? {}));
+  const isDirty = useMemo(
+    () => JSON.stringify(program) !== savedSnapshotRef.current,
+    [program]
+  );
+  const { markClean } = useUnsavedChanges(isDirty);
+
   const [isSaving, setIsSaving] = useState(false);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [exerciseLibraryOpen, setExerciseLibraryOpen] = useState(false);
@@ -105,6 +116,7 @@ export const WorkoutBuilder = ({
   const [programPreviewOpen, setProgramPreviewOpen] = useState(false);
   const [welcomeModalOpen, setWelcomeModalOpen] = useState(true);
   const [overviewOpen, setOverviewOpen] = useState(false);
+  const [publishFlowOpen, setPublishFlowOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -117,7 +129,8 @@ export const WorkoutBuilder = ({
 
   const { days, program: programMetrics } = useProgramEngine(
     buildSpecFromProgram(program),
-    buildSequence(program, exercises ?? [])
+    buildSequence(program, exercises ?? []),
+    buildBlockInputs(program, exercises ?? [])
   );
 
   const handleSave = async () => {
@@ -137,7 +150,6 @@ export const WorkoutBuilder = ({
       if (pendingCoverFileRef.current) {
         const url = await uploadCoverImage(pendingCoverFileRef.current, program.id);
         programToSave = { ...program, cover_image: url };
-        setProgram((prev) => ({ ...prev, cover_image: url }));
         pendingCoverFileRef.current = null;
       } else if (program.cover_image?.startsWith("blob:")) {
         // Blob URL without a file means it was cleared or lost — strip it
@@ -147,8 +159,16 @@ export const WorkoutBuilder = ({
       const programId = await saveOrUpdateProgramService(programToSave);
       // Sync the DB id back so future saves update instead of inserting
       if (programId !== program.id) {
-        setProgram((prev) => ({ ...prev, id: programId }));
+        programToSave = { ...programToSave, id: programId };
       }
+
+      // Atomically update state and snapshot ref together so isDirty
+      // always compares against the exact same object.
+      setProgram(() => {
+        savedSnapshotRef.current = JSON.stringify(programToSave);
+        return programToSave;
+      });
+      markClean();
       toast.success("Program saved!");
       router.push(`/programs/${programId}`);
     } catch (err) {
@@ -223,6 +243,7 @@ export const WorkoutBuilder = ({
       program={program}
       isSaving={isSaving}
       handleSave={handleSave}
+      hasUnsavedChanges={isDirty}
       isWorkoutDay={isWorkoutDay}
       addExercise={(exercise) => {
         addExercise(exercise);
@@ -236,6 +257,8 @@ export const WorkoutBuilder = ({
       setProgramPreviewOpen={setProgramPreviewOpen}
       exerciseLibraryOpen={exerciseLibraryOpen}
       setExerciseLibraryOpen={setExerciseLibraryOpen}
+      isSaved={!!initialProgram}
+      onPublishClick={() => setPublishFlowOpen(true)}
     />
   );
 
@@ -253,6 +276,18 @@ export const WorkoutBuilder = ({
           setActiveDayIndex(null);
         }}
         onPendingCoverFile={(file) => { pendingCoverFileRef.current = file; }}
+        onVersionRestored={async () => {
+          if (!program.id) return;
+          const restored = await getProgramById(program.id);
+          if (restored) {
+            setProgram(restored);
+            savedSnapshotRef.current = JSON.stringify(restored);
+            markClean();
+          }
+        }}
+        isSaved={!!initialProgram}
+        hasUnsavedChanges={isDirty}
+        onOpenPublishFlow={() => setPublishFlowOpen(true)}
       />
 
       {usingBlocks ? (
@@ -524,13 +559,33 @@ export const WorkoutBuilder = ({
   );
 
   return (
-    <BuilderLayout
-      header={headerNode}
-      sidebar={sidebarNode}
-      iconSidebar={iconSidebarNode}
-      modals={modalsNode}
-    >
-      {mainNode}
-    </BuilderLayout>
+    <>
+      <BuilderLayout
+        header={headerNode}
+        sidebar={sidebarNode}
+        iconSidebar={iconSidebarNode}
+        modals={modalsNode}
+      >
+        {mainNode}
+      </BuilderLayout>
+
+      <AnimatePresence>
+        {publishFlowOpen && (
+          <PublishFlow
+            program={program}
+            onPublished={(versionId) => {
+              setPublishFlowOpen(false);
+              setProgram((prev) => ({
+                ...prev,
+                is_published: true,
+                published_version_id: versionId,
+                published_at: new Date(),
+              }));
+            }}
+            onClose={() => setPublishFlowOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 };

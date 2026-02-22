@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import ProgramsView from "@/components/ProgramsView";
+import { ProfilePromptDialog } from "@/components/ProfilePromptDialog";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";
@@ -23,12 +24,25 @@ export default async function ProgramsPage() {
     );
   }
 
-  // Fetch programs owned by current user (server-side)
-  const { data: programs, error } = await supabase
-    .from("programs")
-    .select("id,name,description,goal,mode,cover_image,created_at,updated_at")
-    .eq("user_id", user.id)
-    .order("updated_at", { ascending: false });
+  // Fetch programs owned by current user (server-side) + purchased programs
+  const [{ data: programs, error }, { data: viewCounts }, { data: purchased }] =
+    await Promise.all([
+      supabase
+        .from("programs")
+        .select(
+          "id,name,description,goal,mode,cover_image,is_published,created_at,updated_at",
+        )
+        .eq("user_id", user.id)
+        .order("updated_at", { ascending: false }),
+      supabase.rpc("get_my_program_view_counts"),
+      supabase.rpc("get_my_purchased_programs"),
+    ]);
+
+  // Build a lookup map: programId → view count
+  const viewCountMap: Record<string, number> = {};
+  for (const row of viewCounts ?? []) {
+    viewCountMap[row.program_id] = row.view_count;
+  }
 
   if (error) {
     console.error("[ProgramsPage] error fetching programs", error);
@@ -49,7 +63,14 @@ export default async function ProgramsPage() {
       </div>
 
       {/* Client-side list with delete handling */}
-      <ProgramsView initialPrograms={programs ?? []} />
+      <ProgramsView
+        initialPrograms={programs ?? []}
+        viewCounts={viewCountMap}
+        purchasedPrograms={purchased ?? []}
+      />
+
+      {/* Prompt new users to set up their profile */}
+      <ProfilePromptDialog />
     </div>
   );
 }

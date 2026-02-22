@@ -49,12 +49,17 @@ export async function setUserProfile({
 
 export async function handleSignInWithGoogle(response: {
   credential: CredentialResponse;
+  nonce?: string;
 }) {
   const supabase = createClient();
+
+  // The nonce must match the one embedded in the Google ID token.
+  // Pass it from the GSI callback or omit it if your GSI config
+  // does not set a nonce (Supabase will skip the check).
   const { data, error } = await supabase.auth.signInWithIdToken({
     provider: "google",
     token: response.credential.credential ?? "",
-    nonce: "<NONCE>",
+    ...(response.nonce ? { nonce: response.nonce } : {}),
   });
 
   return {

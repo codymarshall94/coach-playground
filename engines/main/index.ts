@@ -12,6 +12,7 @@ export * from "../core/utils/math";
 export * from "../core/utils/taxonomy";
 
 export * from "../day/dayEngine";
+export * from "../day/analyzeWorkoutDay";
 export * from "../week/weekEngine";
 export * from "../block/blockEngine";
 export * from "../program/programEngine";

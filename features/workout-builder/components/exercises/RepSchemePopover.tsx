@@ -85,6 +85,15 @@ const ALLOWED_SCHEMES: Record<TrackingType, RepSchemeType[]> = {
   distance: ["distance", "time"],
 };
 
+/** Quick-pick presets for each scheme type. */
+const QUICK_PICKS: Record<string, string[]> = {
+  fixed: ["5", "8", "10", "12", "15", "20"],
+  range: ["6-8", "8-10", "8-12", "10-15", "12-15"],
+  time: ["20s", "30s", "45s", "60s", "90s"],
+  distance: ["50", "100", "200", "400", "800"],
+  each_side: ["6", "8", "10", "12", "15"],
+};
+
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
@@ -157,6 +166,7 @@ export function RepSchemePopover({
     null
   );
   const [inputValue, setInputValue] = useState("");
+  const [validationError, setValidationError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const activeScheme = deriveScheme(set);
@@ -166,6 +176,7 @@ export function RepSchemePopover({
     if (!open) {
       setSelectedScheme(null);
       setInputValue("");
+      setValidationError(null);
     }
   }, [open]);
 
@@ -183,11 +194,19 @@ export function RepSchemePopover({
   const apply = useCallback(
     (scheme: RepSchemeType, raw?: string) => {
       const value = (raw ?? inputValue).trim();
+      setValidationError(null);
 
       switch (scheme) {
         case "fixed": {
           const num = parseInt(value, 10);
-          if (isNaN(num) || num <= 0) return;
+          if (isNaN(num) || num <= 0) {
+            setValidationError("Enter a number greater than 0");
+            return;
+          }
+          if (num > 200) {
+            setValidationError("Max 200 reps");
+            return;
+          }
           onApply({
             ...set,
             reps: num,
@@ -202,10 +221,20 @@ export function RepSchemePopover({
 
         case "range": {
           const match = value.match(/^(\d+)\s*-\s*(\d+)$/);
-          if (!match) return;
+          if (!match) {
+            setValidationError("Use format like 8-12");
+            return;
+          }
           const min = parseInt(match[1], 10);
           const max = parseInt(match[2], 10);
-          if (min <= 0 || max <= 0 || min >= max) return;
+          if (min <= 0 || max <= 0) {
+            setValidationError("Both numbers must be greater than 0");
+            return;
+          }
+          if (min >= max) {
+            setValidationError("First number must be less than second");
+            return;
+          }
           onApply({
             ...set,
             reps: min,
@@ -224,7 +253,10 @@ export function RepSchemePopover({
           const sMatch = value.match(/^(\d+)\s*s?$/i);
           if (mMatch) seconds = Math.round(parseFloat(mMatch[1]) * 60);
           else if (sMatch) seconds = parseInt(sMatch[1], 10);
-          if (seconds <= 0) return;
+          if (seconds <= 0) {
+            setValidationError("Enter seconds (e.g. 30s) or minutes (e.g. 1.5m)");
+            return;
+          }
           onApply({
             ...set,
             reps: 0,
@@ -238,7 +270,10 @@ export function RepSchemePopover({
 
         case "each_side": {
           const num = parseInt(value, 10);
-          if (isNaN(num) || num <= 0) return;
+          if (isNaN(num) || num <= 0) {
+            setValidationError("Enter a number greater than 0");
+            return;
+          }
           onApply({
             ...set,
             reps: num,
@@ -252,7 +287,10 @@ export function RepSchemePopover({
 
         case "distance": {
           const num = parseFloat(value);
-          if (isNaN(num) || num <= 0) return;
+          if (isNaN(num) || num <= 0) {
+            setValidationError("Enter a distance in metres (e.g. 100)");
+            return;
+          }
           onApply({
             ...set,
             reps: 0,
@@ -379,7 +417,10 @@ export function RepSchemePopover({
           <div className="p-3 space-y-2">
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setSelectedScheme(null)}
+                onClick={() => {
+                  setSelectedScheme(null);
+                  setValidationError(null);
+                }}
                 className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
               >
                 ← Back
@@ -389,11 +430,34 @@ export function RepSchemePopover({
               </span>
             </div>
 
+            {/* Quick picks */}
+            {QUICK_PICKS[selectedScheme] && (
+              <div className="flex flex-wrap gap-1.5">
+                {QUICK_PICKS[selectedScheme].map((val) => (
+                  <button
+                    key={val}
+                    onClick={() => apply(selectedScheme, val)}
+                    className={cn(
+                      "h-7 min-w-[2.25rem] px-2 rounded-md text-xs font-medium transition-colors",
+                      "bg-muted/60 hover:bg-primary/10 hover:text-primary",
+                      "border border-transparent hover:border-primary/20",
+                      "cursor-pointer"
+                    )}
+                  >
+                    {val}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <div className="flex gap-2">
               <Input
                 ref={inputRef}
                 value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
+                onChange={(e) => {
+                  setInputValue(e.target.value);
+                  setValidationError(null);
+                }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") apply(selectedScheme);
                   if (e.key === "Escape") setSelectedScheme(null);
@@ -402,7 +466,10 @@ export function RepSchemePopover({
                   SCHEME_OPTIONS.find((o) => o.id === selectedScheme)
                     ?.placeholder ?? ""
                 }
-                className="h-8 text-sm font-mono"
+                className={cn(
+                  "h-8 text-sm font-mono",
+                  validationError && "border-destructive focus-visible:ring-destructive/30"
+                )}
               />
               <Button
                 size="sm"
@@ -412,6 +479,10 @@ export function RepSchemePopover({
                 Apply
               </Button>
             </div>
+
+            {validationError && (
+              <p className="text-[11px] text-destructive">{validationError}</p>
+            )}
           </div>
         )}
       </PopoverContent>

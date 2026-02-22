@@ -9,11 +9,13 @@ programs
  ├── program_blocks        (optional, block-mode only)
  │    └── program_weeks
  │         └── program_days
- └── program_days           (direct children in day-mode)
-      └── workout_exercise_groups
-           └── workout_exercises
-                └── exercise_sets
+ ├── program_days           (direct children in day-mode)
+ │    └── workout_exercise_groups
+ │         └── workout_exercises
+ │              └── exercise_sets
+ └── program_versions       (snapshot history for undo / restore)
 
+program_views               (page-view tracking for published programs)
 exercises                   (reference / lookup)
 exercise_muscles            (join: exercises ↔ muscles)
 muscles                     (reference / lookup)
@@ -32,8 +34,46 @@ profiles                    (user profiles, FK → auth.users)
 | goal | enum `program_goal` | strength, hypertrophy, endurance, power |
 | mode | enum `program_mode` | days, blocks (default: days) |
 | is_template | bool | default false |
+| is_published | bool | default false — publicly visible when true |
+| price | numeric | nullable, CHECK >= 0 — price in dollars (null = free) |
+| currency | text | default 'usd' — ISO 4217 currency code |
+| published_at | timestamptz | nullable — set when first published |
+| published_version_id | uuid FK → program_versions | nullable — points to the snapshot visible to the public. Publishing creates a version snapshot and pins it here; the author can keep editing privately. |
+| listing_metadata | jsonb | nullable — structured listing data for the public page: skill_level, session_duration, training_frequency, faqs[] |
 | parent_program_id | uuid FK → programs | set when cloned from a template |
+| cover_image | text | nullable, Supabase storage path |
 | created_at, updated_at | timestamptz | auto |
+
+### `program_versions`
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid PK | `gen_random_uuid()` |
+| program_id | uuid FK → programs | cascade |
+| version | int | auto-incremented per program by trigger |
+| label | text | nullable, e.g. "Before restore", "Manual save" |
+| snapshot | jsonb | full `Program` JSON at time of save |
+| created_at | timestamptz | auto |
+
+Index: `idx_program_versions_program_id` on `(program_id, version DESC)`.
+Trigger: `trg_program_version_number` auto-sets `version` to `max(version) + 1` for the same `program_id` on INSERT.
+
+### `program_views`
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid PK | `gen_random_uuid()` |
+| program_id | uuid FK → programs | cascade |
+| viewer_id | uuid FK → auth.users | nullable (anonymous viewers) |
+| created_at | timestamptz | default now() |
+
+Indexes: `idx_program_views_program_id`, `idx_program_views_dedup` on `(program_id, viewer_id, created_at)`.
+
+RLS:
+- **insert**: anyone can record a view.
+- **select**: program owner can read views for their own programs.
+
+RPCs:
+- `record_program_view(p_program_id)` — inserts a row with dedup (1 per viewer per program per day).
+- `get_my_program_view_counts()` — returns `(program_id, view_count)` for all programs owned by the caller.
 
 ### `program_blocks`
 | Column | Type | Notes |
@@ -97,6 +137,8 @@ profiles                    (user profiles, FK → auth.users)
 | set_index | int | positional |
 | set_type | enum `set_type` | warmup, standard, amrap, drop, cluster, myo_reps, rest_pause, top_set, backoff, other |
 | reps | int | nullable, CHECK ≥ 0 |
+| reps_max | int | nullable — upper bound for range-based reps |
+| rep_scheme | text | nullable — fixed, range, time, each_side, amrap, distance |
 | rest | int | seconds, nullable |
 | rpe | numeric | nullable, CHECK 0–10 |
 | rir | numeric | nullable |
@@ -106,9 +148,43 @@ profiles                    (user profiles, FK → auth.users)
 | per_side | bool | default false — reps counted per side |
 | duration | int | seconds, nullable — for time-based sets |
 | distance | numeric | nullable — metres / yards for sprint-type sets |
+| created_at, updated_at | timestamptz | auto |
 
 ### `exercises`
-Reference table with rich metadata. Key columns: `id` (text PK), `name`, `category`, `equipment[]`, `compound`, `unilateral`, `cns_demand`, `fatigue_index`, `joint_stress`, `metabolic_demand`, `energy_system`, `ideal_rep_range[]`, `volume_per_set` (jsonb), `tracking_type[]`.
+Reference table with rich metadata.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | text PK | slug identifier |
+| name | text | required |
+| category | text | nullable, e.g. "chest", "back" |
+| equipment | text[] | nullable, e.g. `{"barbell","bench"}` |
+| compound | bool | nullable |
+| unilateral | bool | nullable |
+| ballistic | bool | nullable |
+| cns_demand | numeric | nullable |
+| fatigue_index | numeric | nullable |
+| joint_stress | numeric | nullable |
+| metabolic_demand | numeric | nullable |
+| intensity_ceiling | numeric | nullable |
+| energy_system | text | nullable |
+| ideal_rep_range | int[] | nullable, e.g. `{6,12}` |
+| tracking_type | text[] | default `{"reps"}` — reps, time, distance |
+| volume_per_set | jsonb | nullable |
+| force_curve | text | nullable |
+| load_profile | text | nullable |
+| movement_plane | text | nullable, e.g. "sagittal" |
+| rom_rating | text | nullable |
+| skill_requirement | text | nullable |
+| recovery_days | numeric | nullable |
+| base_calorie_cost | numeric | nullable |
+| aliases | text[] | nullable, alternate names |
+| variations | text[] | nullable, related exercise IDs |
+| cues | text[] | nullable, coaching cues |
+| contra_indications | text[] | nullable |
+| image_url | text | nullable |
+| external_links | jsonb | nullable |
+| created_at, updated_at | timestamptz | auto |
 
 `tracking_type` (text[], default `{"reps"}`) lists the metrics an exercise can be measured by: `reps`, `time`, or `distance`. An exercise may support multiple tracking modes — e.g. A-Skips can be tracked by reps or distance (`{"reps","distance"}`). The RepSchemePopover unions the allowed scheme sets for all tracking types.
 
@@ -137,18 +213,37 @@ Reference table with rich metadata. Key columns: `id` (text PK), `name`, `catego
 | Column | Type | Notes |
 |--------|------|-------|
 | id | uuid PK FK → auth.users | |
-| username | text | unique, CHECK length ≥ 3 |
+| username | text | unique, nullable, CHECK length ≥ 3 |
 | full_name | text | nullable |
 | avatar_url | text | nullable |
+| bio | text | nullable |
 | website | text | nullable |
-| created_at, updated_at | timestamptz | |
+| account_type | text | default 'individual' |
+| brand_name | text | nullable |
+| logo_url | text | nullable |
+| cover_image_url | text | nullable |
+| social_instagram | text | nullable |
+| social_twitter | text | nullable |
+| social_youtube | text | nullable |
+| profile_completed | bool | default false |
+| created_at | timestamptz | auto |
+| updated_at | timestamptz | nullable, auto |
 
 ## RLS notes
 
-- `programs`, `program_blocks`, `program_weeks`, `program_days`, `workout_exercise_groups`, `workout_exercises`, `exercise_sets` — RLS enabled; policies scope to `auth.uid()`.
+- `programs`, `program_blocks`, `program_weeks`, `program_days`, `workout_exercise_groups`, `workout_exercises`, `exercise_sets`, `program_versions` — RLS enabled; policies scope to `auth.uid()`.
+- All program-related tables also have a public SELECT policy allowing reads when `programs.is_published = true` (cascading through joins). This enables unauthenticated users to view published programs.
 - `exercises`, `muscles`, `exercise_muscles` — RLS disabled (public read).
 - `profiles` — RLS enabled.
 - The `clone_program_from_template` RPC is `SECURITY DEFINER` and uses `auth.uid()` to set the cloned program's `user_id`.
+
+## Functions / RPCs
+
+| Function | Args | Returns | Notes |
+|----------|------|---------|-------|
+| `clone_program_from_template` | `template_program_id uuid` | uuid | SECURITY DEFINER; deep-clones a template for `auth.uid()` |
+| `is_program_accessible` | `p_program_id uuid` | boolean | Checks if user can view a program (owner or template) |
+| `is_program_owner` | `p_program_id uuid` | boolean | Checks if `auth.uid()` owns the program |
 
 ## Enums
 

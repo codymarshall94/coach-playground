@@ -42,6 +42,7 @@ export const PROGRAM_DETAIL_SELECT = `
  */
 export const PROGRAM_INDEX_SELECT = `
   id, name, description, goal, mode, cover_image, created_at, updated_at,
+  is_published, price, currency, published_at, published_version_id,
   blocks:program_blocks (
     id,
     weeks:program_weeks (

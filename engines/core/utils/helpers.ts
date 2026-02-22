@@ -1,5 +1,6 @@
 // --- inline helpers: build ProgramSpec and SessionInput[] from your data ---
 
+import type { BlockInput } from "@/engines/main/orchestrator";
 import type {
   ProgramSpec,
   SessionExercise,
@@ -96,6 +97,53 @@ export function buildSequence(
   program: Program,
   allExercises: Exercise[]
 ): SessionInput[] {
-  const days: ProgramDay[] = program.days ?? program.blocks?.[0]?.days ?? [];
+  const days: ProgramDay[] = getAllDays(program);
   return days.map((d, i) => toSessionInput(d, i, allExercises));
+}
+
+/** Gather all days from a program regardless of mode. */
+function getAllDays(program: Program): ProgramDay[] {
+  if (program.mode === "blocks" && program.blocks?.length) {
+    return program.blocks.flatMap((b) =>
+      b.weeks?.length
+        ? b.weeks.flatMap((w) => w.days ?? [])
+        : b.days ?? []
+    );
+  }
+  return program.days ?? [];
+}
+
+/**
+ * Build structured block→week→session inputs for blocks-mode programs.
+ * Returns `undefined` for days-mode (the orchestrator falls back to flat).
+ */
+export function buildBlockInputs(
+  program: Program,
+  allExercises: Exercise[]
+): BlockInput[] | undefined {
+  if (program.mode !== "blocks" || !program.blocks?.length) return undefined;
+
+  let globalIndex = 0;
+
+  return program.blocks.map((block) => {
+    const weeks =
+      block.weeks?.length > 0
+        ? block.weeks.map((week) => {
+            return (week.days ?? []).map((day) => {
+              const si = toSessionInput(day, globalIndex, allExercises);
+              globalIndex++;
+              return si;
+            });
+          })
+        : // Legacy blocks without week rows → treat all days as one week
+          [
+            (block.days ?? []).map((day) => {
+              const si = toSessionInput(day, globalIndex, allExercises);
+              globalIndex++;
+              return si;
+            }),
+          ];
+
+    return { weeks };
+  });
 }

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useMemo } from "react";
 import { useExercises } from "@/hooks/useExercises";
-import { analyzeWorkoutDay } from "@/utils/analyzeWorkoutDay";
+import { analyzeWorkoutDay } from "@/engines/day/analyzeWorkoutDay";
 import { BarChart2, Activity, Hash, Layers, ArrowUp, ArrowDown } from "lucide-react";
 
 function sumDayReps(day: any) {
@@ -58,7 +58,7 @@ export default function BlockOverviewPanel({
               intensitySum += wm.avgFatigue;
               intensityCount += 1;
             }
-            totalSets += wm.total_sets ?? 0;
+            totalSets += wm.totalSets ?? 0;
           } catch (e) {
             // ignore individual day analysis failures
           }

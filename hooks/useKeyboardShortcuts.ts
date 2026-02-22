@@ -25,6 +25,7 @@ export function useKeyboardShortcuts({
 }: ShortcutsOptions) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (!e.key) return;
       const key = e.key.toLowerCase();
 
       if (e.shiftKey && key === "?") {

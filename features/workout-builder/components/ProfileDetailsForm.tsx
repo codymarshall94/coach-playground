@@ -64,6 +64,7 @@ export function ProfileDetailsForm({
         <div>
           <UsernameSlugInput
             initialValue={username}
+            currentUserId={userId}
             onChange={(value) => setUsername(value)}
           />
           <p className="text-xs mt-2 text-gray-500 leading-relaxed">

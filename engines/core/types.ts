@@ -24,19 +24,26 @@ export type Goal =
   | "power";
 export type DayRole = "High" | "Medium" | "Low";
 
-/** Movement categories used for balance / coverage */
+/**
+ * Movement categories used for balance / coverage.
+ * Mirrors ExerciseCategory from the exercise DB so that
+ * dayEngine can store exercise.category directly.
+ */
 export type MovementPattern =
   | "squat"
   | "hinge"
-  | "horizontal_push"
-  | "horizontal_pull"
-  | "vertical_push"
-  | "vertical_pull"
-  | "carry"
+  | "hinge_horizontal"
   | "lunge"
-  | "rotation"
-  | "gait"
-  | "core";
+  | "push_horizontal"
+  | "push_vertical"
+  | "pull_horizontal"
+  | "pull_vertical"
+  | "carry"
+  | "jump"
+  | "sprint"
+  | "throw"
+  | "brace"
+  | "other";
 
 /** Energy system buckets (very coarse heuristic) */
 export type EnergySystem = "ATP_CP" | "Glycolytic" | "Oxidative";
@@ -121,7 +128,7 @@ export type DayMetrics = {
   energy: Record<EnergySystem, number>; // fractions sum ≈ 1
   muscleSets: Record<string, number>; // effective sets (weighted)
   muscleSetHits: Record<string, number>; // raw set counts
-  patternExposure: Record<MovementPattern, number>;
+  patternExposure: Partial<Record<MovementPattern, number>>;
   riskFlags: string[];
 };
 

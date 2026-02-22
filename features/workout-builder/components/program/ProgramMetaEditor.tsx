@@ -67,6 +67,13 @@ interface ProgramMetaEditorProps {
   overviewOpen: boolean;
   hideScore?: boolean;
   onPendingCoverFile?: (file: File | null) => void;
+  onVersionRestored?: () => void;
+  /** Whether the program has been persisted to the DB at least once. */
+  isSaved?: boolean;
+  /** Whether the program has unsaved local changes */
+  hasUnsavedChanges?: boolean;
+  /** Opens the full-page publish flow (first-time publish) */
+  onOpenPublishFlow?: () => void;
 }
 
 export const ProgramMetaEditor = ({
@@ -78,6 +85,10 @@ export const ProgramMetaEditor = ({
   overviewOpen,
   hideScore = false,
   onPendingCoverFile,
+  onVersionRestored,
+  isSaved,
+  hasUnsavedChanges,
+  onOpenPublishFlow,
 }: ProgramMetaEditorProps) => {
   const [editedName, setEditedName] = useState(program.name || "");
   const [isEditingName, setIsEditingName] = useState(false);
@@ -117,6 +128,10 @@ export const ProgramMetaEditor = ({
             onChange={onChange}
             onSwitchMode={onSwitchMode}
             onPendingCoverFile={onPendingCoverFile}
+            onVersionRestored={onVersionRestored}
+            isSaved={isSaved}
+            hasUnsavedChanges={hasUnsavedChanges}
+            onOpenPublishFlow={onOpenPublishFlow}
           />
         </div>
       </div>

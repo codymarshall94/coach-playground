@@ -40,9 +40,12 @@ export default async function BuilderPage({
   // If a template id is present, clone it for the current user (only when authenticated)
   if (params.template) {
     if (!user) {
-      // For unauthenticated users, load the template program directly so they can preview/build
+      // For unauthenticated users, load the template program directly so they can preview/build.
+      // Give it a fresh ID so saving later creates a NEW program (the original ID
+      // belongs to the template owner and would fail RLS checks).
       try {
-        initialProgram = await fetchProgramById(supabase, params.template);
+        const tpl = await fetchProgramById(supabase, params.template);
+        initialProgram = { ...tpl, id: crypto.randomUUID() };
       } catch (err) {
         console.error("Failed to fetch template program:", err);
       }

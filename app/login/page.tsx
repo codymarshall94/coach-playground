@@ -2,7 +2,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/Logo";
+import { createClient } from "@/utils/supabase/server";
 import { AlertCircle, ArrowRight, Lock, Mail, UserPlus } from "lucide-react";
+import { redirect } from "next/navigation";
 import { login, signup } from "./actions";
 
 export default async function LoginPage({
@@ -13,6 +15,11 @@ export default async function LoginPage({
   const params = await searchParams;
   const error = params?.error;
   const redirectTo = params?.redirect ?? "/programs";
+
+  // If already signed in, skip the login page
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) redirect(redirectTo);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -58,7 +65,15 @@ export default async function LoginPage({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="password">Password</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Password</Label>
+              <a
+                href="/login/forgot-password"
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Forgot password?
+              </a>
+            </div>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input

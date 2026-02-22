@@ -134,6 +134,28 @@ export type ProgramBlock = {
   days: ProgramDay[];
 };
 
+// -----------------------------------------------------------------------------
+// LISTING METADATA (stored as JSONB in programs.listing_metadata)
+// -----------------------------------------------------------------------------
+
+export interface ListingFAQ {
+  question: string;
+  answer: string;
+}
+
+export type SkillLevel = "beginner" | "intermediate" | "advanced";
+
+export interface ListingMetadata {
+  /** Beginner / Intermediate / Advanced */
+  skill_level?: SkillLevel | null;
+  /** Free-text, e.g. "60-90 mins" */
+  session_duration?: string | null;
+  /** Free-text, e.g. "6 days" */
+  training_frequency?: string | null;
+  /** FAQ items shown on the public page */
+  faqs?: ListingFAQ[];
+}
+
 export type Program = {
   id: string;
   name: string;
@@ -143,6 +165,18 @@ export type Program = {
   cover_image?: string | null;
   blocks?: ProgramBlock[];
   days?: ProgramDay[];
+  /** Whether this program is publicly visible */
+  is_published?: boolean;
+  /** Price in smallest currency unit (e.g. cents). null = free */
+  price?: number | null;
+  /** ISO 4217 currency code (default: "usd") */
+  currency?: string;
+  /** Timestamp when the program was first published */
+  published_at?: Date | string | null;
+  /** Points to the program_versions row whose snapshot is the publicly visible version */
+  published_version_id?: string | null;
+  /** Rich listing metadata for the public program page */
+  listing_metadata?: ListingMetadata | null;
   created_at: Date;
   updated_at: Date;
 };
