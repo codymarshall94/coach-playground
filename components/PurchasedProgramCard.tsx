@@ -1,15 +1,17 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { PurchasedProgram } from "@/services/purchaseService";
 import { PROGRAM_GRADIENTS } from "@/features/workout-builder/components/program/ProgramSettingsSheet";
 import type { ProgramGoal } from "@/types/Workout";
 import { formatDistanceToNow } from "date-fns";
-import { Calendar, Dumbbell, User } from "lucide-react";
+import { Calendar, Dumbbell, Loader2, Trash2, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useState } from "react";
 
 /** Strip HTML tags from a string for plain-text display */
 function stripHtml(html: string): string {
@@ -32,9 +34,11 @@ const GOAL_COLORS: Record<string, string> = {
 
 interface Props {
   program: PurchasedProgram;
+  onRemove?: (purchaseId: string) => Promise<void>;
 }
 
-export default function PurchasedProgramCard({ program }: Props) {
+export default function PurchasedProgramCard({ program, onRemove }: Props) {
+  const [removing, setRemoving] = useState(false);
   const name = program.program_name || "Untitled program";
   const goalLabel = goalLabels[program.program_goal] ?? "Strength";
   const href = `/p/${program.program_slug ?? program.program_id}`;
@@ -71,6 +75,35 @@ export default function PurchasedProgramCard({ program }: Props) {
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
             <Dumbbell className="w-10 h-10 text-white/20" />
+          </div>
+        )}
+
+        {/* Remove button — top-right of cover */}
+        {onRemove && (
+          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button
+              variant="destructive"
+              size="icon"
+              className="h-7 w-7 rounded-full shadow-md"
+              disabled={removing}
+              onClick={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!confirm("Remove this program from your library?")) return;
+                setRemoving(true);
+                try {
+                  await onRemove(program.purchase_id);
+                } finally {
+                  setRemoving(false);
+                }
+              }}
+            >
+              {removing ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Trash2 className="w-3.5 h-3.5" />
+              )}
+            </Button>
           </div>
         )}
       </div>

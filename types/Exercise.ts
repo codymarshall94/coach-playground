@@ -68,7 +68,19 @@ export type RomRating = "short" | "medium" | "long";
 
 export type EnergySystem = "ATP-CP" | "Glycolytic" | "Oxidative";
 
-export type TrackingType = "reps" | "time" | "distance";
+/**
+ * Tracking types match the rep-scheme vocabulary so each exercise can
+ * advertise exactly which input modes are valid (e.g. barbell → no
+ * "each_side").  Legacy DB rows that still contain "reps" are normalised
+ * at read time in exerciseService.
+ */
+export type TrackingType =
+  | "fixed"
+  | "range"
+  | "time"
+  | "each_side"
+  | "amrap"
+  | "distance";
 
 export type Equipment =
   | "barbell"

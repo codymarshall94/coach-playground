@@ -254,7 +254,7 @@ export default function GuidedSetupWizard({ onBack }: { onBack: () => void }) {
     </div>
   );
 
-  const maxCount = mode === "days" ? 7 : 8;
+  const maxCount = mode === "days" ? 7 : 6;
   const splitLabel = mode === "days" ? "training days per week" : "training blocks";
 
   const renderSplit = () => (

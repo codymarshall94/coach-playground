@@ -57,3 +57,39 @@ export async function hasAcquiredProgram(
 
   return (data?.length ?? 0) > 0;
 }
+
+/**
+ * Remove a purchased program from the user's library.
+ * Deletes the `program_purchases` row — RLS ensures the caller owns it.
+ */
+export async function removePurchasedProgram(purchaseId: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("program_purchases")
+    .delete()
+    .eq("id", purchaseId);
+
+  if (error) throw new Error(error.message);
+}
+
+/**
+ * Fetch purchase IDs for the current user, keyed by program_id.
+ * Used by the marketplace to show which programs are already saved.
+ */
+export async function getMyPurchasedProgramIds(): Promise<Record<string, string>> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("program_purchases")
+    .select("id, program_id");
+
+  if (error) {
+    console.warn("[purchaseService] getMyPurchasedProgramIds error:", error.message);
+    return {};
+  }
+
+  const map: Record<string, string> = {};
+  for (const row of data ?? []) {
+    map[row.program_id] = row.id;
+  }
+  return map;
+}

@@ -16,7 +16,7 @@ export function SavePromptModal({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent
         showCloseButton={false}
-        className="max-w-5xl p-0 gap-0 overflow-hidden border-neutral-200 dark:border-neutral-800"
+        className="sm:max-w-5xl p-0 gap-0 overflow-hidden border-neutral-200 dark:border-neutral-800"
       >
         <DialogTitle className="sr-only">Save program</DialogTitle>
         <div className="grid md:grid-cols-[2fr_3fr]">

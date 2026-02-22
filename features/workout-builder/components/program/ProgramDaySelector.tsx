@@ -30,6 +30,8 @@ type Props = {
   onAddWorkoutDay: () => void;
   onAddRestDay: () => void;
   onMove: (fromIndex: number, toIndex: number) => void;
+  /** When inside a block, changes cycle text to reference weeks instead of looping */
+  mode?: "days" | "blocks";
 };
 
 function DayButton({
@@ -135,6 +137,7 @@ export function ProgramDaySelector({
   onAddWorkoutDay,
   onAddRestDay,
   onMove,
+  mode = "days",
 }: Props) {
   const sensors = useSortableSensors();
 
@@ -170,8 +173,10 @@ export function ProgramDaySelector({
             <Repeat className="w-3 h-3 text-muted-foreground flex-shrink-0" />
             <span className="text-[11px] text-muted-foreground">
               {days.length}-day cycle
-              {days.length > 0 && " \u00b7 loops after Day "}
-              {days.length > 0 && days.length}
+              {days.length > 0 &&
+                (mode === "blocks"
+                  ? " \u00b7 then next week"
+                  : ` \u00b7 loops after Day ${days.length}`)}
             </span>
           </div>
 
@@ -200,32 +205,37 @@ export function ProgramDaySelector({
             </SortableItem>
           ))}
 
-          <div className="flex gap-1.5 mt-1">
-            <Button
-              onClick={(e) => {
-                e.stopPropagation();
-                onAddWorkoutDay();
-              }}
-              variant="ghost"
-              size="sm"
-              className="flex-1 cursor-pointer text-xs h-8"
-            >
-              <Dumbbell className="w-3.5 h-3.5 mr-1.5" />
-              Add Workout
-            </Button>
-            <Button
-              onClick={(e) => {
-                e.stopPropagation();
-                onAddRestDay();
-              }}
-              variant="ghost"
-              size="sm"
-              className="flex-1 cursor-pointer text-xs h-8"
-            >
-              <Bed className="w-3.5 h-3.5 mr-1.5" />
-              Add Rest
-            </Button>
-          </div>
+          {/* Empty day slots to fill the week */}
+          {days.length < 7 &&
+            Array.from({ length: 7 - days.length }, (_, i) => (
+              <div
+                key={`empty-${i}`}
+                className="flex items-center justify-center gap-2 rounded-lg min-h-[36px] border border-dashed border-border/60 px-2.5 py-1.5"
+              >
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddWorkoutDay();
+                  }}
+                  className="flex items-center justify-center w-7 h-7 rounded-md text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
+                  title="Add workout day"
+                >
+                  <Dumbbell className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddRestDay();
+                  }}
+                  className="flex items-center justify-center w-7 h-7 rounded-md text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
+                  title="Add rest day"
+                >
+                  <Bed className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
 
           {/* Cycle hint */}
           {days.length > 0 && days.length < 3 && (

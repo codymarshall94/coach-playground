@@ -9,12 +9,28 @@ import type {
   TrackingType,
 } from "@/types/Exercise";
 
+/** Map legacy broad categories to the new per-scheme tracking types. */
+const LEGACY_MAP: Record<string, TrackingType[]> = {
+  reps: ["fixed", "range", "amrap"],
+  time: ["time"],
+  distance: ["distance", "time"],
+};
+
+function normTrackingType(raw: unknown): TrackingType[] {
+  const VALID: Set<string> = new Set([
+    "fixed", "range", "time", "each_side", "amrap", "distance",
+  ]);
+  const arr: string[] = Array.isArray(raw) ? raw : [raw ?? "reps"];
+  // Expand any legacy tokens, then keep only valid values
+  const expanded = arr.flatMap((t) => LEGACY_MAP[t] ?? [t]);
+  const unique = [...new Set(expanded)].filter((v) => VALID.has(v)) as TrackingType[];
+  return unique.length ? unique : ["fixed", "range", "amrap"];
+}
+
 function shapeExercise(ex: any): Exercise {
   return {
     ...ex,
-    tracking_type: Array.isArray(ex.tracking_type)
-      ? (ex.tracking_type as TrackingType[])
-      : ([(ex.tracking_type ?? "reps")] as TrackingType[]),
+    tracking_type: normTrackingType(ex.tracking_type),
     exercise_muscles: (ex.exercise_muscles ?? []).map((em: any) => ({
       role: (em.role ?? "synergist") as MuscleRole,
       contribution: em.contribution ?? 0.5,

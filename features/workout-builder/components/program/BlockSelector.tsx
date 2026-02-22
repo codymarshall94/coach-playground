@@ -19,6 +19,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { MAX_BLOCKS, MAX_WEEKS_PER_BLOCK, MAX_DAYS_PER_WEEK } from "@/config";
 import { cn } from "@/lib/utils";
 import type { ProgramBlock } from "@/types/Workout";
 import { getBlockWeekCount, getBlockWeekDays } from "@/utils/program/weekHelpers";
@@ -130,6 +131,15 @@ export function BlockSelector({
   return (
     <div className="flex flex-col gap-0">
       {/* ═══════ ZONE 1 — Block strip ═══════ */}
+      <div className="flex items-center gap-2 mb-1.5">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Blocks
+        </span>
+        <div className="flex-1 h-px bg-border/40" />
+        <span className="text-[10px] tabular-nums text-muted-foreground">
+          {blocks.length}/{MAX_BLOCKS}
+        </span>
+      </div>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -156,6 +166,7 @@ export function BlockSelector({
                       variant={isActive ? "default" : "outline"}
                       className={cn(
                         "text-xs h-8 px-3 rounded-lg gap-1.5 flex-1 justify-start",
+                        isActive && "bg-primary text-primary-foreground shadow-none hover:bg-primary/90",
                         !isActive && "bg-card hover:bg-accent"
                       )}
                       onClick={() => onSelect(i)}
@@ -240,14 +251,16 @@ export function BlockSelector({
               );
             })}
 
-            <Button
-              onClick={onAddBlock}
-              variant="ghost"
-              size="sm"
-              className="h-8 w-full border border-dashed text-xs text-muted-foreground hover:text-foreground"
-            >
-              <Plus className="w-3.5 h-3.5 mr-1" /> Add Block
-            </Button>
+            {blocks.length < MAX_BLOCKS && (
+              <Button
+                onClick={onAddBlock}
+                variant="ghost"
+                size="sm"
+                className="h-8 w-full border border-dashed text-xs text-muted-foreground hover:text-foreground"
+              >
+                <Plus className="w-3.5 h-3.5 mr-1" /> Add Block
+              </Button>
+            )}
           </div>
         </SortableContext>
 
@@ -271,7 +284,15 @@ export function BlockSelector({
       {/* ═══════ ZONE 2 — Week strip ═══════ */}
       {activeBlock && (
         <>
-          <div className="border-t border-border/40 my-2" />
+          <div className="mt-4 mb-1.5 flex items-center gap-2">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Weeks
+            </span>
+            <div className="flex-1 h-px bg-border/40" />
+            <span className="text-[10px] tabular-nums text-muted-foreground">
+              {weekCount}/{MAX_WEEKS_PER_BLOCK}
+            </span>
+          </div>
 
           <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
             {Array.from({ length: weekCount }, (_, wi) => (
@@ -325,15 +346,17 @@ export function BlockSelector({
               </DropdownMenu>
             )}
 
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 w-7 p-0 flex-shrink-0 text-muted-foreground hover:text-foreground"
-              onClick={onAddWeek}
-              title="Add week"
-            >
-              <Plus className="w-3.5 h-3.5" />
-            </Button>
+            {weekCount < MAX_WEEKS_PER_BLOCK && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 w-7 p-0 flex-shrink-0 text-muted-foreground hover:text-foreground"
+                onClick={onAddWeek}
+                title="Add week"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </Button>
+            )}
           </div>
         </>
       )}
@@ -341,7 +364,15 @@ export function BlockSelector({
       {/* ═══════ ZONE 3 — Day list ═══════ */}
       {activeBlock && (
         <>
-          <div className="border-t border-border/40 my-2" />
+          <div className="mt-4 mb-1.5 flex items-center gap-2">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Days
+            </span>
+            <div className="flex-1 h-px bg-border/40" />
+            <span className="text-[10px] tabular-nums text-muted-foreground">
+              {currentWeekDays.length}/{MAX_DAYS_PER_WEEK}
+            </span>
+          </div>
 
           <ProgramDaySelector
             days={currentWeekDays}
@@ -352,6 +383,7 @@ export function BlockSelector({
             onRemoveWorkoutDay={onRemoveWorkoutDay}
             onDuplicateWorkoutDay={onDuplicateWorkoutDay}
             onMove={onMoveDay}
+            mode="blocks"
           />
         </>
       )}

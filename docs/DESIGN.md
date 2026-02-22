@@ -21,6 +21,8 @@ All colors use **OKLCH** for perceptual uniformity. Tokens are defined as CSS cu
 
 | Token | Role | Light | Dark |
 |-------|------|-------|------|
+| `--background` | Page background | Warm off-white `oklch(0.985 0.005 90)` | Dark navy |
+| `--card` | Card surfaces | Warm near-white `oklch(0.995 0.003 90)` | Dark card |
 | `--brand` | Primary brand green | `oklch(0.66 0.16 150)` | same |
 | `--primary` | Buttons, interactive foregrounds | Dark neutral | Light neutral (flipped) |
 | `--accent` | Highlights, active states | Mint/lime | Brighter mint |
@@ -70,7 +72,7 @@ Each advanced set type has a distinct hue so coaches can scan a program and spot
 | Setting | Value |
 |---------|-------|
 | **Font family** | [Outfit](https://fonts.google.com/specimen/Outfit) (Google Fonts) — geometric sans-serif with a sporty, modern feel |
-| **Variable** | `--font-outfit` applied via `next/font/google` |
+| **Variable** | `--font-outfit` applied via `next/font/google`, mapped to `--font-sans` in `globals.css` |
 | **Weights loaded** | 400 (body), 500 (medium labels), 600 (headings), 700 (display/bold) |
 | **Rendering** | `font-display: swap`, `antialiased` |
 
@@ -92,7 +94,7 @@ Defined as Tailwind `@layer utilities` classes for consistent use across compone
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| `--radius` | `0.875rem` (14px) | Base radius for cards and dialogs |
+| `--radius` | `0.625rem` (10px) | Base radius for cards and dialogs |
 | `--radius-sm` | `--radius - 4px` | Badges, small inputs |
 | `--radius-md` | `--radius - 2px` | Buttons, dropdowns |
 | `--radius-lg` | `--radius` | Cards, sheets |

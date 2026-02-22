@@ -13,6 +13,7 @@ import type {
   WorkoutExerciseGroup,
 } from "@/types/Workout";
 
+import { MAX_BLOCKS, MAX_WEEKS_PER_BLOCK, MAX_DAYS_PER_WEEK } from "@/config";
 import { createEmptyProgram } from "@/utils/createEmptyProgram";
 import { addWeekToBlock, removeWeekFromBlock, duplicateWeekInBlock } from "@/utils/program/weekHelpers";
 
@@ -333,9 +334,11 @@ export function useWorkoutBuilder(initialProgram?: Program) {
 
   const handleAddDay = useCallback(
     (type: "workout" | "rest") => {
-      const nextOrder = usingBlocks
+      const currentDayCount = usingBlocks
         ? _getCurrentDays(program, usingBlocks, activeBlockIndex, activeWeekIndex).length
         : program.days?.length ?? 0;
+      if (currentDayCount >= MAX_DAYS_PER_WEEK) return;
+      const nextOrder = currentDayCount;
 
       const newDay = createDay(type, nextOrder);
 
@@ -443,11 +446,12 @@ export function useWorkoutBuilder(initialProgram?: Program) {
 
   // ---------- Blocks ----------
   const addTrainingBlock = useCallback(() => {
+    if ((program.blocks?.length ?? 0) >= MAX_BLOCKS) return;
     updateProgram((prev) => addBlock(prev));
     setActiveBlockIndex((i) => i + 1);
     setActiveWeekIndex(0);
     setActiveDayIndex(0);
-  }, [updateProgram]);
+  }, [updateProgram, program]);
 
   const removeTrainingBlock = useCallback(
     (index: number) => {
@@ -485,6 +489,8 @@ export function useWorkoutBuilder(initialProgram?: Program) {
 
   // ---------- Weeks (within blocks) ----------
   const addWeek = useCallback(() => {
+    const currentBlock = program.blocks?.[activeBlockIndex];
+    if ((currentBlock?.weeks?.length ?? 0) >= MAX_WEEKS_PER_BLOCK) return;
     updateProgram((prev) => {
       const blocks = [...(prev.blocks ?? [])];
       const block = blocks[activeBlockIndex];

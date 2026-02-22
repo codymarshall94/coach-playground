@@ -79,7 +79,7 @@ export function toSessionInput(
         cues: meta?.cues ?? [],
         contra_indications: meta?.contra_indications ?? [],
         external_links: meta?.external_links ?? [],
-        tracking_type: meta?.tracking_type ?? ["reps"],
+        tracking_type: meta?.tracking_type ?? ["fixed", "range", "amrap"],
       },
       sets,
       order: gi + 1,

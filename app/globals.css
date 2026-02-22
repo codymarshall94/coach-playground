@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-outfit);
   --font-mono: var(--font-geist-mono);
 
   --radius-sm: calc(var(--radius) - 4px);
@@ -63,49 +63,40 @@
 
 
 :root {
-  --radius: 0.875rem;
+  --radius: 0.625rem;
 
-  /* Base */
-  --background: oklch(1 0 0 );
+  /* Base — warm off-white, not sterile */
+  --background: oklch(0.985 0.005 90);
   --foreground: oklch(0.12 0.01 250);
 
 
-   /* Neutral surfaces */
-  --card:       oklch(1 0 0 / 0.9);
+  /* Neutral surfaces — distinct warm layers */
+  --card:       oklch(0.995 0.003 90);
   --card-foreground: var(--foreground);
-  --popover:    oklch(1 0 0);
+  --popover:    oklch(0.995 0.003 90);
   --popover-foreground: var(--foreground);
-  --muted:      oklch(0.94 0.01 250);
+  --muted:      oklch(0.94 0.008 100);
   --muted-foreground: oklch(0.45 0.01 250);
-  --border:     oklch(0.88 0.01 250);
-  --input:      oklch(0.91 0.01 250);
-  --ring:       var(--brand); /* subtle green focus ring */
-  --bar-bg:     oklch(0.92 0.01 250);
- 
-   /* Buttons: make “primary” the dark neutral  */
-   --primary: oklch(0.298 0.0036 286);   /* #2d2d2f */
-   --primary-foreground: oklch(0.98 0.01 240);
+  --border:     oklch(0.90 0.008 100);
+  --input:      oklch(0.92 0.006 100);
+  --ring:       oklch(0.7 0.2 145);
+  --bar-bg:     oklch(0.93 0.006 100);
 
-  /* Buttons: make “primary” the dark neutral  */
-  --primary: oklch(0.298 0.0036 286);   /* #2d2d2f */
+  /* Primary: dark neutral for buttons */
+  --primary: oklch(0.298 0.0036 286);
   --primary-foreground: oklch(0.98 0.01 240);
 
-  /* Brand: your PRGRM green (slightly calmer to match the dark) */
+  /* Brand: PRGRM green */
   --brand: oklch(0.66 0.16 150);
   --brand-foreground: oklch(0.98 0.01 240);
 
-  --accent: oklch(0.78 0.2 150);                  /* fresh mint/lime */
+  --accent: oklch(0.96 0.005 100);                /* warm near-white hover tint */
   --accent-foreground: var(--foreground);
 
   --secondary: oklch(0.92 0.08 135);              /* leafy sage background */
   --secondary-foreground: oklch(0.18 0.01 130);
 
-
-
   /* UI Control */
-  --border: oklch(0.88 0.01 140);
-  --input: oklch(0.91 0.01 140);
-  --ring: oklch(0.7 0.2 145);                     /* forest ring */
   --destructive: oklch(0.64 0.20 30);            /* brick red */
 
   /* Emotional Tone */
@@ -159,8 +150,8 @@
   --popover: oklch(0.18 0.005 250);
   --popover-foreground: var(--foreground);
 
-  --accent: oklch(0.82 0.22 160);
-  --accent-foreground: var(--background);
+  --accent: oklch(0.22 0.01 250);                 /* subtle dark hover tint */
+  --accent-foreground: var(--foreground);
 
 
   --positive: oklch(0.82 0.17 150);

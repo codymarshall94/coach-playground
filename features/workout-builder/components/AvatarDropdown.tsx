@@ -37,25 +37,25 @@ export default function AvatarDropdown() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="outline-none">
-        <Avatar className="w-8 h-8 cursor-pointer ring-2 ring-transparent hover:ring-primary/40 transition-all">
+        <Avatar className="w-8 h-8 cursor-pointer ring-2 ring-transparent hover:ring-border transition-all">
           <AvatarImage src={profile?.avatar_url ?? undefined} />
-          <AvatarFallback className="text-xs font-bold bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
+          <AvatarFallback className="text-xs font-bold bg-muted text-muted-foreground">
             {initials}
           </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
-        className="w-64 p-0 rounded-2xl shadow-xl border-border/40 overflow-hidden"
+        className="w-56 p-1.5 rounded-xl shadow-lg"
         align="end"
         sideOffset={8}
       >
         {/* ── Identity header ── */}
-        <div className="bg-gradient-to-br from-primary/8 to-transparent px-4 pt-4 pb-3">
+        <div className="px-3 pt-2 pb-2.5">
           <div className="flex items-center gap-3">
-            <Avatar className="w-10 h-10 ring-2 ring-background shadow-sm">
+            <Avatar className="w-9 h-9">
               <AvatarImage src={profile?.avatar_url ?? undefined} />
-              <AvatarFallback className="text-sm font-bold bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
+              <AvatarFallback className="text-xs font-bold bg-muted text-muted-foreground">
                 {initials}
               </AvatarFallback>
             </Avatar>
@@ -72,26 +72,17 @@ export default function AvatarDropdown() {
           </div>
         </div>
 
-        {/* ── New Program CTA ── */}
-        <div className="px-3 pt-2 pb-1">
-          <DropdownMenuItem asChild className="p-0 focus:bg-transparent">
-            <Link
-              href="/programs/builder"
-              className="flex items-center gap-2.5 w-full rounded-xl bg-primary px-3.5 py-2.5 text-primary-foreground hover:bg-primary/90 transition-colors"
-            >
-              <div className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
-                <Plus className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-[13px] font-semibold">New Program</p>
-                <p className="text-[10px] opacity-75">Start building</p>
-              </div>
-            </Link>
-          </DropdownMenuItem>
-        </div>
+        <div className="h-px bg-border mx-1.5 my-0.5" />
 
         {/* ── Navigation ── */}
-        <div className="px-1.5 py-1">
+        <div className="py-0.5">
+          <DropdownMenuItem asChild className="cursor-pointer rounded-lg text-[13px] h-9 gap-2.5 px-3">
+            <Link href="/programs/builder">
+              <Plus className="w-4 h-4 text-muted-foreground" />
+              New Program
+            </Link>
+          </DropdownMenuItem>
+
           <DropdownMenuItem asChild className="cursor-pointer rounded-lg text-[13px] h-9 gap-2.5 px-3">
             <Link href="/programs">
               <LayoutGrid className="w-4 h-4 text-muted-foreground" />
@@ -114,10 +105,10 @@ export default function AvatarDropdown() {
           </DropdownMenuItem>
         </div>
 
-        <div className="h-px bg-border/50 mx-3" />
+        <div className="h-px bg-border mx-1.5 my-0.5" />
 
         {/* ── Utilities ── */}
-        <div className="px-1.5 py-1">
+        <div className="py-0.5">
           <DropdownMenuItem asChild className="cursor-pointer rounded-lg text-[13px] h-9 gap-2.5 px-3">
             <Link href="/help" target="_blank">
               <HelpCircle className="w-4 h-4 text-muted-foreground" />
@@ -133,12 +124,7 @@ export default function AvatarDropdown() {
             </div>
             <ThemeToggle />
           </div>
-        </div>
 
-        <div className="h-px bg-border/50 mx-3" />
-
-        {/* ── Sign out ── */}
-        <div className="px-1.5 pt-1 pb-1.5">
           <DropdownMenuItem
             className="cursor-pointer rounded-lg text-[13px] h-9 gap-2.5 px-3 text-muted-foreground hover:text-destructive focus:text-destructive focus:bg-destructive/8"
             asChild

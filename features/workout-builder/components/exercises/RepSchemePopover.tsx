@@ -78,12 +78,8 @@ const SCHEME_OPTIONS: SchemeOption[] = [
   },
 ];
 
-/** Which schemes are valid for each exercise tracking type. */
-const ALLOWED_SCHEMES: Record<TrackingType, RepSchemeType[]> = {
-  reps: ["fixed", "range", "each_side", "amrap"],
-  time: ["time", "each_side"],
-  distance: ["distance", "time"],
-};
+/** Default tracking types when none are specified on the exercise. */
+const DEFAULT_TRACKING: TrackingType[] = ["fixed", "range", "amrap"];
 
 /** Quick-pick presets for each scheme type. */
 const QUICK_PICKS: Record<string, string[]> = {
@@ -157,10 +153,8 @@ export function RepSchemePopover({
   onApply,
   className,
 }: RepSchemePopoverProps) {
-  const allowedSchemes = Array.from(
-    new Set(trackingTypes.flatMap((t) => ALLOWED_SCHEMES[t] ?? ALLOWED_SCHEMES.reps))
-  );
-  const visibleOptions = SCHEME_OPTIONS.filter((o) => allowedSchemes.includes(o.id));
+  const allowed = trackingTypes.length ? trackingTypes : DEFAULT_TRACKING;
+  const visibleOptions = SCHEME_OPTIONS.filter((o) => allowed.includes(o.id));
   const [open, setOpen] = useState(false);
   const [selectedScheme, setSelectedScheme] = useState<RepSchemeType | null>(
     null

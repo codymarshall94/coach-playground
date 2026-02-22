@@ -36,8 +36,24 @@ import { Plus, CalendarDays } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import ScoreDial from "@/components/ScoreDial";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+
+/**
+ * Produce a stable JSON string for dirty-checking purposes.
+ * Strips volatile/non-user-editable fields (timestamps) so the comparison
+ * isn't thrown off by Date-vs-string serialisation differences or server-
+ * generated updated_at changes.
+ */
+function stableStringify(p: Program): string {
+  return JSON.stringify(p, (key, value) => {
+    // Strip timestamps — they change on every save and aren't user edits
+    if (key === "created_at" || key === "updated_at" || key === "published_at") {
+      return undefined;
+    }
+    return value;
+  });
+}
 
 import { DayHeader } from "./components/days/DayHeader";
 import { NoExercisesEmpty } from "./components/empty-states/NoExercisesEmpty";
@@ -100,10 +116,21 @@ export const WorkoutBuilder = ({
   } = useWorkoutBuilder(initialProgram);
 
   // ── Unsaved-changes guard ────────────────────────────────────────
-  const savedSnapshotRef = useRef(JSON.stringify(initialProgram ?? {}));
+  // Snapshot the *actual* working state (after useWorkoutBuilder's
+  // resolveInitialProgram may have transformed it) so the baseline
+  // always matches the live program shape.
+  const savedSnapshotRef = useRef<string>("");
+  if (savedSnapshotRef.current === "") {
+    // Lazy-init on first render — runs synchronously before any paint
+    savedSnapshotRef.current = stableStringify(program);
+  }
   const isDirty = useMemo(
-    () => JSON.stringify(program) !== savedSnapshotRef.current,
+    () => stableStringify(program) !== savedSnapshotRef.current,
     [program]
+  );
+  const resetSnapshot = useCallback(
+    (p: Program) => { savedSnapshotRef.current = stableStringify(p); },
+    []
   );
   const { markClean } = useUnsavedChanges(isDirty);
 
@@ -165,7 +192,7 @@ export const WorkoutBuilder = ({
       // Atomically update state and snapshot ref together so isDirty
       // always compares against the exact same object.
       setProgram(() => {
-        savedSnapshotRef.current = JSON.stringify(programToSave);
+        resetSnapshot(programToSave);
         return programToSave;
       });
       markClean();
@@ -281,7 +308,7 @@ export const WorkoutBuilder = ({
           const restored = await getProgramById(program.id);
           if (restored) {
             setProgram(restored);
-            savedSnapshotRef.current = JSON.stringify(restored);
+            resetSnapshot(restored);
             markClean();
           }
         }}

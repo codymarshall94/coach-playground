@@ -5,6 +5,7 @@ import ProgramCard from "@/components/ProgramCard";
 import PurchasedProgramCard from "@/components/PurchasedProgramCard";
 import type { Program } from "@/types/Workout";
 import type { PurchasedProgram } from "@/services/purchaseService";
+import { removePurchasedProgram } from "@/services/purchaseService";
 import { toast } from "sonner";
 import { duplicateProgram } from "@/services/programService";
 import NoProgramsEmpty from "@/components/NoProgramsEmpty";
@@ -23,6 +24,7 @@ export default function ProgramsView({
   purchasedPrograms = [],
 }: Props) {
   const [programs, setPrograms] = useState(initialPrograms || []);
+  const [purchased, setPurchased] = useState(purchasedPrograms);
   const [loadingIds, setLoadingIds] = useState<Record<string, boolean>>({});
   const [deletingAll, setDeletingAll] = useState(false);
   const [duplicatingIds, setDuplicatingIds] = useState<Record<string, boolean>>({});
@@ -116,8 +118,20 @@ export default function ProgramsView({
     setDeletingAll(false);
   }, [programs]);
 
+  const handleRemovePurchased = useCallback(async (purchaseId: string) => {
+    const prev = purchased;
+    setPurchased((p) => p.filter((pp) => pp.purchase_id !== purchaseId));
+    try {
+      await removePurchasedProgram(purchaseId);
+      toast.success("Removed from your library");
+    } catch (err) {
+      setPurchased(prev);
+      toast.error(err instanceof Error ? err.message : "Failed to remove");
+    }
+  }, [purchased]);
+
   if (!programs || programs.length === 0) {
-    if (purchasedPrograms.length === 0) {
+    if (purchased.length === 0) {
       return <NoProgramsEmpty />;
     }
   }
@@ -210,18 +224,22 @@ export default function ProgramsView({
       )}
 
       {/* Purchased / Library */}
-      {purchasedPrograms.length > 0 && (
+      {purchased.length > 0 && (
         <section>
           <div className="flex items-center gap-2 mb-4">
             <Library className="w-4 h-4 text-brand" />
             <h2 className="text-lg font-semibold">My Library</h2>
             <span className="text-xs text-muted-foreground">
-              ({purchasedPrograms.length})
+              ({purchased.length})
             </span>
           </div>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {purchasedPrograms.map((pp) => (
-              <PurchasedProgramCard key={pp.purchase_id} program={pp} />
+            {purchased.map((pp) => (
+              <PurchasedProgramCard
+                key={pp.purchase_id}
+                program={pp}
+                onRemove={handleRemovePurchased}
+              />
             ))}
           </div>
         </section>

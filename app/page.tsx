@@ -2,7 +2,7 @@
 
 import HighlightedText from "@/components/HighlightedText";
 import { Logo } from "@/components/Logo";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Download, Search, Users } from "lucide-react";
 import Link from "next/link";
 
 const metrics = [
@@ -34,21 +34,29 @@ const metrics = [
 
 export default function Page() {
   return (
-    <main className="min-h-screen bg-white text-black">
+    <main className="min-h-screen bg-background text-foreground">
       {/* NAV */}
       <nav className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5">
         <Logo width={90} height={90} />
-        <Link
-          href="/login"
-          className="rounded-full bg-black px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-neutral-800"
-        >
-          Sign In
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/marketplace"
+            className="rounded-full px-4 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground hover:bg-muted"
+          >
+            Marketplace
+          </Link>
+          <Link
+            href="/login"
+            className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            Sign In
+          </Link>
+        </div>
       </nav>
 
       {/* HERO */}
       <section className="mx-auto flex min-h-[85vh] w-full max-w-3xl flex-col items-center justify-center px-6 text-center">
-        <p className="mb-5 text-sm font-medium tracking-wide text-neutral-500 uppercase">
+        <p className="mb-5 text-sm font-medium tracking-wide text-muted-foreground uppercase">
           Program design &amp; analysis engine
         </p>
         <h1 className="text-5xl font-extrabold leading-[1.08] tracking-[-0.03em] md:text-7xl">
@@ -58,7 +66,7 @@ export default function Page() {
           </HighlightedText>{" "}
           before day&nbsp;one.
         </h1>
-        <p className="mt-6 max-w-xl text-lg leading-relaxed text-neutral-600 md:text-xl">
+        <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground md:text-xl">
           Build structured training programs and get live feedback on volume,
           load, muscle balance, and movement gaps &mdash; all before your
           athletes touch a barbell.
@@ -66,12 +74,12 @@ export default function Page() {
         <div className="mt-8 flex flex-col items-center gap-3">
           <Link
             href="/programs/new"
-            className="group inline-flex items-center rounded-full bg-black px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-neutral-800"
+            className="group inline-flex items-center rounded-full bg-brand px-6 py-3 text-base font-semibold text-brand-foreground transition-colors hover:bg-brand/90"
           >
             Start Building
             <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Link>
-          <span className="text-sm text-neutral-400">
+          <span className="text-sm text-muted-foreground">
             No account required.
           </span>
         </div>
@@ -82,47 +90,47 @@ export default function Page() {
         <h2 className="mb-4 text-4xl font-extrabold tracking-[-0.02em] md:text-5xl">
           It thinks while you build.
         </h2>
-        <p className="mb-12 max-w-2xl text-lg text-neutral-600">
+        <p className="mb-12 max-w-2xl text-lg text-muted-foreground">
           Every exercise you add, every set you configure &mdash; the engine is
           scoring, mapping, and flagging in real time. Not after. Not on export.{" "}
-          <span className="font-medium text-black">Right now.</span>
+          <span className="font-medium text-foreground">Right now.</span>
         </p>
 
-        <div className="grid gap-px overflow-hidden rounded-2xl border bg-neutral-200 md:grid-cols-3">
-          <div className="flex flex-col gap-3 bg-white p-8">
-            <span className="inline-block w-fit rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold tracking-wide text-amber-700">
+        <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border md:grid-cols-3">
+          <div className="flex flex-col gap-3 bg-card p-8">
+            <span className="inline-block w-fit rounded-full border border-warning/40 bg-warning/10 px-3 py-1 text-xs font-semibold tracking-wide text-warning">
               NUDGE
             </span>
-            <p className="text-[15px] leading-relaxed text-neutral-800">
+            <p className="text-[15px] leading-relaxed text-foreground">
               &ldquo;Quads hit 3&times; this week with zero hamstring
               work.&rdquo;
             </p>
-            <p className="text-sm text-neutral-500">
+            <p className="text-sm text-muted-foreground">
               Muscle balance flags surface the problems you&rsquo;d only catch
               mid-cycle.
             </p>
           </div>
-          <div className="flex flex-col gap-3 bg-white p-8">
-            <span className="inline-block w-fit rounded-full border border-orange-300 bg-orange-50 px-3 py-1 text-xs font-semibold tracking-wide text-orange-700">
+          <div className="flex flex-col gap-3 bg-card p-8">
+            <span className="inline-block w-fit rounded-full border border-load-high/40 bg-load-high/10 px-3 py-1 text-xs font-semibold tracking-wide text-load-high">
               LOAD SHIFT
             </span>
-            <p className="text-[15px] leading-relaxed text-neutral-800">
+            <p className="text-[15px] leading-relaxed text-foreground">
               &ldquo;Volume jumped 40% from Block&nbsp;1 to
               Block&nbsp;2.&rdquo;
             </p>
-            <p className="text-sm text-neutral-500">
+            <p className="text-sm text-muted-foreground">
               Load scores shift from green to amber so you see the spike before
               your athletes feel it.
             </p>
           </div>
-          <div className="flex flex-col gap-3 bg-white p-8">
-            <span className="inline-block w-fit rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-semibold tracking-wide text-emerald-700">
+          <div className="flex flex-col gap-3 bg-card p-8">
+            <span className="inline-block w-fit rounded-full border border-brand/40 bg-brand/10 px-3 py-1 text-xs font-semibold tracking-wide text-brand">
               GAP
             </span>
-            <p className="text-[15px] leading-relaxed text-neutral-800">
+            <p className="text-[15px] leading-relaxed text-foreground">
               &ldquo;No horizontal pull in your upper day.&rdquo;
             </p>
-            <p className="text-sm text-neutral-500">
+            <p className="text-sm text-muted-foreground">
               Movement pattern coverage catches what a template never would.
             </p>
           </div>
@@ -134,7 +142,7 @@ export default function Page() {
         <h2 className="mb-4 text-4xl font-extrabold tracking-[-0.02em] md:text-5xl">
           Every set. Scored. Mapped. Flagged.
         </h2>
-        <p className="mb-12 max-w-2xl text-lg text-neutral-600">
+        <p className="mb-12 max-w-2xl text-lg text-muted-foreground">
           Not vanity metrics. The numbers coaches actually program around.
         </p>
 
@@ -142,12 +150,12 @@ export default function Page() {
           {metrics.map((item) => (
             <div
               key={item.label}
-              className="group rounded-2xl border border-neutral-200 p-6 transition-colors hover:border-neutral-400"
+              className="group rounded-2xl border border-border p-6 transition-colors hover:border-brand/40"
             >
               <h3 className="mb-2 text-lg font-semibold tracking-tight">
                 {item.label}
               </h3>
-              <p className="text-sm leading-relaxed text-neutral-600">
+              <p className="text-sm leading-relaxed text-muted-foreground">
                 {item.desc}
               </p>
             </div>
@@ -162,37 +170,37 @@ export default function Page() {
         </h2>
         <div className="grid gap-12 md:grid-cols-3">
           <div>
-            <span className="mb-3 inline-block text-3xl font-extrabold text-neutral-300">
+            <span className="mb-3 inline-block text-3xl font-extrabold text-brand/30">
               01
             </span>
             <h3 className="mb-2 text-lg font-semibold">
               Structure your program
             </h3>
-            <p className="text-sm leading-relaxed text-neutral-600">
+            <p className="text-sm leading-relaxed text-muted-foreground">
               Add blocks, days, exercise groups, and sets. Drag to reorder.
               Start from scratch or pick a template.
             </p>
           </div>
           <div>
-            <span className="mb-3 inline-block text-3xl font-extrabold text-neutral-300">
+            <span className="mb-3 inline-block text-3xl font-extrabold text-brand/30">
               02
             </span>
             <h3 className="mb-2 text-lg font-semibold">
               Get real-time feedback
             </h3>
-            <p className="text-sm leading-relaxed text-neutral-600">
+            <p className="text-sm leading-relaxed text-muted-foreground">
               Volume, load scores, muscle balance, and coach nudges update live
               as you make changes. No save-and-refresh.
             </p>
           </div>
           <div>
-            <span className="mb-3 inline-block text-3xl font-extrabold text-neutral-300">
+            <span className="mb-3 inline-block text-3xl font-extrabold text-brand/30">
               03
             </span>
             <h3 className="mb-2 text-lg font-semibold">
               Export &amp; share
             </h3>
-            <p className="text-sm leading-relaxed text-neutral-600">
+            <p className="text-sm leading-relaxed text-muted-foreground">
               Download a clean PDF, share via your public profile, or save to
               your library to reuse later.
             </p>
@@ -200,24 +208,80 @@ export default function Page() {
         </div>
       </section>
 
+      {/* MARKETPLACE */}
+      <section className="mx-auto w-full max-w-6xl px-6 py-24">
+        <div className="flex flex-col items-center text-center">
+          <span className="mb-4 inline-block rounded-full border border-brand/40 bg-brand/10 px-4 py-1 text-xs font-semibold tracking-wide text-brand uppercase">
+            Marketplace
+          </span>
+          <h2 className="mb-4 text-4xl font-extrabold tracking-[-0.02em] md:text-5xl">
+            Browse programs from other coaches.
+          </h2>
+          <p className="mb-12 max-w-xl text-lg text-muted-foreground">
+            Find proven templates, grab them for free, and make them your own &mdash;
+            or publish yours for the community.
+          </p>
+        </div>
+
+        <div className="grid gap-8 md:grid-cols-3">
+          <div className="rounded-2xl border border-border p-8 text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <Search className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <h3 className="mb-2 text-lg font-semibold tracking-tight">Discover</h3>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Browse programs by goal, duration, and training style.  Find what fits your athletes.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-border p-8 text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <Download className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <h3 className="mb-2 text-lg font-semibold tracking-tight">Clone &amp; Customize</h3>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              One click to copy any program into your builder. Tweak it, analyze it, make it yours.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-border p-8 text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <Users className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <h3 className="mb-2 text-lg font-semibold tracking-tight">Share Yours</h3>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Publish your programs to the marketplace and let other coaches learn from your programming.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-10 flex justify-center">
+          <Link
+            href="/marketplace"
+            className="group inline-flex items-center rounded-full border border-border px-6 py-3 text-base font-semibold text-foreground transition-colors hover:border-brand/40 hover:bg-muted"
+          >
+            Browse the Marketplace
+            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </div>
+      </section>
+
       {/* CTA */}
       <section id="cta" className="mx-auto w-full max-w-6xl px-6 pb-24">
-        <div className="rounded-3xl bg-neutral-950 p-10 py-24 text-center">
-          <h2 className="mb-4 text-4xl font-extrabold tracking-[-0.02em] text-white md:text-5xl">
+        <div className="rounded-3xl bg-primary p-10 py-24 text-center">
+          <h2 className="mb-4 text-4xl font-extrabold tracking-[-0.02em] text-primary-foreground md:text-5xl">
             For coaches who actually program.
           </h2>
-          <p className="mx-auto mb-10 max-w-lg text-neutral-400">
+          <p className="mx-auto mb-10 max-w-lg text-primary-foreground/60">
             No signup wall. No feature gates. Open a blank program and start
             building &mdash; the engine does the rest.
           </p>
           <Link
             href="/programs/new"
-            className="group inline-flex items-center rounded-full bg-white px-6 py-3 font-semibold text-black transition-colors hover:bg-neutral-200"
+            className="group inline-flex items-center rounded-full bg-brand px-6 py-3 font-semibold text-brand-foreground transition-colors hover:bg-brand/90"
           >
             Start Building
             <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Link>
-          <p className="mt-4 text-xs text-neutral-500">
+          <p className="mt-4 text-xs text-primary-foreground/40">
             No account required.
           </p>
         </div>
