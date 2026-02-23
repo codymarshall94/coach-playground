@@ -119,17 +119,19 @@ export const WorkoutBuilder = ({
   // Snapshot the *actual* working state (after useWorkoutBuilder's
   // resolveInitialProgram may have transformed it) so the baseline
   // always matches the live program shape.
-  const savedSnapshotRef = useRef<string>("");
-  if (savedSnapshotRef.current === "") {
-    // Lazy-init on first render — runs synchronously before any paint
-    savedSnapshotRef.current = stableStringify(program);
-  }
+  //
+  // The snapshot is kept in **state** (not a ref) so that updating it
+  // after a save triggers a re-evaluation of the `isDirty` memo.  When
+  // the program reference doesn't change (common for existing-program
+  // saves), a ref-based snapshot would silently update without causing
+  // `useMemo` to re-run, leaving `isDirty` stale at `true`.
+  const [savedSnapshot, setSavedSnapshot] = useState(() => stableStringify(program));
   const isDirty = useMemo(
-    () => stableStringify(program) !== savedSnapshotRef.current,
-    [program]
+    () => stableStringify(program) !== savedSnapshot,
+    [program, savedSnapshot]
   );
   const resetSnapshot = useCallback(
-    (p: Program) => { savedSnapshotRef.current = stableStringify(p); },
+    (p: Program) => { setSavedSnapshot(stableStringify(p)); },
     []
   );
   const { markClean } = useUnsavedChanges(isDirty);
@@ -189,12 +191,10 @@ export const WorkoutBuilder = ({
         programToSave = { ...programToSave, id: programId };
       }
 
-      // Atomically update state and snapshot ref together so isDirty
-      // always compares against the exact same object.
-      setProgram(() => {
-        resetSnapshot(programToSave);
-        return programToSave;
-      });
+      // Update program state and snapshot together.  React 18 batches
+      // these so isDirty re-evaluates in one render pass.
+      setProgram(programToSave);
+      resetSnapshot(programToSave);
       markClean();
       toast.success("Program saved!");
       router.push(`/programs/${programId}`);
@@ -308,7 +308,7 @@ export const WorkoutBuilder = ({
           const restored = await getProgramById(program.id);
           if (restored) {
             setProgram(restored);
-            resetSnapshot(restored);
+            resetSnapshot(restored);   // state-based — batched with setProgram
             markClean();
           }
         }}

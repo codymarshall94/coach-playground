@@ -1,6 +1,6 @@
 import { createClient } from "@/utils/supabase/client";
 import { transformProgramFromSupabase } from "@/utils/program/transformProgram";
-import { PROGRAM_DETAIL_SELECT } from "@/services/programQueries";
+import { PROGRAM_DETAIL_SELECT, applyDetailDaysFilter } from "@/services/programQueries";
 
 /**
  * Lightweight list for template picker cards.
@@ -36,12 +36,13 @@ export const getTemplates = async () => {
  */
 export const getTemplateByIdFull = async (id: string) => {
   const supabase = createClient();
-  const { data, error } = await supabase
-    .from("programs")
-    .select(PROGRAM_DETAIL_SELECT)
-    .eq("id", id)
-    .eq("is_template", true)
-    .single();
+  const { data, error } = await applyDetailDaysFilter(
+    supabase
+      .from("programs")
+      .select(PROGRAM_DETAIL_SELECT)
+      .eq("id", id)
+      .eq("is_template", true)
+  ).single();
 
   if (error) throw new Error(error.message || "Failed to load template");
   return transformProgramFromSupabase(data);

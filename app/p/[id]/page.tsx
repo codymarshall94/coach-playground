@@ -21,6 +21,7 @@ import {
   Dumbbell,
   GraduationCap,
   Layers,
+  Lock,
   Repeat,
 } from "lucide-react";
 import type { Metadata } from "next";
@@ -230,11 +231,11 @@ export default async function PublicProgramPage({
             )}
           </div>
 
-          {/* Description */}
-          {program.description && (
+          {/* Promotional Description (from listing metadata) */}
+          {listing?.promo_description && (
             <div
               className="prose prose-sm dark:prose-invert max-w-none text-foreground/80"
-              dangerouslySetInnerHTML={{ __html: program.description }}
+              dangerouslySetInnerHTML={{ __html: listing.promo_description }}
             />
           )}
 
@@ -319,40 +320,78 @@ export default async function PublicProgramPage({
           </section>
         )}
 
-        {/* ---- Program content (read-only) ---- */}
-        {program.mode === "blocks" ? (
-          <div className="space-y-8">
-            {(program.blocks ?? []).map((block) => (
-              <section key={block.id}>
-                <h2 className="text-xl font-semibold mb-1">{block.name}</h2>
-                {block.description && (
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {block.description}
-                  </p>
-                )}
+        {/* ---- Program preview (teaser) ---- */}
+        {(() => {
+          // Owners see everything; others get a limited preview
+          const PREVIEW_DAY_LIMIT = isOwner ? Infinity : 3;
+          let dayIndex = 0;
 
-                {block.weeks.map((week) => (
-                  <div key={week.id} className="mb-6">
-                    <h3 className="text-sm font-medium text-muted-foreground mb-3">
-                      {week.label ?? `Week ${week.weekNumber}`}
-                    </h3>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {week.days.map((day) => (
-                        <DayCard key={day.id} day={day} />
-                      ))}
-                    </div>
-                  </div>
+          if (program.mode === "blocks") {
+            return (
+              <div className="space-y-8">
+                {(program.blocks ?? []).map((block) => (
+                  <section key={block.id}>
+                    <h2 className="text-xl font-semibold mb-1">{block.name}</h2>
+                    {block.description && (
+                      <p className="text-sm text-muted-foreground mb-4">
+                        {block.description}
+                      </p>
+                    )}
+
+                    {block.weeks.map((week) => (
+                      <div key={week.id} className="mb-6">
+                        <h3 className="text-sm font-medium text-muted-foreground mb-3">
+                          {week.label ?? `Week ${week.weekNumber}`}
+                        </h3>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          {week.days.map((day) => {
+                            const idx = dayIndex++;
+                            if (idx < PREVIEW_DAY_LIMIT) {
+                              return <DayCard key={day.id} day={day} />;
+                            }
+                            return <LockedDayCard key={day.id} name={day.name} />;
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </section>
                 ))}
-              </section>
-            ))}
-          </div>
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {allDays.map((day) => (
-              <DayCard key={day.id} day={day} />
-            ))}
-          </div>
-        )}
+
+                {!isOwner && dayCount > PREVIEW_DAY_LIMIT && (
+                  <PreviewCTA
+                    programId={data.id}
+                    isFree={isFree}
+                    isOwner={isOwner}
+                    remaining={dayCount - PREVIEW_DAY_LIMIT}
+                  />
+                )}
+              </div>
+            );
+          }
+
+          return (
+            <div className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                {allDays.map((day) => {
+                  const idx = dayIndex++;
+                  if (idx < PREVIEW_DAY_LIMIT) {
+                    return <DayCard key={day.id} day={day} />;
+                  }
+                  return <LockedDayCard key={day.id} name={day.name} />;
+                })}
+              </div>
+
+              {!isOwner && allDays.length > PREVIEW_DAY_LIMIT && (
+                <PreviewCTA
+                  programId={data.id}
+                  isFree={isFree}
+                  isOwner={isOwner}
+                  remaining={allDays.length - PREVIEW_DAY_LIMIT}
+                />
+              )}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
@@ -427,6 +466,68 @@ function DayCard({ day }: { day: ProgramDay }) {
       {!isRest && day.groups.length === 0 && (
         <p className="text-xs text-muted-foreground">No exercises yet</p>
       )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Locked day card (teaser placeholder)
+// ---------------------------------------------------------------------------
+
+function LockedDayCard({ name }: { name: string }) {
+  return (
+    <div className="rounded-xl border bg-card p-4 space-y-2 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-t from-card via-card/80 to-transparent z-10" />
+      <div className="flex items-center justify-between">
+        <h4 className="text-sm font-semibold text-muted-foreground/60">{name}</h4>
+      </div>
+      <div className="space-y-1.5 opacity-30 select-none" aria-hidden>
+        <div className="h-3 w-3/4 rounded bg-muted-foreground/10" />
+        <div className="h-3 w-1/2 rounded bg-muted-foreground/10" />
+        <div className="h-3 w-2/3 rounded bg-muted-foreground/10" />
+      </div>
+      <div className="absolute inset-0 z-20 flex items-center justify-center">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+          <Lock className="w-3.5 h-3.5" />
+          <span>Add to library to view</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Preview CTA — shown after the teaser days
+// ---------------------------------------------------------------------------
+
+function PreviewCTA({
+  programId,
+  isFree,
+  isOwner,
+  remaining,
+}: {
+  programId: string;
+  isFree: boolean;
+  isOwner: boolean;
+  remaining: number;
+}) {
+  return (
+    <div className="relative rounded-xl border-2 border-dashed border-primary/20 bg-primary/5 p-6 text-center space-y-3">
+      <p className="text-sm font-medium text-foreground">
+        + {remaining} more {remaining === 1 ? "day" : "days"} in this program
+      </p>
+      <p className="text-xs text-muted-foreground max-w-md mx-auto">
+        {isFree
+          ? "Add this program to your library to unlock the full plan."
+          : "Purchase this program to unlock all training days."}
+      </p>
+      <div className="pt-1">
+        <AcquireProgramButton
+          programId={programId}
+          isFree={isFree}
+          isOwner={isOwner}
+        />
+      </div>
     </div>
   );
 }

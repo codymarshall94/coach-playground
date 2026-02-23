@@ -579,6 +579,7 @@ export type Database = {
           mode: Database["public"]["Enums"]["program_mode"]
           name: string
           parent_program_id: string | null
+          pdf_config: Json | null
           price: number | null
           published_at: string | null
           published_version_id: string | null
@@ -599,6 +600,7 @@ export type Database = {
           mode?: Database["public"]["Enums"]["program_mode"]
           name: string
           parent_program_id?: string | null
+          pdf_config?: Json | null
           price?: number | null
           published_at?: string | null
           published_version_id?: string | null
@@ -619,6 +621,7 @@ export type Database = {
           mode?: Database["public"]["Enums"]["program_mode"]
           name?: string
           parent_program_id?: string | null
+          pdf_config?: Json | null
           price?: number | null
           published_at?: string | null
           published_version_id?: string | null

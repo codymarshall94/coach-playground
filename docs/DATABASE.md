@@ -40,6 +40,7 @@ profiles                    (user profiles, FK → auth.users)
 | published_at | timestamptz | nullable — set when first published |
 | published_version_id | uuid FK → program_versions | nullable — points to the snapshot visible to the public. Publishing creates a version snapshot and pins it here; the author can keep editing privately. |
 | listing_metadata | jsonb | nullable — structured listing data for the public page: skill_level, session_duration, training_frequency, faqs[] |
+| pdf_config | jsonb | nullable — PDF layout designer config (PDFLayoutConfig). Saved per-program, auto-saved from the designer. |
 | parent_program_id | uuid FK → programs | set when cloned from a template |
 | cover_image | text | nullable, Supabase storage path |
 | created_at, updated_at | timestamptz | auto |

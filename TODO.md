@@ -19,8 +19,17 @@
 
 ## UX Papercuts
 
-_Nothing yet._
+- [ ] PDF designer help article (`/help/export-pdf`) still describes the old flow — needs rewrite to match the current "PDF Designer" full-screen planner.
 
 ## Bugs
 
 _Nothing yet._
+
+## PDF Designer — Remaining Phases
+
+- [ ] **Phase 2: Config persistence** — save `pdf_config` per program in Supabase so settings survive across sessions.
+- [ ] **Phase 3: Branding & cover** — logo upload, cover background image, "Prepared for" client name field.
+- [ ] **Phase 4: Typography & pages** — custom font selection, page numbering, auto table of contents.
+- [ ] **Phase 5: Paginated preview & zoom** — multi-page A4 preview with page breaks, zoom controls.
+
+See [plan.md](../plan.md) for full details.

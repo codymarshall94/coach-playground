@@ -43,6 +43,7 @@ import Image from "next/image";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "motion/react";
+import { ProgramDescriptionEditor } from "../ProgramDescriptionEditor";
 
 /* -------------------------------------------------------------------------- */
 /*  Steps — Review → Listing → Price → Live                                  */
@@ -179,6 +180,9 @@ export function PublishFlow({ program, onPublished, onClose }: PublishFlowProps)
   const [faqs, setFaqs] = useState<ListingFAQ[]>(
     existingMeta?.faqs ?? []
   );
+  const [promoDescription, setPromoDescription] = useState(
+    existingMeta?.promo_description ?? ""
+  );
 
   const parsedPrice = parseFloat(priceInput);
   const finalPrice = !isNaN(parsedPrice) && parsedPrice > 0 ? parsedPrice : null;
@@ -208,8 +212,10 @@ export function PublishFlow({ program, onPublished, onClose }: PublishFlowProps)
     if (trainingFrequency.trim()) meta.training_frequency = trainingFrequency.trim();
     const validFaqs = faqs.filter((f) => f.question.trim() && f.answer.trim());
     if (validFaqs.length > 0) meta.faqs = validFaqs;
+    const strippedPromo = promoDescription.replace(/<[^>]*>/g, "").trim();
+    if (strippedPromo) meta.promo_description = promoDescription;
     return Object.keys(meta).length > 0 ? meta : null;
-  }, [skillLevel, sessionDuration, trainingFrequency, faqs]);
+  }, [skillLevel, sessionDuration, trainingFrequency, faqs, promoDescription]);
 
   /* ---- Compute stats ---- */
   const stats = useMemo(() => {
@@ -447,6 +453,23 @@ export function PublishFlow({ program, onPublished, onClose }: PublishFlowProps)
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Promotional Description */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <Sparkles className="w-4 h-4 text-muted-foreground" />
+                Promotional Description
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Write a compelling pitch for your program. This is what athletes
+                see on the marketplace page instead of your internal notes.
+              </p>
+              <ProgramDescriptionEditor
+                value={promoDescription}
+                onChange={setPromoDescription}
+                label="Promo Description"
+              />
             </div>
 
             {/* FAQ section */}

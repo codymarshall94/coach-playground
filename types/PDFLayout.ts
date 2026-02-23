@@ -83,6 +83,20 @@ export interface PDFLayoutConfig {
   // ── Cover options ──
   /** Show a dedicated cover page area at top */
   showCoverPage: boolean;
+
+  // ── Personalisation ──
+  /** Client name printed on the cover ("Prepared for …") */
+  preparedFor: string;
+
+  // ── Typography ──
+  /** Google Font family name (default: "Inter") */
+  fontFamily: string;
+
+  // ── Page structure ──
+  /** Show page numbers at the bottom of each page */
+  showPageNumbers: boolean;
+  /** Auto-generate a table of contents (block-mode only) */
+  showTableOfContents: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -104,6 +118,10 @@ export const DEFAULT_PDF_LAYOUT: PDFLayoutConfig = {
   showNotes: true,
   showWarmupSets: true,
   showCoverPage: true,
+  preparedFor: "",
+  fontFamily: "Inter",
+  showPageNumbers: true,
+  showTableOfContents: false,
 };
 
 // ---------------------------------------------------------------------------

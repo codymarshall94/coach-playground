@@ -1,6 +1,6 @@
 import { WorkoutBuilder } from "@/features/workout-builder/WorkoutBuilder";
 import { createClient } from "@/utils/supabase/server";
-import { PROGRAM_DETAIL_SELECT } from "@/services/programQueries";
+import { PROGRAM_DETAIL_SELECT, applyDetailDaysFilter } from "@/services/programQueries";
 import { transformProgramFromSupabase } from "@/utils/program/transformProgram";
 
 export default async function ProgramEditPage({
@@ -11,11 +11,12 @@ export default async function ProgramEditPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("programs")
-    .select(PROGRAM_DETAIL_SELECT)
-    .eq("id", id)
-    .single();
+  const { data, error } = await applyDetailDaysFilter(
+    supabase
+      .from("programs")
+      .select(PROGRAM_DETAIL_SELECT)
+      .eq("id", id)
+  ).single();
 
   if (error || !data) {
     console.error("❌ Failed to fetch program", error?.message);

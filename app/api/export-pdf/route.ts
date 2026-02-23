@@ -13,7 +13,7 @@ async function getBrowser() {
     const puppeteer = (await import("puppeteer-core")).default;
     return puppeteer.launch({
       args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
+      defaultViewport: { width: 794, height: 1123 },
       executablePath: await chromium.executablePath(),
       headless: true,
     });
@@ -66,7 +66,17 @@ export async function POST(req: NextRequest) {
     const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
-      margin: { top: "0", right: "0", bottom: "0", left: "0" },
+      margin: config.showPageNumbers
+        ? { top: "0", right: "0", bottom: "40px", left: "0" }
+        : { top: "0", right: "0", bottom: "0", left: "0" },
+      ...(config.showPageNumbers && {
+        displayHeaderFooter: true,
+        headerTemplate: "<span></span>",
+        footerTemplate: `
+          <div style="width:100%;text-align:center;font-size:9px;color:#9ca3af;font-family:Inter,Helvetica,Arial,sans-serif;padding:8px 0;">
+            <span class="pageNumber"></span> / <span class="totalPages"></span>
+          </div>`,
+      }),
     });
 
     return new NextResponse(Buffer.from(pdfBuffer), {

@@ -4,7 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 
 import { Program } from "@/types/Workout";
 import { transformProgramFromSupabase } from "@/utils/program/transformProgram";
-import { PROGRAM_DETAIL_SELECT } from "@/services/programQueries";
+import { PROGRAM_DETAIL_SELECT, applyDetailDaysFilter } from "@/services/programQueries";
 import { SupabaseClient } from "@supabase/supabase-js";
 
 export const metadata = {
@@ -14,11 +14,12 @@ export const metadata = {
 };
 
 async function fetchProgramById(supabase: SupabaseClient, id: string) {
-  const { data, error } = await supabase
-    .from("programs")
-    .select(PROGRAM_DETAIL_SELECT)
-    .eq("id", id)
-    .single();
+  const { data, error } = await applyDetailDaysFilter(
+    supabase
+      .from("programs")
+      .select(PROGRAM_DETAIL_SELECT)
+      .eq("id", id)
+  ).single();
 
   if (error) throw error;
   return transformProgramFromSupabase(data);
@@ -56,10 +57,14 @@ export default async function BuilderPage({
         { template_program_id: params.template }
       );
       if (cloneErr) {
-        // If cloning fails (bad id or other issue), fall back to loading template
-        console.error("clone_program_from_template error:", cloneErr);
+        // RPC can fail when the SSR access token is stale (auth.uid() = NULL).
+        // Fall back to loading the template with a fresh ID so saving creates a
+        // NEW program owned by this user instead of attempting to overwrite the
+        // template (which would violate RLS).
+        console.error("clone_program_from_template error:", cloneErr?.message ?? cloneErr);
         try {
-          initialProgram = await fetchProgramById(supabase, params.template);
+          const tpl = await fetchProgramById(supabase, params.template);
+          initialProgram = { ...tpl, id: crypto.randomUUID() };
         } catch (err) {
           console.error("Failed to fetch template program after clone error:", err);
         }

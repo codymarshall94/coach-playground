@@ -25,6 +25,9 @@ import {
   Rows3,
   FileText,
   Scissors,
+  User,
+  Image,
+  Upload,
 } from "lucide-react";
 
 interface PDFLayoutSidebarProps {
@@ -242,12 +245,49 @@ export function PDFLayoutSidebar({ config, onChange }: PDFLayoutSidebarProps) {
                   className="h-8 text-xs"
                 />
               </div>
+              <div>
+                <Label className="text-xs mb-1">Logo URL</Label>
+                <div className="flex gap-2 items-center">
+                  <Input
+                    value={config.branding.logoUrl}
+                    onChange={(e) => updateBranding("logoUrl", e.target.value)}
+                    placeholder="https://… or data:image/…"
+                    className="h-8 text-xs flex-1"
+                  />
+                  {config.branding.logoUrl && (
+                    <img
+                      src={config.branding.logoUrl}
+                      alt=""
+                      className="h-8 w-8 rounded border border-border object-contain bg-white"
+                    />
+                  )}
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Paste a logo image URL. Shows in the cover header.
+                </p>
+              </div>
             </div>
           </section>
 
           <Separator />
 
           {/* ── Prepared For ── */}
+          <section>
+            <SectionHeading icon={User} label="Prepared For" />
+            <Input
+              value={config.preparedFor}
+              onChange={(e) => update("preparedFor", e.target.value)}
+              placeholder="e.g. John Smith"
+              className="h-8 text-xs"
+            />
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Client name printed on the cover page.
+            </p>
+          </section>
+
+          <Separator />
+
+          {/* ── Font Size ── */}
           <section>
             <SectionHeading icon={Type} label="Font Size" />
             <div className="flex gap-1.5">
@@ -264,6 +304,39 @@ export function PDFLayoutSidebar({ config, onChange }: PDFLayoutSidebarProps) {
                   )}
                 >
                   {size}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <Separator />
+
+          {/* ── Font Family ── */}
+          <section>
+            <SectionHeading icon={Type} label="Font" />
+            <div className="grid grid-cols-2 gap-1.5">
+              {[
+                "Inter",
+                "Roboto",
+                "Oswald",
+                "Lora",
+                "Montserrat",
+                "Playfair Display",
+                "Raleway",
+                "Source Sans 3",
+              ].map((font) => (
+                <button
+                  key={font}
+                  type="button"
+                  onClick={() => update("fontFamily", font)}
+                  className={cn(
+                    "rounded-md border px-3 py-1.5 text-xs font-medium transition-all text-left truncate",
+                    config.fontFamily === font
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border text-muted-foreground hover:border-primary/40"
+                  )}
+                >
+                  {font}
                 </button>
               ))}
             </div>
@@ -349,6 +422,7 @@ export function PDFLayoutSidebar({ config, onChange }: PDFLayoutSidebarProps) {
                 [
                   { key: "showCoverPage", label: "Cover header" },
                   { key: "showDescription", label: "Program description" },
+                  { key: "showPageNumbers", label: "Page numbers" },
                   { key: "showSetType", label: "Set type column" },
                   { key: "showRest", label: "Rest column" },
                   { key: "showIntensity", label: "Intensity column" },

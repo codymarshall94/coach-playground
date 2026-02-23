@@ -1,3 +1,5 @@
+import type { PDFLayoutConfig } from "@/types/PDFLayout";
+
 export type SetType =
   | "warmup"
   | "standard"
@@ -154,6 +156,8 @@ export interface ListingMetadata {
   training_frequency?: string | null;
   /** FAQ items shown on the public page */
   faqs?: ListingFAQ[];
+  /** Rich-text promotional description shown on the public marketplace page */
+  promo_description?: string | null;
 }
 
 export type Program = {
@@ -177,6 +181,8 @@ export type Program = {
   published_version_id?: string | null;
   /** Rich listing metadata for the public program page */
   listing_metadata?: ListingMetadata | null;
+  /** PDF layout designer configuration (JSON) */
+  pdf_config?: PDFLayoutConfig | null;
   created_at: Date;
   updated_at: Date;
 };

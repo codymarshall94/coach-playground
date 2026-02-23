@@ -16,7 +16,7 @@ import {
 } from "@/types/Workout";
 import { createClient } from "@/utils/supabase/client";
 import { transformProgramFromSupabase } from "@/utils/program/transformProgram";
-import { PROGRAM_DETAIL_SELECT, PROGRAM_INDEX_SELECT } from "@/services/programQueries";
+import { PROGRAM_DETAIL_SELECT, PROGRAM_INDEX_SELECT, applyDetailDaysFilter } from "@/services/programQueries";
 import { slugify } from "@/utils/slugify";
 
 /* ----------------------------------------------------------------------------
@@ -293,6 +293,7 @@ export async function ensureProgramRecord(program: Program): Promise<string> {
       goal: program.goal,
       mode: program.mode,
       cover_image: program.cover_image,
+      pdf_config: (program.pdf_config ?? null) as unknown as Record<string, unknown>,
     });
     if (error || !data) {
       console.error("❌ insertProgram:", error?.message);
@@ -491,6 +492,7 @@ export async function insertProgram({
   goal,
   mode,
   cover_image,
+  pdf_config,
 }: {
   user_id: string;
   name: string;
@@ -498,10 +500,11 @@ export async function insertProgram({
   goal: string;
   mode: "days" | "blocks";
   cover_image?: string | null;
+  pdf_config?: Record<string, unknown> | null;
 }) {
   return supabase
     .from("programs")
-    .insert({ user_id, name, description, goal, mode, cover_image })
+    .insert({ user_id, name, description, goal, mode, cover_image, pdf_config: pdf_config ?? null })
     .select("id")
     .single();
 }
@@ -648,6 +651,7 @@ export async function updateProgram(program: Program) {
       price: program.price ?? null,
       currency: program.currency ?? "usd",
       listing_metadata: (program.listing_metadata ?? null) as unknown as Record<string, unknown>,
+      pdf_config: (program.pdf_config ?? null) as unknown as Record<string, unknown>,
       updated_at: nowIso(),
     })
     .eq("id", program.id);
@@ -697,11 +701,12 @@ export async function getAllProgramsForUser(): Promise<Program[]> {
 }
 
 export async function getProgramById(id: string): Promise<Program | null> {
-  const { data, error } = await supabase
-    .from("programs")
-    .select(PROGRAM_DETAIL_SELECT)
-    .eq("id", id)
-    .single();
+  const { data, error } = await applyDetailDaysFilter(
+    supabase
+      .from("programs")
+      .select(PROGRAM_DETAIL_SELECT)
+      .eq("id", id)
+  ).single();
 
   if (error) {
     console.error("❌ getProgramById:", error.message);
@@ -730,6 +735,7 @@ export async function duplicateProgram(sourceId: string): Promise<Program> {
     goal: source.goal,
     mode: source.mode,
     cover_image: source.cover_image,
+    pdf_config: (source.pdf_config ?? null) as unknown as Record<string, unknown>,
   });
   if (insertErr || !newRow) {
     throw new Error(insertErr?.message || "Failed to duplicate program");
@@ -845,7 +851,27 @@ export async function restoreProgramVersion(
       goal: snapshot.goal,
       mode: snapshot.mode,
       cover_image: snapshot.cover_image ?? null,
+      pdf_config: (snapshot.pdf_config ?? null) as unknown as Record<string, unknown>,
       updated_at: nowIso(),
     })
     .eq("id", programId);
+}
+
+/* ----------------------------------------------------------------------------
+ * Save PDF config only (lightweight update for the designer auto-save)
+ * -------------------------------------------------------------------------- */
+
+export async function savePdfConfig(
+  programId: string,
+  pdfConfig: Record<string, unknown> | null,
+) {
+  const { error } = await supabase
+    .from("programs")
+    .update({
+      pdf_config: pdfConfig,
+      updated_at: nowIso(),
+    })
+    .eq("id", programId);
+
+  if (error) throw new Error(`savePdfConfig: ${error.message}`);
 }

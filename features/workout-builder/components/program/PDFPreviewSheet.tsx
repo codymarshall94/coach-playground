@@ -1,39 +1,32 @@
 "use client";
 
+import { useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  IntensitySystem,
   Program,
   ProgramDay,
-  RepSchemeType,
-  SetInfo,
 } from "@/types/Workout";
 import {
   PDFLayoutConfig,
   PDFTheme,
-  PDF_THEMES,
 } from "@/types/PDFLayout";
+import {
+  resolveTheme,
+  buildVisibleColumns,
+  groupConsecutiveSets,
+  formatRestTime,
+  formatIntensity,
+  formatAdvancedSetInfo,
+  formatPrescription,
+  FONT_SIZE_MAP,
+  DENSITY_MAP,
+  ColumnDef,
+} from "@/utils/pdfHelpers";
 import DOMPurify from "dompurify";
 import { Activity, Dumbbell, Target, Zap } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Font size / density maps
-// ─────────────────────────────────────────────────────────────────────────────
-
-const FONT_SIZE_MAP = {
-  small: { body: "text-xs", table: "text-xs", heading: "text-base", hero: "text-2xl" },
-  medium: { body: "text-sm", table: "text-sm", heading: "text-lg", hero: "text-3xl" },
-  large: { body: "text-base", table: "text-base", heading: "text-xl", hero: "text-4xl" },
-} as const;
-
-const DENSITY_MAP = {
-  compact: { cellPy: "py-1", cellPx: "px-2", sectionGap: "mb-4" },
-  normal: { cellPy: "py-2", cellPx: "px-3", sectionGap: "mb-8" },
-  spacious: { cellPy: "py-3", cellPx: "px-4", sectionGap: "mb-12" },
-} as const;
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Shared formatting helpers
+// Goal icon mapping (Lucide — only used in the in-browser preview)
 // ─────────────────────────────────────────────────────────────────────────────
 
 const goalIcons = {
@@ -43,163 +36,9 @@ const goalIcons = {
   power: Target,
 };
 
-function formatRestTime(seconds: number) {
-  if (seconds < 60) return `${seconds}s`;
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return s ? `${m}m ${s}s` : `${m}m`;
-}
-
-function formatIntensity(set: SetInfo, system: IntensitySystem) {
-  switch (system) {
-    case "rpe":
-      return set.rpe != null ? `RPE ${set.rpe}` : "";
-    case "rir":
-      return set.rir != null ? `RIR ${set.rir}` : "";
-    case "one_rep_max_percent":
-      return set.one_rep_max_percent ? `${set.one_rep_max_percent}% 1RM` : "";
-    default:
-      return "";
-  }
-}
-
-const SET_TYPE_LABELS: Record<string, string> = {
-  standard: "Standard",
-  warmup: "Warmup",
-  amrap: "AMRAP",
-  drop: "Drop Set",
-  cluster: "Cluster",
-  myo_reps: "Myo-Reps",
-  rest_pause: "Rest-Pause",
-  top_set: "Top Set",
-  backoff: "Backoff",
-};
-
-function formatAdvancedSetInfo(set: SetInfo): string {
-  const label =
-    SET_TYPE_LABELS[set.set_type] ?? set.set_type.replace("_", " ");
-  switch (set.set_type) {
-    case "drop":
-      return `${label}\n(${set.drop_percent ?? "?"}% × ${set.drop_sets ?? "?"} drops)`;
-    case "cluster":
-      return `${label}\n(${set.cluster_reps ?? "?"} reps, ${set.intra_rest ?? "?"}s rest)`;
-    case "myo_reps":
-      return `${label}\n(Start: ${set.activation_set_reps ?? "?"}, Mini: ${set.mini_sets ?? "?"})`;
-    case "rest_pause":
-      return `${label}\n(${set.initial_reps ?? "?"} reps, ${set.pause_duration ?? "?"}s pause)`;
-    default:
-      return label;
-  }
-}
-
-function formatPrescription(
-  set: SetInfo,
-  exerciseRepScheme?: RepSchemeType
-): string {
-  const scheme = set.rep_scheme ?? exerciseRepScheme ?? "fixed";
-  const side = set.per_side ? " e/s" : "";
-  switch (scheme) {
-    case "time":
-      return (
-        (set.duration ? formatRestTime(set.duration) : `${set.reps}`) + side
-      );
-    case "range":
-      return (
-        (set.reps_max ? `${set.reps}–${set.reps_max}` : `${set.reps}`) + side
-      );
-    case "each_side":
-      return `${set.reps} e/s`;
-    case "amrap":
-      return `AMRAP${side}`;
-    case "distance":
-      return (
-        (set.distance != null ? `${set.distance}m` : `${set.reps}`) + side
-      );
-    case "fixed":
-    default:
-      return `${set.reps}${side}`;
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Set grouping
-// ─────────────────────────────────────────────────────────────────────────────
-
-interface SetGroup {
-  startIndex: number;
-  count: number;
-  set: SetInfo;
-}
-
-function setGroupingSignature(set: SetInfo, system: IntensitySystem) {
-  return [
-    set.set_type,
-    set.reps,
-    set.reps_max,
-    set.rep_scheme,
-    set.duration,
-    set.distance,
-    set.per_side,
-    set.rest,
-    formatIntensity(set, system),
-    set.drop_percent,
-    set.drop_sets,
-    set.cluster_reps,
-    set.intra_rest,
-    set.activation_set_reps,
-    set.mini_sets,
-    set.initial_reps,
-    set.pause_duration,
-    set.notes,
-  ].join("|");
-}
-
-function groupConsecutiveSets(
-  sets: SetInfo[],
-  system: IntensitySystem
-): SetGroup[] {
-  const groups: SetGroup[] = [];
-  let i = 0;
-  while (i < sets.length) {
-    const sig = setGroupingSignature(sets[i], system);
-    let j = i + 1;
-    while (j < sets.length && setGroupingSignature(sets[j], system) === sig)
-      j++;
-    groups.push({ startIndex: i, count: j - i, set: sets[i] });
-    i = j;
-  }
-  return groups;
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Theme-driven sub-components
 // ─────────────────────────────────────────────────────────────────────────────
-
-function resolveTheme(config: PDFLayoutConfig): PDFTheme {
-  const base = PDF_THEMES[config.themeId];
-  if (!config.accentColor) return base;
-  // When a custom accent is set, override the hero background with it
-  return {
-    ...base,
-    heroBg: config.accentColor,
-    heroGradient: `linear-gradient(135deg, ${config.accentColor} 0%, ${config.accentColor}dd 100%)`,
-  };
-}
-
-/** Determine which columns are visible and their headers */
-function visibleColumns(config: PDFLayoutConfig) {
-  const cols: { key: string; header: string; center?: boolean }[] = [
-    { key: "exercise", header: "Exercise" },
-    { key: "set", header: "Set", center: true },
-  ];
-  if (config.showSetType) cols.push({ key: "type", header: "Type" });
-  cols.push({ key: "rx", header: "Rx", center: true });
-  if (config.showRest) cols.push({ key: "rest", header: "Rest", center: true });
-  if (config.showIntensity)
-    cols.push({ key: "intensity", header: "Intensity", center: true });
-  if (config.showNotes) cols.push({ key: "notes", header: "Notes" });
-  return cols;
-}
 
 function WorkoutDayTable({
   day,
@@ -211,7 +50,7 @@ function WorkoutDayTable({
   config: PDFLayoutConfig;
 }) {
   if (day.type !== "workout") return null;
-  const cols = visibleColumns(config);
+  const cols = buildVisibleColumns(config);
   const fonts = FONT_SIZE_MAP[config.fontSize];
   const density = DENSITY_MAP[config.tableDensity];
 
@@ -440,13 +279,27 @@ function WorkoutDayTable({
 export function PDFPreviewSheet({
   program,
   config,
+  zoom = 75,
 }: {
   program: Program;
   config: PDFLayoutConfig;
+  zoom?: number;
 }) {
   const theme = resolveTheme(config);
   const GoalIcon = goalIcons[program.goal];
   const fonts = FONT_SIZE_MAP[config.fontSize];
+  const fontFamily = config.fontFamily || "Inter";
+
+  // Dynamically load the Google Font stylesheet
+  useEffect(() => {
+    const id = `pdf-font-${fontFamily.replace(/\s/g, "-")}`;
+    if (document.getElementById(id)) return;
+    const link = document.createElement("link");
+    link.id = id;
+    link.rel = "stylesheet";
+    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontFamily)}:wght@400;500;600;700;800&display=swap`;
+    document.head.appendChild(link);
+  }, [fontFamily]);
 
   const totalWeeks =
     program.mode === "blocks" && program.blocks
@@ -465,8 +318,15 @@ export function PDFPreviewSheet({
   return (
     <ScrollArea className="h-full">
       {/* A4-ish container for the preview */}
-      <div className="mx-auto max-w-[816px] shadow-xl border border-border/50 rounded-lg overflow-hidden my-6">
-        <div style={{ backgroundColor: theme.bodyBg }} className="text-[13px] leading-6">
+      <div
+        className="mx-auto max-w-[816px] shadow-xl border border-border/50 rounded-lg overflow-hidden my-6"
+        style={{
+          transform: `scale(${zoom / 100})`,
+          transformOrigin: "top center",
+          marginBottom: `${Math.max(24, 24 - (816 * (1 - zoom / 100)))}px`,
+        }}
+      >
+        <div style={{ backgroundColor: theme.bodyBg, fontFamily: `'${config.fontFamily || "Inter"}', 'Helvetica Neue', Helvetica, Arial, sans-serif` }} className="text-[13px] leading-6">
           {/* ── Cover / Hero header ── */}
           {config.showCoverPage && (
             <div
@@ -481,7 +341,14 @@ export function PDFPreviewSheet({
               <div className="relative z-10">
                 {/* Branding */}
                 {config.branding.coachName && (
-                  <div className="mb-4">
+                  <div className="mb-4 flex items-center gap-3">
+                    {config.branding.logoUrl && (
+                      <img
+                        src={config.branding.logoUrl}
+                        alt=""
+                        className="h-8 w-auto object-contain rounded"
+                      />
+                    )}
                     <span
                       className="text-sm font-bold tracking-wide"
                       style={{ color: theme.heroAccent }}
@@ -543,6 +410,27 @@ export function PDFPreviewSheet({
                     {program.mode === "blocks" ? " / block" : ""}
                   </span>
                 </div>
+
+                {/* Prepared for */}
+                {config.preparedFor && (
+                  <div
+                    className="mt-4 pt-3"
+                    style={{ borderTop: `1px solid ${theme.heroText}20` }}
+                  >
+                    <span
+                      className="text-[11px] font-medium uppercase tracking-wider"
+                      style={{ color: `${theme.heroText}50` }}
+                    >
+                      Prepared for
+                    </span>
+                    <div
+                      className="text-base font-semibold mt-0.5"
+                      style={{ color: theme.heroText }}
+                    >
+                      {config.preparedFor}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -731,6 +619,16 @@ export function PDFPreviewSheet({
                 style={{ borderTopWidth: 1, borderColor: theme.borderColor, color: theme.mutedText }}
               >
                 {config.footerText}
+              </div>
+            )}
+
+            {/* Page number preview indicator */}
+            {config.showPageNumbers && (
+              <div
+                className="mt-6 text-center text-[9px]"
+                style={{ color: theme.mutedText }}
+              >
+                1 / 1 <span className="ml-1 opacity-50">(page numbers appear in exported PDF)</span>
               </div>
             )}
           </div>
